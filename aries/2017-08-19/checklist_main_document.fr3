@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<TfrxReport Version="5.6" DotMatrixReport="False" IniFile="\Software\Fast Reports" PreviewOptions.Buttons="4095" PreviewOptions.Zoom="1" PrintOptions.Printer="Default" PrintOptions.PrintOnSheet="0" ReportOptions.CreateDate="42964,5581289005" ReportOptions.Description.Text="" ReportOptions.LastChange="42965,4184165741" ScriptLanguage="PascalScript" ScriptText.Text="&#13;&#10;begin&#13;&#10;&#13;&#10;end.">
+  <Variables>
+    <item Name="company_name" Value="'EMMEBI SRL a socio unico'"/>
+    <item Name="company_sector" Value="'Sistemi di Sicurezza'"/>
+    <item Name="company_street" Value="'Via dell''Artigianato'"/>
+    <item Name="company_street_number" Value="'2'"/>
+    <item Name="company_municipality" Value="'Breda di Piave'"/>
+    <item Name="company_province" Value="'TV'"/>
+    <item Name="company_phone" Value="'0422 600050'"/>
+    <item Name="company_mobile_phone" Value="'3356055425'"/>
+    <item Name="company_vat_number" Value="'04371390263'"/>
+    <item Name="company_businesses_register_province" Value="'TV'"/>
+    <item Name="company_businesses_register_number_ciaa" Value="'TV-344298'"/>
+    <item Name="company_provincial_register_province" Value="'TV'"/>
+    <item Name="company_provincial_register_number" Value="'103276'"/>
+    <item Name="company_website" Value="'www.emmebi.tv.it'"/>
+    <item Name="company_fax" Value="'0422 600050'"/>
+    <item Name="company_email" Value="'info@emmebi.tv.it'"/>
+    <item Name="company_tax_code" Value="'04371390263'"/>
+    <item Name="company_rea_number" Value="'TV-344298'"/>
+    <item Name="company_inps_position" Value="'8400'"/>
+    <item Name="company_inail_position" Value="'20839290 50 '"/>
+    <item Name="company_ateco_code" Value="'43.21.02'"/>
+    <item Name="company_insurance_rct" Value="'AXA POLIZZA NR 123456'"/>
+    <item Name="company_hamlet" Value="'Pero'"/>
+    <item Name="company_capital" Value="'25.000,00'"/>
+    <item Name="company_enabling" Value="'Abilitazione A-B-G (limitatamente parte elettronica)'"/>
+    <item Name="company_bank" Value="'VENETO BANCA AG. CANDELU'''"/>
+    <item Name="company_iban" Value="'IT 38 Y 05035 61780 069570364476'"/>
+    <item Name="company_postal_code" Value="'31030'"/>
+    <item Name="company_tax_regime" Value="''"/>
+    <item Name="company_holder" Value="' BARBON MIRCO '"/>
+  </Variables>
+  <TfrxDataPage Name="Data" Height="1000" Left="0" Top="0" Width="1000"/>
+  <TfrxReportPage Name="Page1" PaperWidth="210" PaperHeight="297" PaperSize="9" LeftMargin="10" RightMargin="10" TopMargin="10" BottomMargin="10" ColumnWidth="0" ColumnPositions.Text="" HGuides.Text="" VGuides.Text="">
+    <TfrxReportTitle Name="ReportTitle1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="20" Left="0" Top="0" Width="718,1107"/>
+    <TfrxPageFooter Name="PageFooter1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="20" Left="0" Top="211,65368" Width="718,1107"/>
+    <TfrxReportSummary Name="ReportSummary1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="22,67718" Left="0" Top="188,9765" Width="718,1107"/>
+    <TfrxPageHeader Name="PageHeader1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="22,67718" Left="0" Top="18,89765" Width="718,1107">
+      <TfrxMemoView Name="Memo3" Left="11,33859" Top="7,55906" Width="94,48825" Height="18,89765" Text=""/>
+    </TfrxPageHeader>
+    <TfrxHeader Name="Header1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="71,81107" Left="0" Top="79,37013" Width="718,1107">
+      <TfrxMemoView Name="Memo2" Left="211,65368" Top="30,23624" Width="94,48825" Height="18,89765" Text="qweqweqwe"/>
+    </TfrxHeader>
+  </TfrxReportPage>
+</TfrxReport>

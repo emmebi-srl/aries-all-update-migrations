@@ -1,0 +1,1 @@
+ALTER TABLE azienda ADD COLUMN email_provider_caldav TINYINT DEFAULT 0 AFTER nome_caldav;

@@ -1,0 +1,1 @@
+INSERT INTO `stampante_moduli` (`id_documento`, `modulo`, `Id_modulo`) VALUES (4, 'ESTRATTO CONTO', 5);

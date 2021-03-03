@@ -1,0 +1,2 @@
+ALTER TABLE `lotto`
+	CHANGE COLUMN `Descrizione` `Descrizione` LONGTEXT NULL DEFAULT NULL AFTER `Nome`;

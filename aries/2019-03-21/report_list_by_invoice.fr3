@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<TfrxReport Version="5.6" DotMatrixReport="False" IniFile="\Software\Fast Reports" PreviewOptions.Buttons="4095" PreviewOptions.Zoom="1" PrintOptions.Printer="Default" PrintOptions.PrintOnSheet="0" ReportOptions.CreateDate="43545,3130433796" ReportOptions.Description.Text="" ReportOptions.LastChange="43547,4277147222" ScriptLanguage="JScript" ScriptText.Text="">
+  <Datasets>
+    <item DataSet="FReports.frxDsPrintBody" DataSetName="frxDsPrintBody"/>
+  </Datasets>
+  <Variables>
+    <item Name="company_name" Value="'EMMEBI SRL a socio unico'"/>
+    <item Name="company_sector" Value="'Sistemi di Sicurezza'"/>
+    <item Name="company_street" Value="'Via Gen. C. A. Dalla Chiesa '"/>
+    <item Name="company_street_number" Value="'10'"/>
+    <item Name="company_municipality" Value="'Breda di Piave'"/>
+    <item Name="company_province" Value="'TV'"/>
+    <item Name="company_phone" Value="'0422 600050'"/>
+    <item Name="company_mobile_phone" Value="'3356055425'"/>
+    <item Name="company_vat_number" Value="'04371390263'"/>
+    <item Name="company_businesses_register_province" Value="'TV'"/>
+    <item Name="company_businesses_register_number_ciaa" Value="'TV-344298'"/>
+    <item Name="company_provincial_register_province" Value="'TV'"/>
+    <item Name="company_provincial_register_number" Value="'103276'"/>
+    <item Name="company_website" Value="'www.emmebi.tv.it'"/>
+    <item Name="company_fax" Value="'0422 600050'"/>
+    <item Name="company_email" Value="'info@emmebi.tv.it'"/>
+    <item Name="company_tax_code" Value="'04371390263'"/>
+    <item Name="company_rea_number" Value="'TV-344298'"/>
+    <item Name="company_inps_position" Value="'8400'"/>
+    <item Name="company_inail_position" Value="'20839290 50 '"/>
+    <item Name="company_ateco_code" Value="'43.21.02'"/>
+    <item Name="company_insurance_rct" Value="'AXA POLIZZA NR 123456'"/>
+    <item Name="company_hamlet" Value="''"/>
+    <item Name="company_capital" Value="'25.000,00'"/>
+    <item Name="company_enabling" Value="'Abilitazione A-B-G (limitatamente parte elettronica)'"/>
+    <item Name="company_bank" Value="' INTESA SANPAOLO S.P.A. - AG. CANDELU'''"/>
+    <item Name="company_iban" Value="'IT34I0306961788100000000699'"/>
+    <item Name="company_postal_code" Value="'31030'"/>
+    <item Name="company_tax_regime" Value="'RF01'"/>
+    <item Name="company_holder" Value="' BARBON MIRCO '"/>
+  </Variables>
+  <TfrxDataPage Name="Data" Height="1000" Left="0" Top="0" Width="1000"/>
+  <TfrxReportPage Name="Page1" PaperWidth="210" PaperHeight="297" PaperSize="9" LeftMargin="10" RightMargin="10" TopMargin="10" BottomMargin="10" ColumnWidth="0" ColumnPositions.Text="" HGuides.Text="" VGuides.Text="">
+    <TfrxMasterData Name="MasterData1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="24,56692913" Left="0" Top="56,69295" Width="718,1107" OnAfterCalcHeight="MasterData1OnAfterCalcHeight" OnBeforePrint="MasterData1OnBeforePrint" ColumnWidth="0" ColumnGap="0" DataSet="FReports.frxDsPrintBody" DataSetName="frxDsPrintBody" RowCount="0">
+      <TfrxMemoView Name="Memo4" Left="3,77953" Top="3,77953" Width="34,01577" Height="15,11812" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="[frxDsPrintBody.&#34;ID&#34;]"/>
+      <TfrxMemoView Name="Memo5" Left="45,35436" Top="3,77953" Width="166,29932" Height="15,11812" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsPrintBody.&#34;ragione_sociale&#34;]"/>
+      <TfrxLineView Name="Line1" Left="0" Top="21,54330709" Width="718,1107" Height="0" Color="0" Diagonal="True"/>
+      <TfrxMemoView Name="Memo7" Left="578,26809" Top="3,77953" Width="64,25201" Height="15,11812" DataField="Costo" DataSet="FReports.frxDsPrintBody" DataSetName="frxDsPrintBody" DisplayFormat.FormatStr="%2.2f" DisplayFormat.Kind="fkNumeric" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="[frxDsPrintBody.&#34;Costo&#34;]"/>
+      <TfrxMemoView Name="Memo8" Left="650,07916" Top="3,77953" Width="64,25201" Height="15,11812" DataField="Totale" DataSet="FReports.frxDsPrintBody" DataSetName="frxDsPrintBody" DisplayFormat.FormatStr="%2.2f" DisplayFormat.Kind="fkNumeric" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="[frxDsPrintBody.&#34;Totale&#34;]"/>
+      <TfrxMemoView Name="Memo11" Left="226,7718" Top="3,77953" Width="147,40167" Height="15,11812" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsPrintBody.&#34;descrizione&#34;]"/>
+      <TfrxMemoView Name="Memo15" Left="385,51206" Top="3,77953" Width="86,92919" Height="15,11812" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsPrintBody.&#34;nome&#34;]"/>
+      <TfrxMemoView Name="Memo16" Left="480,00031" Top="3,77953" Width="86,92919" Height="15,11812" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsPrintBody.&#34;stato&#34;]"/>
+    </TfrxMasterData>
+    <TfrxGroupFooter Name="GroupFooter1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="52,91342" Left="0" Top="79,37013" Width="718,1107" OnBeforePrint="GroupFooter1OnBeforePrint">
+      <TfrxSysMemoView Name="SysMemo1" Left="578,26809" Top="3,77953" Width="64,25201" Height="18,89765" DisplayFormat.FormatStr="###,##0.00" DisplayFormat.Kind="fkNumeric" Font.Charset="1" Font.Color="16711680" Font.Height="-9" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="[SUM(&#60;frxDsPrintBody.&#34;Costo&#34;&#62;,MasterData1)]"/>
+      <TfrxSysMemoView Name="SysMemo2" Left="650,07916" Top="3,77953" Width="64,25201" Height="18,89765" DisplayFormat.FormatStr="###,##0.00" DisplayFormat.Kind="fkNumeric" Font.Charset="1" Font.Color="16711680" Font.Height="-9" Font.Name="Arial" Font.Style="0" Fill.BackColor="16777215" HAlign="haRight" ParentFont="False" Text="[SUM(&#60;frxDsPrintBody.&#34;Totale&#34;&#62;,MasterData1)]"/>
+      <TfrxLineView Name="Line4" Left="396,85065" Top="26,45671" Width="321,26005" Height="0" Color="0" Diagonal="True"/>
+      <TfrxLineView Name="Line5" Left="646,29963" Top="0" Width="0" Height="26,45671" Color="0" Frame.Typ="1"/>
+      <TfrxLineView Name="Line6" Left="574,48856" Top="0" Width="0" Height="26,45671" Color="0" Frame.Typ="1"/>
+      <TfrxMemoView Name="Memo12" Left="400,63018" Top="3,77953" Width="154,96073" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="TOTALI"/>
+      <TfrxLineView Name="Line12" Left="396,85065" Top="0" Width="0" Height="26,45671" Color="0" Frame.Typ="1"/>
+      <TfrxLineView Name="Line15" Left="718,1107" Top="0" Width="0" Height="26,45671" Color="0" Frame.Typ="1"/>
+    </TfrxGroupFooter>
+    <TfrxGroupHeader Name="GroupHeader1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="56,69295" Left="0" Top="0" Width="718,1107" OnAfterPrint="GroupHeader1OnAfterPrint" OnBeforePrint="GroupHeader1OnBeforePrint" Condition="frxDsPrintBody.&#34;id_gruppo&#34;" StartNewPage="True">
+      <TfrxMemoView Name="MGroupTitle" Left="3,77953" Top="7,55906" Width="370,39394" Height="18,89765" Font.Charset="1" Font.Color="16711680" Font.Height="-13" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="[FormatDateTime(&#34;mmmm YYYY&#34;,&#60;frxDsPrintBody.&#34;data&#34;&#62;)]"/>
+      <TfrxShapeView Name="Shape1" Left="0" Top="34,01577" Width="41,57483" Height="22,67718"/>
+      <TfrxShapeView Name="Shape2" Left="41,57483" Top="34,01577" Width="181,41744" Height="22,67718"/>
+      <TfrxShapeView Name="Shape3" Left="222,99227" Top="34,01577" Width="154,96073" Height="22,67718"/>
+      <TfrxShapeView Name="Shape4" Left="476,22078" Top="34,01577" Width="98,26778" Height="22,67718"/>
+      <TfrxShapeView Name="Shape5" Left="574,48856" Top="34,01577" Width="71,81107" Height="22,67718"/>
+      <TfrxMemoView Name="Memo9" Left="3,77953" Top="37,7953" Width="34,01577" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-12" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="ID"/>
+      <TfrxMemoView Name="Memo10" Left="45,35436" Top="37,7953" Width="173,85838" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-12" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Rag. Sociale"/>
+      <TfrxMemoView Name="Memo2" Left="226,7718" Top="37,7953" Width="147,40167" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-12" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Desc. Impianto"/>
+      <TfrxShapeView Name="Shape6" Left="646,29963" Top="34,01577" Width="71,81107" Height="22,67718"/>
+      <TfrxMemoView Name="Memo3" Left="578,26809" Top="37,7953" Width="64,25201" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-12" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Costo"/>
+      <TfrxMemoView Name="Memo6" Left="650,07916" Top="37,7953" Width="64,25201" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-12" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Prezzo"/>
+      <TfrxShapeView Name="Shape7" Left="377,953" Top="34,01577" Width="98,26778" Height="22,67718"/>
+      <TfrxMemoView Name="Memo13" Left="381,73253" Top="37,7953" Width="90,70872" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-12" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Tipo Intervento"/>
+      <TfrxMemoView Name="Memo14" Left="480,00031" Top="37,7953" Width="90,70872" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-12" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Stato"/>
+    </TfrxGroupHeader>
+    <TfrxFooter Name="Footer1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="188,9765" Left="0" Top="132,28355" Width="718,1107">
+      <TfrxSysMemoView Name="SysWorkCost" Left="589,60668" Top="30,23624" Width="124,72449" Height="18,89765" DisplayFormat.FormatStr="###,##0.00" DisplayFormat.Kind="fkNumeric" Font.Charset="1" Font.Color="16711680" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="[SUM(&#60;frxDsPrintBody.&#34;cost_lav&#34;&#62;)]"/>
+      <TfrxSysMemoView Name="SysWorkPrice" Left="589,60668" Top="56,69295" Width="124,72449" Height="18,89765" DisplayFormat.ThousandSeparator="." DisplayFormat.FormatStr="###,##0.00" DisplayFormat.Kind="fkNumeric" Font.Charset="1" Font.Color="16711680" Font.Height="-12" Font.Name="Arial" Font.Style="0" Fill.BackColor="16777215" HAlign="haRight" ParentFont="False" Text="[SUM(&#60;frxDsPrintBody.&#34;prez_lav&#34;&#62;)]"/>
+      <TfrxMemoView Name="Memo17" Left="400,63018" Top="7,55906" Width="154,96073" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="TOTALI PERIODO"/>
+      <TfrxShapeView Name="Shape9" Left="393,07112" Top="0" Width="325,03958" Height="26,45671"/>
+      <TfrxShapeView Name="Shape10" Left="585,82715" Top="26,45671" Width="132,28355" Height="26,45671"/>
+      <TfrxShapeView Name="Shape11" Left="585,82715" Top="52,91342" Width="132,28355" Height="26,45671"/>
+      <TfrxShapeView Name="Shape12" Left="393,07112" Top="52,91342" Width="192,75603" Height="26,45671"/>
+      <TfrxShapeView Name="Shape13" Left="393,07112" Top="26,45671" Width="192,75603" Height="26,45671"/>
+      <TfrxMemoView Name="Memo19" Left="400,63018" Top="60,47248" Width="154,96073" Height="15,11812" Font.Charset="1" Font.Color="-16777207" Font.Height="-11" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="PREZZO LAVORO"/>
+      <TfrxMemoView Name="Memo20" Left="400,63018" Top="34,01577" Width="154,96073" Height="15,11812" Font.Charset="1" Font.Color="-16777207" Font.Height="-11" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="COSTO LAVORO"/>
+      <TfrxSysMemoView Name="SysTotalCost" Left="589,60668" Top="83,14966" Width="124,72449" Height="18,89765" DisplayFormat.ThousandSeparator="." DisplayFormat.FormatStr="###,##0.00" DisplayFormat.Kind="fkNumeric" Font.Charset="1" Font.Color="16711680" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="[SUM(&#60;frxDsPrintBody.&#34;Costo&#34;&#62;)]"/>
+      <TfrxSysMemoView Name="SysTotalPrice" Left="589,60668" Top="109,60637" Width="124,72449" Height="18,89765" DisplayFormat.FormatStr="###,##0.00" DisplayFormat.Kind="fkNumeric" Font.Charset="1" Font.Color="16711680" Font.Height="-12" Font.Name="Arial" Font.Style="0" Fill.BackColor="16777215" HAlign="haRight" ParentFont="False" Text="[SUM(&#60;frxDsPrintBody.&#34;Totale&#34;&#62;)]"/>
+      <TfrxShapeView Name="Shape8" Left="585,82715" Top="79,37013" Width="132,28355" Height="26,45671"/>
+      <TfrxShapeView Name="Shape14" Left="585,82715" Top="105,82684" Width="132,28355" Height="26,45671"/>
+      <TfrxShapeView Name="Shape15" Left="393,07112" Top="105,82684" Width="192,75603" Height="26,45671"/>
+      <TfrxShapeView Name="Shape16" Left="393,07112" Top="79,37013" Width="192,75603" Height="26,45671"/>
+      <TfrxMemoView Name="Memo18" Left="400,63018" Top="113,3859" Width="154,96073" Height="15,11812" Font.Charset="1" Font.Color="-16777207" Font.Height="-11" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="PREZZO TOT"/>
+      <TfrxMemoView Name="Memo21" Left="400,63018" Top="86,92919" Width="154,96073" Height="15,11812" Font.Charset="1" Font.Color="-16777207" Font.Height="-11" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="COSTO TOT"/>
+    </TfrxFooter>
+  </TfrxReportPage>
+</TfrxReport>

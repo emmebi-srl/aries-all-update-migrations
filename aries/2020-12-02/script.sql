@@ -1,0 +1,1 @@
+insert into preventivo_impost VALUES ('report_discont_label', 'sc%');

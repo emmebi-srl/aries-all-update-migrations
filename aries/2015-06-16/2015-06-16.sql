@@ -1,0 +1,5 @@
+ALTER TABLE `utente`
+	CHANGE COLUMN `porta` `porta` SMALLINT NULL DEFAULT NULL AFTER `smtp`,
+	CHANGE COLUMN `mssl` `mssl` BIT NULL DEFAULT NULL AFTER `porta`;
+ALTER TABLE `utente`
+	CHANGE COLUMN `salt` `salt` CHAR(8) NOT NULL DEFAULT '' AFTER `conferma`;

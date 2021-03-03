@@ -1,0 +1,1 @@
+INSERT INTO `stato_notifica` (`id`, `descrizione`, `abilitato`, `rif_applicazioni`) VALUES (4, 'Annullata', b'1', 'canceled');

@@ -1,0 +1,1 @@
+INSERT INTO `stampante_moduli_formati` (`Id_modulo`, `Id_documento`, `Id_formato`, `Timestamp`) VALUES (0, 15, 2, '2020-04-10 07:54:04');

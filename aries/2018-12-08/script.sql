@@ -1,0 +1,8 @@
+ALTER TABLE mail_gruppo_inviate_fornitore
+	ADD COLUMN `Codice_errore` INT(11) NULL DEFAULT NULL,
+	ADD COLUMN `Messaggio_errore` VARCHAR(250) NULL DEFAULT NULL,
+	ADD COLUMN `Timestamp` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
+
+ALTER TABLE `fattura_configurazione`
+	ADD COLUMN `email_sdi` VARCHAR(100) NULL DEFAULT NULL AFTER `id_certificato_firma`;

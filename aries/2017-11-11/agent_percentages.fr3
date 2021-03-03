@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<TfrxReport Version="5.6" DotMatrixReport="False" IniFile="\Software\Fast Reports" PreviewOptions.Buttons="4095" PreviewOptions.Zoom="1" PrintOptions.Printer="Default" PrintOptions.PrintOnSheet="0" ReportOptions.CreateDate="42964,5581289005" ReportOptions.Description.Text="" ReportOptions.LastChange="43052,0021269213" ScriptLanguage="PascalScript" ScriptText.Text="&#13;&#10;begin&#13;&#10;&#13;&#10;end.">
+  <Variables>
+    <item Name="company_name" Value="'EMMEBI SRL a socio unico'"/>
+    <item Name="company_sector" Value="'Sistemi di Sicurezza'"/>
+    <item Name="company_street" Value="'Via dell''Artigianato'"/>
+    <item Name="company_street_number" Value="'2'"/>
+    <item Name="company_municipality" Value="'Breda di Piave'"/>
+    <item Name="company_province" Value="'TV'"/>
+    <item Name="company_phone" Value="'0422 600050'"/>
+    <item Name="company_mobile_phone" Value="'3356055425'"/>
+    <item Name="company_vat_number" Value="'04371390263'"/>
+    <item Name="company_businesses_register_province" Value="'TV'"/>
+    <item Name="company_businesses_register_number_ciaa" Value="'TV-344298'"/>
+    <item Name="company_provincial_register_province" Value="'TV'"/>
+    <item Name="company_provincial_register_number" Value="'103276'"/>
+    <item Name="company_website" Value="'www.emmebi.tv.it'"/>
+    <item Name="company_fax" Value="'0422 600050'"/>
+    <item Name="company_email" Value="'info@emmebi.tv.it'"/>
+    <item Name="company_tax_code" Value="'04371390263'"/>
+    <item Name="company_rea_number" Value="'TV-344298'"/>
+    <item Name="company_inps_position" Value="'8400'"/>
+    <item Name="company_inail_position" Value="'20839290 50 '"/>
+    <item Name="company_ateco_code" Value="'43.21.02'"/>
+    <item Name="company_insurance_rct" Value="'AXA POLIZZA NR 123456'"/>
+    <item Name="company_hamlet" Value="'Pero'"/>
+    <item Name="company_capital" Value="'25.000,00'"/>
+    <item Name="company_enabling" Value="'Abilitazione A-B-G (limitatamente parte elettronica)'"/>
+    <item Name="company_bank" Value="'VENETO BANCA AG. CANDELU'''"/>
+    <item Name="company_iban" Value="'IT 38 Y 05035 61780 069570364476'"/>
+    <item Name="company_postal_code" Value="'31030'"/>
+    <item Name="company_tax_regime" Value="''"/>
+    <item Name="company_holder" Value="' BARBON MIRCO '"/>
+    <item Name="products_price_effective" Value="'621,00'"/>
+    <item Name="products_value_of_material_and_labor" Value="'50,00'"/>
+    <item Name="products_price_suggested_retail" Value="'542,10'"/>
+    <item Name="products_agent" Value="'54,21'"/>
+    <item Name="products_profit" Value="'108,42'"/>
+    <item Name="products_fixed_costs" Value="'108,42'"/>
+    <item Name="wotk_sale_percentage" Value="-14,55"/>
+    <item Name="wotk_agent_percentage" Value="'54,21'"/>
+    <item Name="wotk_agent_new_percentage" Value="'-20,00'"/>
+    <item Name="wotk_final_price" Value="'621,00'"/>
+    <item Name="products_final_fixed_costs" Value="'108,42'"/>
+    <item Name="wotk_final_agent" Value="'-20,00'"/>
+    <item Name="wotk_final_cost" Value="'271,05'"/>
+    <item Name="wotk_final_profit" Value="'261,53'"/>
+    <item Name="work_price_effective" Value="'298,00'"/>
+    <item Name="work_value_of_material_and_labor" Value="'40,00'"/>
+    <item Name="work_price_suggested_retail" Value="'0,00'"/>
+    <item Name="work_agent" Value="'0,00'"/>
+    <item Name="work_profit" Value="'0,00'"/>
+    <item Name="work_fixed_costs" Value="'0,00'"/>
+    <item Name="work_sale_percentage" Value="'-100,00'"/>
+    <item Name="work_agent_percentage" Value="'0,00'"/>
+    <item Name="work_agent_new_percentage" Value="'149,00'"/>
+    <item Name="work_final_price" Value="'298,00'"/>
+    <item Name="work_final_fixed_costs" Value="'0,00'"/>
+    <item Name="work_final_agent" Value="'149,00'"/>
+    <item Name="work_final_cost" Value="'0,00'"/>
+    <item Name="work_final_profit" Value="'149,00'"/>
+    <item Name="total_price_effective" Value="'919,00'"/>
+    <item Name="total_value_of_material_and_labor" Value="'542,10'"/>
+    <item Name="total_price_suggested_retail" Value="'542,10'"/>
+    <item Name="total_profit" Value="'108,42'"/>
+    <item Name="total_fixed_costs" Value="'108,42'"/>
+    <item Name="total_sale_percentage" Value="'-114,55'"/>
+    <item Name="total_agent_percentage" Value="'54,21'"/>
+    <item Name="total_agent_new_percentage" Value="'250,55'"/>
+    <item Name="total_final_price" Value="'919,00'"/>
+    <item Name="total_final_fixed_costs" Value="'108,42'"/>
+    <item Name="total_final_agent" Value="'250,55'"/>
+    <item Name="total_final_cost" Value="'271,05'"/>
+    <item Name="total_final_profit" Value="'288,98'"/>
+    <item Name="products_sale_percentage" Value="'-14,55'"/>
+    <item Name="products_agent_percentage" Value="'54,21'"/>
+    <item Name="products_agent_new_percentage" Value="'101,55'"/>
+    <item Name="products_final_price" Value="'621,00'"/>
+    <item Name="products_final_agent" Value="'101,55'"/>
+    <item Name="products_final_cost" Value="'271,05'"/>
+    <item Name="products_final_profit" Value="'139,98'"/>
+    <item Name="work_total_cost" Value="'0,00'"/>
+    <item Name="products_total_cost" Value="'271,05'"/>
+    <item Name="total_cost" Value="'271,05'"/>
+    <item Name="products_formula_agents_percentage" Value="'10,00'"/>
+    <item Name="products_formula_fixed_costs_percentage" Value="'20,00'"/>
+    <item Name="products_formula_profit_percentage" Value="'20,00'"/>
+    <item Name="products_formula_first_factor" Value="'3,00'"/>
+    <item Name="products_formula_second_factor" Value="'5,00'"/>
+    <item Name="work_formula_agents_percentage" Value="'10,00'"/>
+    <item Name="work_formula_fixed_costs_percentage" Value="'30,00'"/>
+    <item Name="work_formula_profit_percentage" Value="'20,00'"/>
+    <item Name="work_formula_first_factor" Value="'1,00'"/>
+    <item Name="work_formula_second_factor" Value="'2,00'"/>
+    <item Name="total_agent" Value="'54,21'"/>
+  </Variables>
+  <TfrxDataPage Name="Data" Height="1000" Left="0" Top="0" Width="1000"/>
+  <TfrxReportPage Name="Page1" Orientation="poLandscape" PaperWidth="297" PaperHeight="210" PaperSize="9" LeftMargin="10" RightMargin="10" TopMargin="10" BottomMargin="10" ColumnWidth="0" ColumnPositions.Text="" HGuides.Text="" VGuides.Text="">
+    <TfrxShapeView Name="Shape1" Left="3,77953" Top="3,77953" Width="1039,37075" Height="714,33117"/>
+    <TfrxLineView Name="Line1" Left="831,4966" Top="3,77953" Width="0" Height="714,33117" Color="0" Diagonal="True"/>
+    <TfrxLineView Name="Line2" Left="623,62245" Top="3,77953" Width="0" Height="714,33117" Color="0" Diagonal="True"/>
+    <TfrxLineView Name="Line3" Left="415,7483" Top="3,77953" Width="0" Height="714,33117" Color="0" Diagonal="True"/>
+    <TfrxLineView Name="Line4" Left="3,77953" Top="60,47248" Width="1039,37075" Height="0" Color="0" Diagonal="True"/>
+    <TfrxMemoView Name="LblWorkTitle" Left="449,76407" Top="22,67718" Width="143,62214" Height="18,89765" Font.Charset="1" Font.Color="16711680" Font.Height="-19" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="MANODOPERA"/>
+    <TfrxMemoView Name="LblProductsTitle" Left="668,97681" Top="22,67718" Width="124,72449" Height="18,89765" Font.Charset="1" Font.Color="16711680" Font.Height="-19" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="MATERIALE"/>
+    <TfrxMemoView Name="LblTotalsTitle" Left="907,0872" Top="22,67718" Width="79,37013" Height="18,89765" Font.Charset="1" Font.Color="16711680" Font.Height="-19" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="TOTALI"/>
+    <TfrxMemoView Name="Memo1" Left="56,69295" Top="86,92919" Width="343,93723" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haRight" ParentFont="False" Text="COSTI DI MATERIALE E MANO D'OPERA"/>
+    <TfrxMemoView Name="Memo2" Left="56,69295" Top="139,84261" Width="343,93723" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haRight" ParentFont="False" Text="POSTO CHE DEVO CONSERVARE"/>
+    <TfrxMemoView Name="Memo3" Left="56,69295" Top="170,07885" Width="343,93723" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="PER IL COMMERCIALE"/>
+    <TfrxMemoView Name="Memo4" Left="56,69295" Top="196,53556" Width="343,93723" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="COSTI AZIENDALI"/>
+    <TfrxMemoView Name="Memo5" Left="56,69295" Top="279,68522" Width="343,93723" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haRight" ParentFont="False" Text="IL VALORE DEI COSTI SI ATTESTA AL"/>
+    <TfrxMemoView Name="Memo6" Left="56,69295" Top="222,99227" Width="343,93723" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="UTILE AZIENDALE"/>
+    <TfrxMemoView Name="Memo7" Left="56,69295" Top="313,70099" Width="343,93723" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haRight" ParentFont="False" Text="IL PREZZO DI VENDITA DOVREBBE ESSERE"/>
+    <TfrxMemoView Name="Memo8" Left="26,45671" Top="362,83488" Width="374,17347" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haRight" ParentFont="False" Text="SE VENDUTO A PREZZO PIENO AL COMMERCIALE SPETTA"/>
+    <TfrxMemoView Name="Memo9" Left="56,69295" Top="411,96877" Width="343,93723" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="MA SE VENDUTO CON SCONTO"/>
+    <TfrxMemoView Name="Memo10" Left="56,69295" Top="438,42548" Width="343,93723" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haRight" ParentFont="False" Text="IL PREZZO FINALE DI VENDITA AL CLIENTE SARA'"/>
+    <TfrxMemoView Name="Memo11" Left="7,55906" Top="491,3389" Width="393,07112" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="ALL'AGENTE SPETTA UNA RIDUZIONE DELLE PROVVIGIONI DEL"/>
+    <TfrxMemoView Name="Memo12" Left="56,69295" Top="517,79561" Width="343,93723" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haRight" ParentFont="False" Text="LA NUOVO QUOTA PER IL COMMERCIALE SARA DI"/>
+    <TfrxLineView Name="Line5" Left="3,77953" Top="559,37044" Width="1039,37075" Height="0" Color="0" Diagonal="True"/>
+    <TfrxMemoView Name="Memo13" Left="56,69295" Top="566,9295" Width="343,93723" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haRight" ParentFont="False" Text="QUINDI ..."/>
+    <TfrxMemoView Name="Memo14" Left="7,55906" Top="597,16574" Width="393,07112" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="L'IMPIANTO E VENDUTO A"/>
+    <TfrxMemoView Name="Memo15" Left="7,55906" Top="619,84292" Width="393,07112" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="AL COMMERCIALE"/>
+    <TfrxMemoView Name="Memo16" Left="7,55906" Top="642,5201" Width="393,07112" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="COSTI FISSI"/>
+    <TfrxMemoView Name="Memo17" Left="7,55906" Top="665,19728" Width="393,07112" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="COSTI MATERIALI E MANODOPERA"/>
+    <TfrxMemoView Name="Memo18" Left="7,55906" Top="687,87446" Width="393,07112" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="UTILE AZIENDALE"/>
+    <TfrxMemoView Name="Memo19" Left="415,7483" Top="86,92919" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[work_total_cost]"/>
+    <TfrxMemoView Name="Memo20" Left="623,62245" Top="86,92919" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[products_total_cost]"/>
+    <TfrxMemoView Name="Memo21" Left="831,4966" Top="86,92919" Width="211,65368" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[total_cost]"/>
+    <TfrxMemoView Name="Memo24" Left="415,7483" Top="313,70099" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[work_price_suggested_retail]€"/>
+    <TfrxMemoView Name="Memo25" Left="415,7483" Top="362,83488" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[work_agent_percentage]€"/>
+    <TfrxMemoView Name="Memo26" Left="415,7483" Top="438,42548" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[work_price_effective]€"/>
+    <TfrxMemoView Name="Memo27" Left="415,7483" Top="517,79561" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[work_agent_new_percentage]€"/>
+    <TfrxMemoView Name="Memo22" Left="623,62245" Top="279,68522" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[products_value_of_material_and_labor]%"/>
+    <TfrxMemoView Name="Memo28" Left="623,62245" Top="313,70099" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[products_price_suggested_retail]€"/>
+    <TfrxMemoView Name="Memo29" Left="623,62245" Top="362,83488" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[products_agent_percentage]€"/>
+    <TfrxMemoView Name="Memo30" Left="623,62245" Top="438,42548" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[products_price_effective]€"/>
+    <TfrxMemoView Name="Memo31" Left="623,62245" Top="517,79561" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[products_agent_new_percentage]€"/>
+    <TfrxMemoView Name="Memo32" Left="831,4966" Top="517,79561" Width="211,65368" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[total_agent_new_percentage]€"/>
+    <TfrxMemoView Name="Memo33" Left="831,4966" Top="438,42548" Width="211,65368" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[total_price_effective]€"/>
+    <TfrxMemoView Name="Memo34" Left="831,4966" Top="362,83488" Width="211,65368" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[total_agent_percentage]€"/>
+    <TfrxMemoView Name="Memo35" Left="831,4966" Top="313,70099" Width="211,65368" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[total_price_suggested_retail]€"/>
+    <TfrxMemoView Name="Memo23" Left="415,7483" Top="279,68522" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haCenter" ParentFont="False" Text="[work_value_of_material_and_labor]%"/>
+    <TfrxMemoView Name="Memo37" Left="415,7483" Top="170,07885" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[work_formula_agents_percentage]%    [work_agent]€">
+      <Formats>
+        <item/>
+        <item/>
+      </Formats>
+    </TfrxMemoView>
+    <TfrxMemoView Name="Memo38" Left="415,7483" Top="196,53556" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[work_formula_fixed_costs_percentage]%    [work_fixed_costs]€">
+      <Formats>
+        <item/>
+        <item/>
+      </Formats>
+    </TfrxMemoView>
+    <TfrxMemoView Name="Memo39" Left="415,7483" Top="222,99227" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[work_formula_profit_percentage]%    [work_profit]€">
+      <Formats>
+        <item/>
+        <item/>
+      </Formats>
+    </TfrxMemoView>
+    <TfrxMemoView Name="Memo40" Left="623,62245" Top="170,07885" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[products_formula_agents_percentage]%    [products_agent]€">
+      <Formats>
+        <item/>
+        <item/>
+      </Formats>
+    </TfrxMemoView>
+    <TfrxMemoView Name="Memo41" Left="623,62245" Top="196,53556" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[products_formula_fixed_costs_percentage]%    [products_fixed_costs]€">
+      <Formats>
+        <item/>
+        <item/>
+      </Formats>
+    </TfrxMemoView>
+    <TfrxMemoView Name="Memo42" Left="623,62245" Top="222,99227" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[products_formula_profit_percentage]%    [products_profit]€">
+      <Formats>
+        <item/>
+        <item/>
+      </Formats>
+    </TfrxMemoView>
+    <TfrxMemoView Name="Memo43" Left="831,4966" Top="222,99227" Width="211,65368" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[total_profit]€"/>
+    <TfrxMemoView Name="Memo44" Left="831,4966" Top="196,53556" Width="211,65368" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[total_fixed_costs]€"/>
+    <TfrxMemoView Name="Memo45" Left="831,4966" Top="170,07885" Width="211,65368" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[total_agent]€"/>
+    <TfrxMemoView Name="Memo46" Left="415,7483" Top="411,96877" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[work_sale_percentage]%"/>
+    <TfrxMemoView Name="Memo47" Left="623,62245" Top="411,96877" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[products_sale_percentage]%"/>
+    <TfrxMemoView Name="Memo49" Left="415,7483" Top="491,3389" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[work_formula_first_factor] / [work_formula_second_factor]">
+      <Formats>
+        <item/>
+        <item/>
+      </Formats>
+    </TfrxMemoView>
+    <TfrxMemoView Name="Memo50" Left="623,62245" Top="491,3389" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[products_formula_first_factor] / [products_formula_second_factor]">
+      <Formats>
+        <item/>
+        <item/>
+      </Formats>
+    </TfrxMemoView>
+    <TfrxMemoView Name="Memo36" Left="415,7483" Top="597,16574" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[work_final_price]€"/>
+    <TfrxMemoView Name="Memo48" Left="415,7483" Top="619,84292" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[work_final_agent]€"/>
+    <TfrxMemoView Name="Memo51" Left="415,7483" Top="642,5201" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[work_final_fixed_costs]€"/>
+    <TfrxMemoView Name="Memo52" Left="415,7483" Top="665,19728" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[work_final_cost]€"/>
+    <TfrxMemoView Name="Memo53" Left="415,7483" Top="687,87446" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[work_final_profit]€"/>
+    <TfrxMemoView Name="Memo54" Left="623,62245" Top="597,16574" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[products_final_price]€">
+      <Formats>
+        <item/>
+        <item/>
+      </Formats>
+    </TfrxMemoView>
+    <TfrxMemoView Name="Memo55" Left="623,62245" Top="619,84292" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[products_final_agent]€">
+      <Formats>
+        <item/>
+        <item/>
+      </Formats>
+    </TfrxMemoView>
+    <TfrxMemoView Name="Memo56" Left="623,62245" Top="642,5201" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[products_final_fixed_costs]€">
+      <Formats>
+        <item/>
+        <item/>
+      </Formats>
+    </TfrxMemoView>
+    <TfrxMemoView Name="Memo57" Left="623,62245" Top="665,19728" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[products_final_cost]€">
+      <Formats>
+        <item/>
+        <item/>
+      </Formats>
+    </TfrxMemoView>
+    <TfrxMemoView Name="Memo58" Left="623,62245" Top="687,87446" Width="207,87415" Height="18,89765" Font.Charset="1" Font.Color="-16777199" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[products_final_profit]€"/>
+    <TfrxMemoView Name="Memo59" Left="831,4966" Top="597,16574" Width="211,65368" Height="18,89765" Font.Charset="1" Font.Color="16711680" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[total_final_price]€"/>
+    <TfrxMemoView Name="Memo60" Left="831,4966" Top="619,84292" Width="211,65368" Height="18,89765" Font.Charset="1" Font.Color="16711680" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[total_final_agent]€"/>
+    <TfrxMemoView Name="Memo61" Left="831,4966" Top="642,5201" Width="211,65368" Height="18,89765" Font.Charset="1" Font.Color="16711680" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[total_final_fixed_costs]€"/>
+    <TfrxMemoView Name="Memo62" Left="831,4966" Top="665,19728" Width="211,65368" Height="18,89765" Font.Charset="1" Font.Color="16711680" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[total_final_cost]€"/>
+    <TfrxMemoView Name="Memo63" Left="831,4966" Top="687,87446" Width="211,65368" Height="18,89765" Font.Charset="1" Font.Color="16711680" Font.Height="-12" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[total_final_profit]€"/>
+  </TfrxReportPage>
+</TfrxReport>

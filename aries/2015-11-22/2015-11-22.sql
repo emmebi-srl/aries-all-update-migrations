@@ -1,0 +1,1 @@
+INSERT IGNORE stampante_moduli VALUES (11,"LISTA ARTICOLI", 3, 0,1,0,1,1);

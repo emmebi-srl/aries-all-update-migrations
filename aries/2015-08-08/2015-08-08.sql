@@ -1,0 +1,68 @@
+ALTER TABLE `azienda`
+	CHANGE COLUMN `giorni_promemoria` `giorni_promemoria` SMALLINT NULL DEFAULT NULL AFTER `stampa_ri`,
+	CHANGE COLUMN `abilita_convalida_rapporto` `abilita_convalida_rapporto` BIT NULL DEFAULT b'0' AFTER `license`,
+	CHANGE COLUMN `notifica_attesa` `notifica_attesa` SMALLINT NULL DEFAULT NULL AFTER `circolare_per_garanzia`,
+	CHANGE COLUMN `passaggio_nonaccettato` `passaggio_nonaccettato` SMALLINT NULL DEFAULT NULL AFTER `notifica_attesa`,
+	ADD COLUMN `Data_fine` DATETIME NULL DEFAULT NULL AFTER `regime_fiscale`,
+	ADD COLUMN `Data_ins` DATETIME NOT NULL AFTER `Data_fine`,
+	ADD COLUMN `Data_mod` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `Data_ins`,
+	ADD COLUMN `Utente_ins` SMALLINT NOT NULL AFTER `Data_mod`,
+	ADD COLUMN `Utente_mod` SMALLINT NOT NULL AFTER `Utente_ins`;
+	
+	
+ALTER TABLE `comune`
+	ADD COLUMN `Data_ins` DATETIME NOT NULL AFTER `id_provincia`,
+	ADD COLUMN `Data_mod` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `Data_ins`,
+	ADD COLUMN `Utente_ins` SMALLINT NOT NULL AFTER `Data_mod`,
+	ADD COLUMN `Utente_mod` SMALLINT NOT NULL AFTER `Utente_ins`;
+	
+ALTER TABLE `comune`
+	DROP INDEX `id_provincia`,
+	DROP INDEX `FK_comune_1_pro`,
+	ADD INDEX `FK_comune_1_pro` (`id_provincia`),
+	DROP FOREIGN KEY `comune_ibfk_1`;
+	
+ALTER TABLE `nazione`
+	ADD COLUMN `Data_ins` DATETIME NOT NULL AFTER `sigla`,
+	ADD COLUMN `Data_mod` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `Data_ins`,
+	ADD COLUMN `Utente_ins` SMALLINT NOT NULL AFTER `Data_mod`,
+	ADD COLUMN `Utente_mod` SMALLINT NOT NULL AFTER `Utente_ins`;
+	
+ALTER TABLE `regione`
+	ADD COLUMN `Data_ins` DATETIME NOT NULL AFTER `nazione`,
+	ADD COLUMN `Data_mod` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `Data_ins`,
+	ADD COLUMN `Utente_ins` SMALLINT NOT NULL AFTER `Data_mod`,
+	ADD COLUMN `Utente_mod` SMALLINT NOT NULL AFTER `Utente_ins`;
+	
+ALTER TABLE `frazione`
+	ADD COLUMN `Data_ins` DATETIME NOT NULL AFTER `id_comune`,
+	ADD COLUMN `Data_mod` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `Data_ins`,
+	ADD COLUMN `Utente_ins` SMALLINT NOT NULL AFTER `Data_mod`,
+	ADD COLUMN `Utente_mod` SMALLINT NOT NULL AFTER `Utente_ins`;
+
+	
+ALTER TABLE `operaio`
+	DROP FOREIGN KEY `operaio_ibfk_1`;
+	
+ALTER TABLE `filiale`
+	DROP FOREIGN KEY `filiale_ibfk_1`;
+
+ALTER TABLE `banca_appoggio`
+	DROP FOREIGN KEY `banca_appoggio_ibfk_1`;
+
+	
+ALTER TABLE `province`
+	ALTER `Nome` DROP DEFAULT;
+ALTER TABLE `province`
+	CHANGE COLUMN `id_provincia` `id_provincia` INT(11) NOT NULL AUTO_INCREMENT FIRST,
+	CHANGE COLUMN `Nome` `Nome` VARCHAR(45) NOT NULL AFTER `Sigla`,
+	ADD COLUMN `Data_ins` DATETIME NOT NULL AFTER `Regione`,
+	ADD COLUMN `Data_mod` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `Data_ins`,
+	ADD COLUMN `Utente_ins` SMALLINT NOT NULL AFTER `Data_mod`,
+	ADD COLUMN `Utente_mod` SMALLINT NOT NULL AFTER `Utente_ins`,
+	DROP PRIMARY KEY,
+	ADD PRIMARY KEY (`id_provincia`),
+	ADD INDEX `Sigla` (`Sigla`);
+
+
+	

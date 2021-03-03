@@ -1,0 +1,3 @@
+ALTER TABLE `impianto_abbonamenti_mesi`
+	ADD COLUMN `Id` INT NULL AUTO_INCREMENT FIRST,
+	ADD UNIQUE INDEX `Id` (`Id`);

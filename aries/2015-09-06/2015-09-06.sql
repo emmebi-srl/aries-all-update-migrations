@@ -1,0 +1,2 @@
+ALTER TABLE `evento`
+	CHANGE COLUMN `Data_sveglia` `Data_sveglia` DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00' AFTER `Sveglia`;

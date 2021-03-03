@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<TfrxReport Version="5.6" DotMatrixReport="False" IniFile="\Software\Fast Reports" PreviewOptions.Buttons="4095" PreviewOptions.Zoom="1" PrintOptions.Printer="Default" PrintOptions.PrintOnSheet="0" ReportOptions.CreateDate="42816,8730547338" ReportOptions.Description.Text="" ReportOptions.LastChange="42880,3604487153" ScriptLanguage="PascalScript" ScriptText.Text="&#13;&#10;var&#13;&#10;  seconds_sum: Integer;&#13;&#10;&#13;&#10;procedure GroupFooter1OnBeforePrint(Sender: TfrxComponent);&#13;&#10;var i : integer;&#13;&#10;  minutes:Integer;&#13;&#10;begin&#13;&#10;  minutes := Trunc(seconds_sum/60);&#13;&#10;  Memo14.Text := 'Totale ore: ' + IntToStr(Trunc(minutes/60))+':'+IntToStr(Trunc(minutes mod 60));&#13;&#10;&#13;&#10;  for i := 1 to  10 - &#60;Line&#62; do&#13;&#10;     engine.showband(child1);   // this band is unattached and has only empty boxes in it&#13;&#10;end;&#13;&#10;&#13;&#10;&#13;&#10;procedure MasterData1OnBeforePrint(Sender: TfrxComponent);&#13;&#10;begin&#13;&#10;  seconds_sum := seconds_sum + &#60;frxDsMainPrintList.&#34;totale_secondi&#34;&#62;;&#13;&#10;end;&#13;&#10;&#13;&#10;procedure OnStartReport(Sender: TfrxComponent);&#13;&#10;begin&#13;&#10;  seconds_sum := 0;&#13;&#10;end;&#13;&#10;&#13;&#10;procedure GroupHeader1OnBeforePrint(Sender: TfrxComponent);&#13;&#10;begin&#13;&#10;    seconds_sum := 0;&#13;&#10;end;&#13;&#10;&#13;&#10;begin&#13;&#10;&#13;&#10;end." OnStartReport="OnStartReport">
+  <Datasets>
+    <item DataSet="FReportsDaily.frxDsMainPrintList" DataSetName="frxDsMainPrintList"/>
+  </Datasets>
+  <Variables>
+    <item Name="products_images_path" Value="'C:\Users\MARIO\Desktop\Default\Articoli\FOTO ARTICOLI\'"/>
+    <item Name="company_name" Value="'EMMEBI SRL a socio unico'"/>
+    <item Name="company_sector" Value="'Sistemi di Sicurezza'"/>
+    <item Name="company_street" Value="'Via dell''Artigianato'"/>
+    <item Name="company_street_number" Value="'2'"/>
+    <item Name="company_municipality" Value="'Breda di Piave'"/>
+    <item Name="company_province" Value="'TV'"/>
+    <item Name="company_phone" Value="'0422 600050'"/>
+    <item Name="company_mobile_phone" Value="'3356055425'"/>
+    <item Name="company_vat_number" Value="'04371390263'"/>
+    <item Name="company_businesses_register_province" Value="'TV'"/>
+    <item Name="company_businesses_register_number_ciaa" Value="'TV-344298'"/>
+    <item Name="company_provincial_register_province" Value="'TV'"/>
+    <item Name="company_provincial_register_number" Value="'103276'"/>
+    <item Name="company_website" Value="'www.emmebi.tv.it'"/>
+    <item Name="company_fax" Value="'0422 600050'"/>
+    <item Name="company_email" Value="'info@emmebi.tv.it'"/>
+    <item Name="company_tax_code" Value="'04371390263'"/>
+    <item Name="company_rea_number" Value="'TV-344298'"/>
+    <item Name="company_inps_position" Value="'8400'"/>
+    <item Name="company_inail_position" Value="'20839290 50 '"/>
+    <item Name="company_ateco_code" Value="'43.21.02'"/>
+    <item Name="company_insurance_rct" Value="'AXA POLIZZA NR 123456'"/>
+    <item Name="company_hamlet" Value="'Pero'"/>
+    <item Name="company_capital" Value="'25.000,00'"/>
+    <item Name="company_enabling" Value="'Abilitazione A-B-G (limitatamente parte elettronica)'"/>
+    <item Name="company_bank" Value="'VENETO BANCA AG. CANDELU'''"/>
+    <item Name="company_iban" Value="'IT 38 Y 05035 61780 069570364476'"/>
+    <item Name="company_postal_code" Value="'31030'"/>
+    <item Name="company_tax_regime" Value="''"/>
+    <item Name="company_holder" Value="' BARBON MIRCO '"/>
+    <item Name="path_configuration_logo" Value="'C:\Users\MARIO\Desktop\Default\LOGO AZIENDA\25.bmp'"/>
+    <item Name="path_configuration_background" Value="'C:\Users\MARIO\Desktop\Default\LOGO AZIENDA\25 sfondo.bmp'"/>
+    <item Name="path_configuration_seal" Value="'C:\Users\MARIO\Desktop\Default\LOGO AZIENDA\25 bollo.bmp'"/>
+    <item Name="path_configuration_signature" Value="'C:\Users\MARIO\Desktop\Default\LOGO AZIENDA\25 firma.bmp'"/>
+  </Variables>
+  <TfrxDataPage Name="Data" Height="1000" Left="0" Top="0" Width="1000"/>
+  <TfrxReportPage Name="Page1" PaperWidth="210" PaperHeight="297" PaperSize="9" LeftMargin="10" RightMargin="10" TopMargin="3,5" BottomMargin="3,5" ColumnWidth="0" ColumnPositions.Text="" HGuides.Text="" VGuides.Text="">
+    <TfrxMasterData Name="MasterData1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="24,56692913" Left="0" Top="56,69295" Width="718,1107" OnAfterCalcHeight="MasterData1OnAfterCalcHeight" OnBeforePrint="MasterData1OnBeforePrint" ColumnWidth="0" ColumnGap="0" DataSet="FReportsDaily.frxDsMainPrintList" DataSetName="frxDsMainPrintList" RowCount="10">
+      <TfrxMemoView Name="Memo4" Left="3,77953" Top="3,77953" Width="113,3859" Height="15,11812" Font.Charset="1" Font.Color="0" Font.Height="-11" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsMainPrintList.&#34;nome&#34;]"/>
+      <TfrxMemoView Name="Memo5" Left="124,72449" Top="3,77953" Width="185,19697" Height="15,11812" Font.Charset="1" Font.Color="0" Font.Height="-11" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsMainPrintList.&#34;descrizione_lavoro&#34;]"/>
+      <TfrxMemoView Name="Memo6" Left="321,26005" Top="3,77953" Width="64,25201" Height="18,89765" DisplayFormat.FormatStr="hh:mm" DisplayFormat.Kind="fkDateTime" Font.Charset="1" Font.Color="0" Font.Height="-11" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[frxDsMainPrintList.&#34;ora_inizio&#34;]"/>
+      <TfrxMemoView Name="Memo7" Left="396,85065" Top="3,77953" Width="64,25201" Height="18,89765" DisplayFormat.FormatStr="hh:mm" DisplayFormat.Kind="fkDateTime" Font.Charset="1" Font.Color="0" Font.Height="-11" Font.Name="Arial" Font.Style="0" HAlign="haCenter" ParentFont="False" Text="[frxDsMainPrintList.&#34;ora_fine&#34;]"/>
+      <TfrxMemoView Name="Memo8" Left="472,44125" Top="3,77953" Width="241,88992" Height="18,89765" DataField="note_attivita" DataSet="FReportsDaily.frxDsMainPrintList" DataSetName="frxDsMainPrintList" Font.Charset="1" Font.Color="0" Font.Height="-11" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsMainPrintList.&#34;note_attivita&#34;]"/>
+      <TfrxLineView Name="Line1" Left="0" Top="21,5433070866142" Width="718,1107" Height="0" Color="0" Diagonal="True"/>
+    </TfrxMasterData>
+    <TfrxGroupFooter Name="GroupFooter1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="37,7953" Left="0" Top="102,04731" Width="718,1107" OnBeforePrint="GroupFooter1OnBeforePrint">
+      <TfrxMemoView Name="Memo3" Left="3,77953" Top="7,55906" Width="529,1342" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-11" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsMainPrintList.&#34;note&#34;]"/>
+      <TfrxLineView Name="Line2" Left="0" Top="34,01577" Width="718,1107" Height="0" Color="0" Frame.Style="fsDash" Frame.Typ="4" Frame.Width="2"/>
+      <TfrxMemoView Name="Memo14" Left="555,59091" Top="7,55906" Width="151,1812" Height="15,11812" OnAfterPrint="Memo14OnAfterPrint" OnBeforePrint="Memo14OnBeforePrint" Font.Charset="1" Font.Color="0" Font.Height="-12" Font.Name="Arial" Font.Style="1" HAlign="haRight" ParentFont="False" Text=""/>
+    </TfrxGroupFooter>
+    <TfrxGroupHeader Name="GroupHeader1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="56,69295" Left="0" Top="0" Width="718,1107" OnAfterPrint="GroupHeader1OnAfterPrint" OnBeforePrint="GroupHeader1OnBeforePrint" Condition="frxDsMainPrintList.&#34;group_key&#34;">
+      <TfrxMemoView Name="Memo1" Left="3,77953" Top="7,55906" Width="370,39394" Height="18,89765" Font.Charset="1" Font.Color="16711680" Font.Height="-13" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="[frxDsMainPrintList.&#34;ragione_sociale&#34;]"/>
+      <TfrxMemoView Name="Memo2" ShiftMode="smDontShift" Left="457,32313" Top="7,55906" Width="260,78757" Height="18,89765" Font.Charset="1" Font.Color="16711680" Font.Height="-13" Font.Name="Arial" Font.Style="1" HAlign="haRight" ParentFont="False" Text="[frxDsMainPrintList.&#34;data_rapporto&#34;]">
+        <Formats>
+          <item/>
+          <item/>
+        </Formats>
+      </TfrxMemoView>
+      <TfrxShapeView Name="Shape1" Left="0" Top="34,01577" Width="120,94496" Height="22,67718"/>
+      <TfrxShapeView Name="Shape2" Left="120,94496" Top="34,01577" Width="196,53556" Height="22,67718"/>
+      <TfrxShapeView Name="Shape3" Left="317,48052" Top="34,01577" Width="75,5906" Height="22,67718"/>
+      <TfrxShapeView Name="Shape4" Left="393,07112" Top="34,01577" Width="75,5906" Height="22,67718"/>
+      <TfrxShapeView Name="Shape5" Left="468,66172" Top="34,01577" Width="249,44898" Height="22,67718"/>
+      <TfrxMemoView Name="Memo9" Left="3,77953" Top="37,7953" Width="94,48825" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-12" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Tipo Attività"/>
+      <TfrxMemoView Name="Memo10" Left="124,72449" Top="37,7953" Width="181,41744" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-12" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Descrizione"/>
+      <TfrxMemoView Name="Memo11" Left="321,26005" Top="37,7953" Width="68,03154" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-12" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Ora inizio"/>
+      <TfrxMemoView Name="Memo12" Left="396,85065" Top="37,7953" Width="68,03154" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-12" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Ora fine"/>
+      <TfrxMemoView Name="Memo13" Left="472,44125" Top="37,7953" Width="241,88992" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-12" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Note interne"/>
+    </TfrxGroupHeader>
+    <TfrxMasterData Name="child1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="24,56692913" Left="0" Top="79,37013" Width="718,1107" ColumnWidth="0" ColumnGap="0" RowCount="0"/>
+  </TfrxReportPage>
+</TfrxReport>

@@ -1,0 +1,26 @@
+ALTER TABLE `banca`
+	ALTER `Nome` DROP DEFAULT;
+ALTER TABLE `banca`
+	CHANGE COLUMN `Id_banca` `Id_banca` BIGINT NOT NULL AUTO_INCREMENT FIRST,
+	CHANGE COLUMN `Nome` `Nome` VARCHAR(50) NOT NULL AFTER `Id_banca`,
+	ADD COLUMN `Data_ins` DATETIME NOT NULL AFTER `abi`,
+	ADD COLUMN `Data_mod` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `Data_ins`,
+	ADD COLUMN `Utente_ins` SMALLINT NOT NULL AFTER `Data_mod`,
+	ADD COLUMN `Utente_mod` SMALLINT NOT NULL AFTER `Utente_ins`;
+
+	
+
+	
+ALTER TABLE `evento_operaio`
+	ADD COLUMN `Utente_ins` SMALLINT UNSIGNED NOT NULL AFTER `Id_operaio`,
+	ADD COLUMN `Utente_mod` SMALLINT UNSIGNED NOT NULL AFTER `Utente_ins`,
+	ADD COLUMN `Data_ins` DATETIME NOT NULL AFTER `Utente_mod`,
+	ADD COLUMN `Data_mod` TIMESTAMP NOT NULL AFTER `Data_ins`;
+	
+	
+ALTER TABLE `evento_file_associati_caldav`
+	ADD UNIQUE INDEX `file_name_id_operaio` (`file_name`, `id_operaio`);
+
+
+
+	

@@ -1,0 +1,2 @@
+INSERT INTO `tipo_evento` (id_tipo, `nome`, `colore`, `Id_tipologia`, `Timestamp`) VALUES (27, 'PREVENTIVO', 'clAqua', 2, '2020-02-05 06:51:35');
+UPDATE cartella_default SET nome = 'IMPIANTI' WHERE id_tipo = 1 AND nome = 'DA SISTEMARE';

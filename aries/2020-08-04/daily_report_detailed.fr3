@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<TfrxReport Version="5.6" DotMatrixReport="False" IniFile="\Software\Fast Reports" PreviewOptions.Buttons="4095" PreviewOptions.Zoom="1" PrintOptions.Printer="Default" PrintOptions.PrintOnSheet="0" ReportOptions.CreateDate="42816,8730547338" ReportOptions.Description.Text="" ReportOptions.LastChange="44057,720038287" ScriptLanguage="PascalScript" ScriptText.Text="begin&#13;&#10;&#13;&#10;end." OnStartReport="OnStartReport">
+  <Datasets>
+    <item DataSet="FReportsDaily.frxDsDetailedActivitySummary" DataSetName="frxDsDetailedActivitySummary"/>
+    <item DataSet="FReportsDaily.frxDsDetailedExpensesSummary" DataSetName="frxDsDetailedExpensesSummary"/>
+    <item DataSet="FReportsDaily.frxDsDetailedInterventionHours" DataSetName="frxDsDetailedInterventionHours"/>
+    <item DataSet="FReportsDaily.frxDsDetailedPrintList" DataSetName="frxDsDetailedPrintList"/>
+  </Datasets>
+  <Variables>
+    <item Name="products_images_path" Value="'C:\Users\MARIO\Desktop\Default\Articoli\FOTO ARTICOLI\'"/>
+    <item Name="company_name" Value="'EMMEBI SRL a socio unico'"/>
+    <item Name="company_sector" Value="'Sistemi di Sicurezza'"/>
+    <item Name="company_street" Value="'Via Gen. C. A. Dalla Chiesa '"/>
+    <item Name="company_street_number" Value="'10'"/>
+    <item Name="company_municipality" Value="'Breda di Piave'"/>
+    <item Name="company_province" Value="'TV'"/>
+    <item Name="company_phone" Value="'0422 600050'"/>
+    <item Name="company_mobile_phone" Value="'3356055425'"/>
+    <item Name="company_vat_number" Value="'04371390263'"/>
+    <item Name="company_businesses_register_province" Value="'TV'"/>
+    <item Name="company_businesses_register_number_ciaa" Value="'TV-344298'"/>
+    <item Name="company_provincial_register_province" Value="'TV'"/>
+    <item Name="company_provincial_register_number" Value="'103276'"/>
+    <item Name="company_website" Value="'www.emmebi.tv.it'"/>
+    <item Name="company_fax" Value="'0422 600050'"/>
+    <item Name="company_email" Value="'info@emmebi.tv.it'"/>
+    <item Name="company_tax_code" Value="'04371390263'"/>
+    <item Name="company_rea_number" Value="'TV-344298'"/>
+    <item Name="company_inps_position" Value="'8400'"/>
+    <item Name="company_inail_position" Value="'20839290 50 '"/>
+    <item Name="company_ateco_code" Value="'43.21.02'"/>
+    <item Name="company_insurance_rct" Value="'AXA POLIZZA NR 123456'"/>
+    <item Name="company_hamlet" Value="''"/>
+    <item Name="company_capital" Value="'25.000,00'"/>
+    <item Name="company_enabling" Value="'Abilitazione A-B-G (limitatamente parte elettronica)'"/>
+    <item Name="company_bank" Value="' INTESA SANPAOLO S.P.A. - AG. CANDELU'''"/>
+    <item Name="company_iban" Value="'IT34I0306961788100000000699'"/>
+    <item Name="company_postal_code" Value="'31030'"/>
+    <item Name="company_tax_regime" Value="'RF01'"/>
+    <item Name="company_holder" Value="'BARBON MIRCO '"/>
+    <item Name="path_configuration_logo" Value="'C:\Users\MARIO\Desktop\Default\LOGO AZIENDA\25.bmp'"/>
+    <item Name="path_configuration_background" Value="'C:\Users\MARIO\Desktop\Default\LOGO AZIENDA\25 sfondo.bmp'"/>
+    <item Name="path_configuration_seal" Value="'C:\Users\MARIO\Desktop\Default\LOGO AZIENDA\25 bollo.bmp'"/>
+    <item Name="path_configuration_signature" Value="'C:\Users\MARIO\Desktop\Default\LOGO AZIENDA\25 firma.bmp'"/>
+    <item Name="employee_company_name" Value="'BARBON MIRCO '"/>
+    <item Name="formatted_start_date" Value="'02/07/2013'"/>
+    <item Name="formatted_end_date" Value="'31/08/2020'"/>
+  </Variables>
+  <TfrxDataPage Name="Data" Height="1000" Left="0" Top="0" Width="1000"/>
+  <TfrxReportPage Name="Page1" Font.Charset="1" Font.Color="0" Font.Height="-13" Font.Name="Arial" Font.Style="1" Orientation="poLandscape" PaperWidth="297" PaperHeight="210" PaperSize="9" LeftMargin="3,5" RightMargin="3,5" TopMargin="7" BottomMargin="7" ColumnWidth="0" ColumnPositions.Text="" HGuides.Text="" VGuides.Text="">
+    <TfrxReportTitle Name="ReportHeader" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="113,3859" Left="0" Top="0" Width="1096,0637">
+      <TfrxMemoView Name="MEmployeeName" Left="3,77953" Top="71,81107" Width="200,31509" Height="18,89765" Font.Charset="1" Font.Color="16711680" Font.Height="-13" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="[&#60;employee_company_name&#62;]"/>
+      <TfrxMemoView Name="MTitle" Left="3,77953" Top="11,33859" Width="396,85065" Height="37,7953" Font.Charset="1" Font.Color="0" Font.Height="-21" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Rapporti Giornalieri"/>
+      <TfrxMemoView Name="MSelectedPeriod" Left="3,77953" Top="52,91342" Width="449,76407" Height="18,89765" Font.Charset="1" Font.Color="16711680" Font.Height="-13" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="['Periodo dal ' + &#60;formatted_start_date&#62; + ' al ' + &#60;formatted_end_date&#62;]"/>
+    </TfrxReportTitle>
+    <TfrxMasterData Name="MDataActivityList" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="79,37013" Left="0" Top="491,3389" Width="1096,0637" ColumnWidth="0" ColumnGap="0" DataSet="FReportsDaily.frxDsDetailedPrintList" DataSetName="frxDsDetailedPrintList" KeepTogether="True" RowCount="0" StartNewPage="True">
+      <TfrxShapeView Name="Shape3" Left="0" Top="60,47248" Width="64,25201" Height="18,89765"/>
+      <TfrxMemoView Name="MDateHeader" Left="3,77953" Top="62,36224378" Width="56,69295" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Data"/>
+      <TfrxShapeView Name="Shape6" Left="64,25201" Top="60,47248" Width="128,50402" Height="18,89765"/>
+      <TfrxMemoView Name="MCustomerHeader" Left="68,03154" Top="62,36224378" Width="105,82684" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Cliente"/>
+      <TfrxShapeView Name="Shape8" Left="192,75603" Top="60,47248" Width="268,34663" Height="18,89765"/>
+      <TfrxMemoView Name="MAddressHeader" Left="196,53556" Top="62,36224378" Width="90,70872" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Indirizzo"/>
+      <TfrxShapeView Name="Shape9" Left="461,10266" Top="60,47248" Width="75,5906" Height="18,89765"/>
+      <TfrxMemoView Name="MStartTimeHeader" Left="464,88219" Top="62,36224378" Width="68,03154" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Dalle"/>
+      <TfrxShapeView Name="Shape12" Left="536,69326" Top="60,47248" Width="75,5906" Height="18,89765"/>
+      <TfrxMemoView Name="Memo4" Left="540,47279" Top="62,36224378" Width="68,03154" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Alle"/>
+      <TfrxShapeView Name="Shape13" Left="612,28386" Top="60,47248" Width="98,26778" Height="18,89765"/>
+      <TfrxMemoView Name="Memo6" Left="616,06339" Top="62,3622437795276" Width="68,03154" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Tipo attività"/>
+      <TfrxShapeView Name="Shape15" Left="710,55164" Top="60,47248" Width="136,06308" Height="18,89765"/>
+      <TfrxMemoView Name="Memo8" Left="714,33117" Top="62,3622437795276" Width="68,03154" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Intervento"/>
+      <TfrxShapeView Name="Shape17" Left="1046,92981" Top="60,47248" Width="49,13389" Height="18,89765"/>
+      <TfrxMemoView Name="Memo10" Left="1050,70934" Top="62,3622437795276" Width="45,35436" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Ore"/>
+      <TfrxShapeView Name="Shape1" Left="846,61472" Top="60,47248" Width="200,31509" Height="18,89765"/>
+      <TfrxMemoView Name="Memo13" Left="850,39425" Top="62,3622437795276" Width="105,82684" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Note"/>
+      <TfrxMemoView Name="Memo15" Left="3,77953" Top="26,45671" Width="192,75603" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-16" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Dettaglio Attività"/>
+    </TfrxMasterData>
+    <TfrxDetailData Name="DDataActivityList" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="18,89765" Left="0" Top="570,70903" Width="1096,0637" ColumnWidth="0" ColumnGap="0" DataSet="FReportsDaily.frxDsDetailedPrintList" DataSetName="frxDsDetailedPrintList" RowCount="0">
+      <TfrxShapeView Name="Shape4" Left="0" Top="0" Width="64,25201" Height="18,89765"/>
+      <TfrxMemoView Name="MDateValue" Left="7,55906" Top="3,77953" Width="52,91342" Height="15,11812" DataField="data_rapporto" DataSet="FReportsDaily.frxDsDetailedPrintList" DataSetName="frxDsDetailedPrintList" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsDetailedPrintList.&#34;data_rapporto&#34;]"/>
+      <TfrxShapeView Name="Shape5" Left="64,25201" Top="0" Width="128,50402" Height="18,89765"/>
+      <TfrxMemoView Name="MCustomerNameValue" Left="68,03154" Top="3,77953" Width="117,16543" Height="15,11812" DataField="ragione_sociale_cliente" DataSet="FReportsDaily.frxDsDetailedPrintList" DataSetName="frxDsDetailedPrintList" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsDetailedPrintList.&#34;ragione_sociale_cliente&#34;]"/>
+      <TfrxShapeView Name="Shape7" Left="192,75603" Top="0" Width="268,34663" Height="18,89765"/>
+      <TfrxMemoView Name="MAddress" Left="196,53556" Top="3,77953" Width="260,78757" Height="15,11812" DataField="indirizzo" DataSet="FReportsDaily.frxDsDetailedPrintList" DataSetName="frxDsDetailedPrintList" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsDetailedPrintList.&#34;indirizzo&#34;]"/>
+      <TfrxShapeView Name="Shape10" Left="461,10266" Top="0" Width="75,5906" Height="18,89765"/>
+      <TfrxMemoView Name="MStartTime" Left="464,88219" Top="3,77953" Width="68,03154" Height="15,11812" DataField="ora_inizio" DataSet="FReportsDaily.frxDsDetailedPrintList" DataSetName="frxDsDetailedPrintList" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsDetailedPrintList.&#34;ora_inizio&#34;]"/>
+      <TfrxShapeView Name="Shape11" Left="536,69326" Top="0" Width="75,5906" Height="18,89765"/>
+      <TfrxMemoView Name="MEndTime" Left="540,47279" Top="3,77953" Width="68,03154" Height="15,11812" DataField="ora_fine" DataSet="FReportsDaily.frxDsDetailedPrintList" DataSetName="frxDsDetailedPrintList" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsDetailedPrintList.&#34;ora_fine&#34;]"/>
+      <TfrxShapeView Name="Shape14" Left="612,28386" Top="0" Width="98,26778" Height="18,89765"/>
+      <TfrxMemoView Name="MActivityType" Left="616,06339" Top="3,77953" Width="90,70872" Height="15,11812" DataField="nome" DataSet="FReportsDaily.frxDsDetailedPrintList" DataSetName="frxDsDetailedPrintList" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsDetailedPrintList.&#34;nome&#34;]"/>
+      <TfrxShapeView Name="Shape16" Left="710,55164" Top="0" Width="136,06308" Height="18,89765"/>
+      <TfrxMemoView Name="MInterventionType" Left="714,33117" Top="3,77953" Width="128,50402" Height="15,11812" DataField="tipo_intervento" DataSet="FReportsDaily.frxDsDetailedPrintList" DataSetName="frxDsDetailedPrintList" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsDetailedPrintList.&#34;tipo_intervento&#34;]"/>
+      <TfrxShapeView Name="Shape18" Left="1046,92981" Top="0" Width="49,13389" Height="18,89765"/>
+      <TfrxMemoView Name="MTimeDifference" Left="1050,70934" Top="3,77953" Width="41,57483" Height="15,11812" DataField="time_differenza" DataSet="FReportsDaily.frxDsDetailedPrintList" DataSetName="frxDsDetailedPrintList" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsDetailedPrintList.&#34;time_differenza&#34;]"/>
+      <TfrxShapeView Name="Shape2" Left="846,61472" Top="0" Width="200,31509" Height="18,89765"/>
+      <TfrxMemoView Name="MInternalNotes" Left="850,39425" Top="3,77953" Width="192,75603" Height="15,11812" DataField="note" DataSet="FReportsDaily.frxDsDetailedPrintList" DataSetName="frxDsDetailedPrintList" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsDetailedPrintList.&#34;note&#34;]"/>
+    </TfrxDetailData>
+    <TfrxMasterData Name="MDataActivitiesSummary" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="60,47248" Left="0" Top="151,1812" Width="1096,0637" ColumnWidth="0" ColumnGap="0" DataSet="FReportsDaily.frxDsDetailedActivitySummary" DataSetName="frxDsDetailedActivitySummary" RowCount="0">
+      <TfrxMemoView Name="MActivitySummaryTitle" Left="3,77953" Top="3,77953" Width="192,75603" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-16" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Riassunto Attività"/>
+      <TfrxShapeView Name="Shape19" Left="0" Top="41,57483" Width="309,92146" Height="18,89765"/>
+      <TfrxShapeView Name="Shape20" Left="309,92146" Top="41,57483" Width="113,3859" Height="18,89765"/>
+      <TfrxMemoView Name="MActivityTypeSummaryHeader" Left="3,77953" Top="43,46456693" Width="136,06308" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="TIpo Attività"/>
+      <TfrxMemoView Name="MActivityTypeSummaryTotalsHeader" Left="313,70099" Top="43,46456693" Width="98,26778" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Totale"/>
+    </TfrxMasterData>
+    <TfrxDetailData Name="DDataActivitiesSummary" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="18,89765" Left="0" Top="211,65368" Width="1096,0637" ColumnWidth="0" ColumnGap="0" DataSet="FReportsDaily.frxDsDetailedActivitySummary" DataSetName="frxDsDetailedActivitySummary" RowCount="0">
+      <TfrxShapeView Name="Shape21" Left="0" Top="0" Width="309,92146" Height="18,89765"/>
+      <TfrxMemoView Name="MActivityTypeSummary" Left="3,77953" Top="3,77953" Width="302,3624" Height="15,11812" DataField="nome" DataSet="FReportsDaily.frxDsDetailedActivitySummary" DataSetName="frxDsDetailedActivitySummary" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsDetailedActivitySummary.&#34;nome&#34;]"/>
+      <TfrxShapeView Name="Shape22" Left="309,92146" Top="0" Width="113,3859" Height="18,89765"/>
+      <TfrxMemoView Name="Memo1" Left="313,70099" Top="3,77953" Width="102,04731" Height="15,11812" DataField="time_differenza" DataSet="FReportsDaily.frxDsDetailedActivitySummary" DataSetName="frxDsDetailedActivitySummary" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="[frxDsDetailedActivitySummary.&#34;time_differenza&#34;]"/>
+    </TfrxDetailData>
+    <TfrxMasterData Name="MDataInterventionsSummary" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="83,14966" Left="0" Top="230,55133" Width="1096,0637" ColumnWidth="0" ColumnGap="0" DataSet="FReportsDaily.frxDsDetailedInterventionHours" DataSetName="frxDsDetailedInterventionHours" RowCount="0">
+      <TfrxMemoView Name="MInterventionSummaryTitle" Left="3,77953" Top="26,45671" Width="192,75603" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-16" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Riassunto Interventi"/>
+      <TfrxShapeView Name="Shape23" Left="0" Top="64,25201" Width="309,92146" Height="18,89765"/>
+      <TfrxShapeView Name="Shape24" Left="309,92146" Top="64,25201" Width="113,3859" Height="18,89765"/>
+      <TfrxMemoView Name="Memo3" Left="3,77953" Top="66,14174693" Width="136,06308" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="TIpo Intervento"/>
+      <TfrxMemoView Name="Memo5" Left="313,70099" Top="66,14174693" Width="98,26778" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Totale"/>
+    </TfrxMasterData>
+    <TfrxDetailData Name="DetailData1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="18,89765" Left="0" Top="313,70099" Width="1096,0637" ColumnWidth="0" ColumnGap="0" DataSet="FReportsDaily.frxDsDetailedInterventionHours" DataSetName="frxDsDetailedInterventionHours" RowCount="0">
+      <TfrxShapeView Name="Shape25" Left="0" Top="0" Width="309,92146" Height="18,89765"/>
+      <TfrxMemoView Name="Memo7" Left="3,77953" Top="3,77953" Width="302,3624" Height="15,11812" DataField="tipo_intervento" DataSet="FReportsDaily.frxDsDetailedInterventionHours" DataSetName="frxDsDetailedInterventionHours" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="[frxDsDetailedInterventionHours.&#34;tipo_intervento&#34;]"/>
+      <TfrxShapeView Name="Shape26" Left="309,92146" Top="0" Width="113,3859" Height="18,89765"/>
+      <TfrxMemoView Name="Memo9" Left="313,70099" Top="3,77953" Width="102,04731" Height="15,11812" DataField="time_differenza" DataSet="FReportsDaily.frxDsDetailedInterventionHours" DataSetName="frxDsDetailedInterventionHours" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="[frxDsDetailedInterventionHours.&#34;time_differenza&#34;]"/>
+    </TfrxDetailData>
+    <TfrxMasterData Name="MDataExpensesSummary" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="83,14966" Left="0" Top="332,59864" Width="1096,0637" ColumnWidth="0" ColumnGap="0" DataSet="FReportsDaily.frxDsDetailedExpensesSummary" DataSetName="frxDsDetailedExpensesSummary" RowCount="0">
+      <TfrxMemoView Name="MExpensesSummaryTitle" Left="3,77953" Top="26,45671" Width="192,75603" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-16" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Riassunto Spese"/>
+      <TfrxShapeView Name="Shape27" Left="0" Top="64,25201" Width="309,92146" Height="18,89765"/>
+      <TfrxShapeView Name="Shape28" Left="309,92146" Top="64,25201" Width="113,3859" Height="18,89765"/>
+      <TfrxMemoView Name="MExpensesSummaryTypeHeader" Left="3,77953" Top="66,14174693" Width="136,06308" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="TIpo Spesa"/>
+      <TfrxMemoView Name="MExpensesSummaryTotalHeader" Left="313,70099" Top="66,14174693" Width="98,26778" Height="15,11812" Font.Charset="1" Font.Color="16711680" Font.Height="-11" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="Totale"/>
+    </TfrxMasterData>
+    <TfrxDetailData Name="DetailData2" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="75,5906" Left="0" Top="415,7483" Width="1096,0637" ColumnWidth="0" ColumnGap="0" DataSet="FReportsDaily.frxDsDetailedExpensesSummary" DataSetName="frxDsDetailedExpensesSummary" RowCount="0">
+      <TfrxShapeView Name="Shape33" Left="309,92146" Top="56,69295" Width="113,3859" Height="18,89765"/>
+      <TfrxShapeView Name="Shape29" Left="0" Top="0" Width="309,92146" Height="18,89765"/>
+      <TfrxMemoView Name="Memo2" Left="3,77953" Top="3,77953" Width="302,3624" Height="15,11812" DataSet="FReportsDaily.frxDsDetailedInterventionHours" DataSetName="frxDsDetailedInterventionHours" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="TRASFERTA"/>
+      <TfrxShapeView Name="Shape30" Left="309,92146" Top="0" Width="113,3859" Height="18,89765"/>
+      <TfrxMemoView Name="Memo11" Left="313,70099" Top="60,47248" Width="102,04731" Height="15,11812" DataSet="FReportsDaily.frxDsDetailedExpensesSummary" DataSetName="frxDsDetailedExpensesSummary" DisplayFormat.FormatStr="%2.2n" DisplayFormat.Kind="fkNumeric" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="[frxDsDetailedExpensesSummary.&#34;spesa_altro&#34;]"/>
+      <TfrxShapeView Name="Shape31" Left="309,92146" Top="18,89765" Width="113,3859" Height="18,89765"/>
+      <TfrxShapeView Name="Shape32" Left="309,92146" Top="37,7953" Width="113,3859" Height="18,89765"/>
+      <TfrxShapeView Name="Shape34" Left="0" Top="18,89765" Width="309,92146" Height="18,89765"/>
+      <TfrxShapeView Name="Shape35" Left="0" Top="37,7953" Width="309,92146" Height="18,89765"/>
+      <TfrxShapeView Name="Shape36" Left="0" Top="56,69295" Width="309,92146" Height="18,89765"/>
+      <TfrxMemoView Name="Memo12" Left="313,70099" Top="3,77953" Width="102,04731" Height="15,11812" DataField="spesa_trasferta" DataSet="FReportsDaily.frxDsDetailedExpensesSummary" DataSetName="frxDsDetailedExpensesSummary" DisplayFormat.FormatStr="%2.2n" DisplayFormat.Kind="fkNumeric" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="[frxDsDetailedExpensesSummary.&#34;spesa_trasferta&#34;]"/>
+      <TfrxMemoView Name="Memo14" Left="313,70099" Top="22,67718" Width="102,04731" Height="15,11812" DataField="spesa_autostrada" DataSet="FReportsDaily.frxDsDetailedExpensesSummary" DataSetName="frxDsDetailedExpensesSummary" DisplayFormat.FormatStr="%2.2n" DisplayFormat.Kind="fkNumeric" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="[frxDsDetailedExpensesSummary.&#34;spesa_autostrada&#34;]"/>
+      <TfrxMemoView Name="Memo16" Left="313,70099" Top="41,57483" Width="102,04731" Height="15,11812" DataField="spesa_parcheggio" DataSet="FReportsDaily.frxDsDetailedExpensesSummary" DataSetName="frxDsDetailedExpensesSummary" DisplayFormat.FormatStr="%2.2n" DisplayFormat.Kind="fkNumeric" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" HAlign="haRight" ParentFont="False" Text="[frxDsDetailedExpensesSummary.&#34;spesa_parcheggio&#34;]"/>
+      <TfrxMemoView Name="Memo17" Left="3,77953" Top="22,67718" Width="302,3624" Height="15,11812" DataSet="FReportsDaily.frxDsDetailedInterventionHours" DataSetName="frxDsDetailedInterventionHours" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="AUTOSTRADA"/>
+      <TfrxMemoView Name="Memo18" Left="3,77953" Top="41,57483" Width="302,3624" Height="15,11812" DataSet="FReportsDaily.frxDsDetailedInterventionHours" DataSetName="frxDsDetailedInterventionHours" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="PARCHEGGIO"/>
+      <TfrxMemoView Name="Memo19" Left="3,77953" Top="60,47248" Width="302,3624" Height="15,11812" DataSet="FReportsDaily.frxDsDetailedInterventionHours" DataSetName="frxDsDetailedInterventionHours" Font.Charset="1" Font.Color="0" Font.Height="-9" Font.Name="Arial" Font.Style="0" ParentFont="False" Text="ALTRO"/>
+    </TfrxDetailData>
+  </TfrxReportPage>
+</TfrxReport>
