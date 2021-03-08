@@ -529,7 +529,8 @@ BEGIN
 	
 	UPDATE commessa
 	SET stato_commessa=3 
-	WHERE stato_commessa = 1 AND id_commessa = NEW.id_commessa AND anno = NEW.anno_commessa;
+		WHERE stato_commessa = 1 AND id_commessa = NEW.id_commessa
+		AND anno = NEW.anno_commessa;
 END
 //
 DELIMITER ;
@@ -651,3 +652,83 @@ END
 
 //
 delimiter ; 
+
+
+-- ############################# SUPPLIERS ############################################################################## 
+DROP TRIGGER IF EXISTS trg_afterSupplierInsert; 
+DROP TRIGGER IF EXISTS insforn; 
+DELIMITER //
+CREATE TRIGGER `trg_afterSupplierInsert` AFTER INSERT ON `fornitore` FOR EACH ROW
+BEGIN
+	DECLARE price_name VARCHAR(150);
+	DECLARE net_name VARCHAR(150);
+	DECLARE last_name VARCHAR(150);
+	DECLARE special_name VARCHAR(150);
+
+	SET price_name = CONCAT(NEW.id_fornitore,substring(NEW.ragione_sociale,1,8),"Prezzo");
+	SET net_name = CONCAT(NEW.id_fornitore,substring(NEW.ragione_sociale,1,8),"Netto");
+	SET last_name = CONCAT(NEW.id_fornitore,substring(NEW.ragione_sociale,1,8),"Ultimo");
+	SET special_name = CONCAT(NEW.id_fornitore,substring(NEW.ragione_sociale,1,8),"Speciale");
+
+	INSERT INTO listino(nome) values (price_name), (net_name), (last_name), (special_name);
+
+	INSERT into fornitore_listino (id_fornitore,acquisto,netto,ultimo,speciale,nome)
+	select
+		NEW.id_fornitore,
+		(select id_listino from listino where nome = price_name),
+		(select id_listino from listino where nome = net_name),
+		(select id_listino from listino where nome = last_name),
+		(select id_listino from listino where nome = special_name),
+		NEW.ragione_sociale;
+
+END
+//
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS trg_afterSupplierUpdate; 
+DELIMITER //
+CREATE TRIGGER `trg_afterSupplierUpdate` AFTER UPDATE ON `fornitore` FOR EACH ROW
+BEGIN
+	DECLARE price_name VARCHAR(150);
+	DECLARE net_name VARCHAR(150);
+	DECLARE last_name VARCHAR(150);
+	DECLARE special_name VARCHAR(150);
+
+	DECLARE old_price_name VARCHAR(150);
+	DECLARE old_net_name VARCHAR(150);
+	DECLARE old_last_name VARCHAR(150);
+	DECLARE old_special_name VARCHAR(150);
+
+	IF NEW.ragione_sociale <> OLD.ragione_sociale THEN
+		SET price_name = CONCAT(NEW.id_fornitore,substring(NEW.ragione_sociale,1,8),"Prezzo");
+		SET net_name = CONCAT(NEW.id_fornitore,substring(NEW.ragione_sociale,1,8),"Netto");
+		SET last_name = CONCAT(NEW.id_fornitore,substring(NEW.ragione_sociale,1,8),"Ultimo");
+		SET special_name = CONCAT(NEW.id_fornitore,substring(NEW.ragione_sociale,1,8),"Speciale");
+		
+		SET old_price_name = CONCAT(OLD.id_fornitore,substring(OLD.ragione_sociale,1,8),"Prezzo");
+		SET old_net_name = CONCAT(OLD.id_fornitore,substring(OLD.ragione_sociale,1,8),"Netto");
+		SET old_last_name = CONCAT(OLD.id_fornitore,substring(OLD.ragione_sociale,1,8),"Ultimo");
+		SET old_special_name = CONCAT(OLD.id_fornitore,substring(OLD.ragione_sociale,1,8),"Speciale");
+
+		UPDATE listino SET nome = price_name WHERE nome = old_price_name;
+		UPDATE listino SET nome = net_name WHERE nome = old_net_name;
+		UPDATE listino SET nome = last_name WHERE nome = old_last_name;
+		UPDATE listino SET nome = special_name WHERE nome = old_special_name;
+
+		UPDATE fornitore_listino
+		SET nome =NEW.ragione_sociale
+		WHERE id_fornitore = new.id_fornitore;
+	END IF;
+END
+//
+DELIMITER ;
+
+
+DROP TRIGGER IF EXISTS trg_afterSupplerPriceListDelete; 
+DELIMITER //
+CREATE TRIGGER `trg_afterSupplerPriceListDelete` AFTER DELETE ON `fornitore_listino` FOR EACH ROW 
+BEGIN
+	DELETE FROM listino WHERE id_listino IN (OLD.netto,OLD.ultimo,OLD.speciale);	
+END
+//
+DELIMITER ;

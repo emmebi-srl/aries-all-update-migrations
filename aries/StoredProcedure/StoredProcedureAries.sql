@@ -3618,6 +3618,7 @@ DELIMITER //
 CREATE  PROCEDURE `sp_ariesDdtProductGetByJobAndProductCode`(
 	job_id INT(11), 
 	job_year INT(11), 
+	sub_job_id INT(11),
 	job_lot_id INT(11), 
 	product_code VARCHAR(11)
 )
@@ -3642,11 +3643,11 @@ BEGIN
 		0 AS sconto2,
 		sconto,
 		IFNULL(economia, 0) economia,
-		id_commessa,
-		anno_commessa,
-		id_sottocommessa,
-		id_lotto_commessa,
-		id_tab_commessa,
+		articoli_ddt.id_commessa,
+		articoli_ddt.anno_commessa,
+		articoli_ddt.id_sottocommessa,
+		articoli_ddt.id_lotto_commessa,
+		articoli_ddt.id_tab_commessa,
 		sostituzione,
 		codice_articolo_sostituzione,
 		id_tab_sostituzione
@@ -3676,6 +3677,39 @@ CREATE  PROCEDURE `sp_ariesDdtProductSetQuantities`(
 )
 BEGIN
 
+	DECLARE job_id INT(11);
+	DECLARE job_year INT(11);
+	DECLARE sub_job_id INT(11);
+	DECLARE lot_id INT(11);
+	DECLARE has_job_link BIT(1);
+	
+	SELECT fnc_ddtHasJobLink(ddt_id, ddt_year)
+		INTO has_job_link;
+	
+	-- WE CANNOT UPDATE A PRODUCT LINKED TO THE JOB.
+	-- FOR THIS REASON WE NEED TO REMOVE JOB-DDT LINK FIRST, 
+	-- UPDATE PRODUCT AND CREATE BACK JOB-DDT LINK
+	IF has_job_link THEN
+		SELECT id_commessa,
+			anno_commessa,
+			id_sottocommessa,
+			id_lotto
+		INTO job_id, 
+			job_year,
+			sub_job_id,
+			lot_id
+		FROM commessa_ddt
+		WHERE id_ddt = ddt_id and anno_ddt = ddt_year;
+
+		DELETE FROM commessa_ddt
+		WHERE id_commessa = job_id
+			AND anno_commessa = job_year
+			AND id_sottocommessa = sub_job_id
+			AND id_lotto = lot_id
+			AND id_ddt = ddt_id 
+			AND anno_ddt = ddt_year;
+	END IF;
+
 	UPDATE articoli_ddt
 	SET
 		quantità = quantity + economy_quantity, 
@@ -3683,6 +3717,17 @@ BEGIN
 	WHERE Id_ddt = ddt_id 
 		and anno = ddt_year
 		and numero_tab = row_id; 
+
+	IF has_job_link THEN
+		INSERT INTO commessa_ddt
+		SET id_commessa = job_id,
+			anno_commessa = job_year,
+			id_sottocommessa = sub_job_id,
+			id_lotto = lot_id,
+			id_ddt = ddt_id, 
+			anno_ddt = ddt_year;
+	END IF;
+
 				
 END//
 DELIMITER ;
