@@ -2565,6 +2565,7 @@ BEGIN
 		IFNULL(Username, "") AS Username, 
 		IFNULL(DIsplay_name, "") AS Display_name, 
 		messaggio_non_abbonato,
+		email_ufficio,
 		admin_password,
 		IFNULL(Data_ins, Data_Mod) AS Data_ins,
 		Data_Mod

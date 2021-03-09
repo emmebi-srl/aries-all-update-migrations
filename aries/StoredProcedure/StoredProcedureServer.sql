@@ -326,6 +326,7 @@ SELECT
 	IFNULL(porta, 0) AS Porta, 
 	IFNULL(Username, "") AS Username, 
 	IFNULL(DIsplay_name, "") AS Display_name, 
+	email_ufficio, 
 	IFNULL(Data_ins, Data_Mod) AS Data_ins,
 	Data_Mod
 FROM tablet_configurazione ORDER BY id_tablet DESC LIMIT 1; 

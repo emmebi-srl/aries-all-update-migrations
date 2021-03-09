@@ -14326,6 +14326,7 @@ SELECT
 	IFNULL(DIsplay_name, "") AS Display_name, 
 	messaggio_non_abbonato,
 	admin_password,
+	email_ufficio,
 	IFNULL(Data_ins, Data_Mod) AS Data_ins,
 	Data_Mod
 FROM tablet_configurazione ORDER BY id_tablet DESC LIMIT 1; 
@@ -14347,6 +14348,7 @@ CREATE  PROCEDURE `sp_ariesTabletConfigurationInsert`(
 	email_password VARCHAR(45),
 	no_subscriber_message TEXT,
 	admin_password VARCHAR(20), 
+	office_email VARCHAR(100), 
 	OUT result BIT
 )
 BEGIN
@@ -14361,8 +14363,9 @@ BEGIN
    	porta = email_port, 
    	testo_mail = email_body, 
    	display_name =  email_display_name, 
-	messaggio_non_abbonato = no_subscriber_message, 
-	admin_password = admin_password, 
+		messaggio_non_abbonato = no_subscriber_message, 
+		admin_password = admin_password, 
+		email_ufficio = office_email,
    	Data_ins = CURDATE(); 
    
    SELECT ROW_COUNT() INTO result; 
