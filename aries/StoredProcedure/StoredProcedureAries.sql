@@ -7712,7 +7712,8 @@ BEGIN
 		importo_imponibile, 
 		importo_iva,
 		importo_totale,
-		costo_totale
+		costo_totale,
+		id_documento_ricezione
 	FROM Fattura;
 	
 END//
@@ -7769,7 +7770,8 @@ BEGIN
 		importo_imponibile, 
 		importo_iva,
 		importo_totale,
-		costo_totale
+		costo_totale,
+		id_documento_ricezione
 	FROM Fattura
 	WHERE Fattura.Id = enter_id;
 	
@@ -7828,7 +7830,8 @@ BEGIN
 		importo_imponibile, 
 		importo_iva,
 		importo_totale,
-		costo_totale
+		costo_totale,
+		id_documento_ricezione
 	FROM Fattura
 	WHERE Fattura.Id_fattura = enter_id AND Fattura.anno = enter_year;
 	

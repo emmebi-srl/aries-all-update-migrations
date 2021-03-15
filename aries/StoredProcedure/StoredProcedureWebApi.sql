@@ -3986,7 +3986,7 @@ BEGIN
 END; //
 DELIMITER ;
 
--- Dump della struttura di procedura emmebi.sp_ariesInvoiceGetByIdAndYear
+
 DROP PROCEDURE IF EXISTS sp_ariesInvoiceGetForDeadlineAlert;
 DELIMITER //
 CREATE  PROCEDURE `sp_ariesInvoiceGetForDeadlineAlert`(
@@ -4034,7 +4034,8 @@ BEGIN
 		importo_imponibile, 
 		importo_iva,
 		importo_totale,
-		costo_totale
+		costo_totale,
+		id_documento_ricezione
 	FROM Fattura
 	WHERE CURDATE() > DATE_ADD(Fattura.data, INTERVAL 5 DAY) AND Inviato = 0 AND (Anno > 2019 OR Anno = 0)
 	ORDER BY DATA ASC;
@@ -4137,58 +4138,6 @@ BEGIN
 END; //
 DELIMITER ;
 
-
-
--- Dump della struttura di procedura emmebi.sp_ariesSupplierInvoiceGet
-DROP PROCEDURE IF EXISTS sp_ariesSupplierInvoiceGet;
-DELIMITER //
-CREATE  PROCEDURE `sp_ariesSupplierInvoiceGet`(
-)
-BEGIN
-	SELECT
-	`Id_fattura`,
-	`anno`,
-	`id_fornitore`,
-	`Data_registrazione`,
-	`data_modifica`,
-	`data`,
-	`cond_pagamento`,
-	`annotazioni`,
-	`Stato`,
-	`causale_fattura`,
-	`nota_interna`,
-	`tipo_fattura`,
-	`incasso`,
-	`bollo`,
-	`trasporto`,
-	`ricevuto`,
-	`pagato_il`,
-	`tramite`,
-	`insoluto`,
-	`fattura_fornitore`,
-	`totale`,
-	`totiva`,
-	`scan`,
-	`modifica`,
-	`costo_cavi`,
-	`uso_consumo`,
-	`id_attività`,
-	`iva_incasso`,
-	`iva_bollo`,
-	IFNULL(`aliquota_iva_BTI`, 0) AS aliquota_iva_BTI,
-	IFNULL(tipo_iva.aliquota, 0) AS aliquota_iva_BTI_valore,
-	`formato_trasmissione`,
-	`codice_destinatario`,
-	`pec_destinatario`,
-	`progressivo_invio`,
-	`tipo_fattura_elettronica`,
-	`sorgente_documento`,
-	`e_fattura_filename`
-	FROM fornfattura
-		LEFT JOIN tipo_iva ON aliquota_iva_BTI = tipo_iva.id_iva
-	ORDER BY Anno DESC, id_fattura DESC;
-END//
-DELIMITER ;
 
 
 DELIMITER //
