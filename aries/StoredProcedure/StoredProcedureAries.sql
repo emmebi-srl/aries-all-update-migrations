@@ -17951,7 +17951,7 @@ BEGIN
 		SubJobId,
 		IFNULL(a.desc_brev, ap.desc_brev), 
 		lotto,
-		quantità,
+		SUM(quantità),
 		id_articolo,
 		ap.codice_fornitore,
 		ap.unità_misura,
@@ -17977,7 +17977,7 @@ BEGIN
 		SubJobId,
 		IFNULL(a.desc_brev, ap.desc_brev),
 		lotto, 
-		quantità, id_articolo, ap.codice_fornitore, ap.unità_misura, id_tab, 
+		SUM(quantità), id_articolo, ap.codice_fornitore, ap.unità_misura, id_tab, 
 		ROUND(prezzo-prezzo * IF(pl.tipo_ricar = 1, 0, sconto)/100, 2), IF(montato, ap.tempo_installazione, "0"), 
 		costo_h, costo, (prezzo_h-prezzo_h * scontolav/100), scontoriga, iva 
 	FROM articolo_preventivo ap
