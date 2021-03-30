@@ -1,0 +1,1 @@
+INSERT INTO `stampante_moduli_formati` (`Id_modulo`, `Id_documento`, `Id_formato`, `Timestamp`) VALUES (3, 3, 2, '2021-03-26 05:36:01');

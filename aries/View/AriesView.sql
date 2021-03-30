@@ -1253,3 +1253,41 @@ FROM rapporto_giornaliero
 		AND clienti.Id_cliente = destinazione_cliente.id_cliente
 	LEFT JOIN comune ON comune.Id_comune = destinazione_cliente.Comune
 ORDER BY rapporto_giornaliero.data_rapporto DESC, rapporto_giornaliero_attivita.ora_inizio DESC;
+
+
+
+DROP VIEW IF EXISTS vw_quote_body_details;
+CREATE VIEW vw_quote_body_details AS
+SELECT
+	ap.Id_preventivo,
+	ap.anno,
+	ap.Id_revisione,
+	ap.Lotto as "id_lotto",
+	id_tab,
+	l.nome as "lotto",
+	ap.id_articolo,
+	IFNULL(articolo.desc_brev, ap.Desc_brev) AS descrizione,
+	ap.codice_fornitore,
+	ROUND(quantità,2) AS "quantità",
+	ap.unità_misura,
+	ROUND(prezzo,2) as prezzo_maateriale,
+	ROUND(costo,2) as costo_materiale,
+	sconto AS "sconto_materiale",
+	prezzo_h,
+	costo_h,
+	montato,
+	ap.tempo_installazione,
+	scontolav AS "sconto_lavoro",
+	scontoriga AS "sconto_riga",
+	ROUND((((quantità*(prezzo/100*(100-sconto)))+(IF(montato=0, 0, (prezzo_h*((ap.tempo_installazione*quantità)/60))/100*(0-scontolav+100))))/100*(0-scontoriga+100)),2) AS "prezzo_totale",
+	ROUND((quantità*costo)+IF(montato=0, 0, (costo_h*((ap.tempo_installazione*quantità)/60))),2) AS "costo_totale"
+FROM articolo_preventivo as ap
+	LEFT JOIN articolo ON articolo.Codice_articolo = ap.Id_articolo
+	INNER JOIN preventivo_lotto AS pl
+		ON ap.Id_preventivo = pl.id_preventivo
+		AND ap.anno = pl.anno
+		AND ap.Lotto = pl.posizione
+		AND ap.Id_revisione = pl.id_revisione
+	LEFT JOIN Lotto AS l
+		ON l.id_lotto = pl.id_lotto
+ORDER BY anno desc, id_preventivo desc, id_lotto, id_tab;
