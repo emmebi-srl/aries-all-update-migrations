@@ -17980,8 +17980,7 @@ BEGIN
 		SUM(quantità), id_articolo, ap.codice_fornitore, ap.unità_misura, id_tab, 
 		ROUND(prezzo-prezzo * IF(pl.tipo_ricar = 1, 0, sconto)/100, 2), IF(montato, ap.tempo_installazione, "0"), 
 		costo_h, costo, (prezzo_h-prezzo_h * scontolav/100), scontoriga, iva 
-	FROM articolo_preventivo ap
-		LEFT JOIN articolo a ON id_articolo = codice_articolo 
+	FROM articolo_preventivo ap 
 		LEFT JOIN preventivo_lotto pl ON pl.posizione = ap.lotto 
 			AND pl.anno = ap.anno 
 			AND pl.id_revisione = ap.id_revisione 
@@ -17990,7 +17989,8 @@ BEGIN
 		AND ap.anno = QuoteYear 
 		AND ap.id_revisione = QuoteRevision 
 		AND tipo IN("A", "AL") 
-		AND id_articolo IS NULL;
+		AND id_articolo IS NULL
+	HAVING id_tab IS NOT NULL; -- for some reason we get one row with all null result, this having is a workaround to avoid it
 
 	INSERT INTO commessa_preventivo(id_commessa, anno, id_sottocommessa,
 		preventivo, anno_prev, rev, lotto, pidlotto) 
