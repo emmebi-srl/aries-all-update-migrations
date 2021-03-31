@@ -17975,7 +17975,7 @@ BEGIN
 		JobId,
 		JobYear,
 		SubJobId,
-		IFNULL(a.desc_brev, ap.desc_brev),
+		ap.desc_brev,
 		lotto, 
 		SUM(quantità), id_articolo, ap.codice_fornitore, ap.unità_misura, id_tab, 
 		ROUND(prezzo-prezzo * IF(pl.tipo_ricar = 1, 0, sconto)/100, 2), IF(montato, ap.tempo_installazione, "0"), 
