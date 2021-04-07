@@ -15368,7 +15368,7 @@ BEGIN
 	END IF;
 	
 	IF aspect & 32 THEN -- Busta [32]
-		INSERT INTO ddt_aspetto(id_ddt, anno, vista) VALUES(ddtId, ddtYear, "bu");
+		INSERT INTO ddt_aspetto(id_ddt, anno, vista) VALUES(newDdtId, newDdtYear, "bu");
 	END IF;
 	
 END//
