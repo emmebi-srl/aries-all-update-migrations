@@ -18923,13 +18923,13 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS sp_ariesDepotsScaleByReportProduct;
 DELIMITER $$
 CREATE PROCEDURE sp_ariesDepotsScaleByReportProduct(
-	report_id INT, report_year INT, tab_id INT
+	report_id INT, report_year INT, tab_id INT,
+	quantity DECIMAL(11, 2),
+	product_code VARCHAR(16)
 )
 BEGIN
 	DECLARE has_ddt_link BIT(1);
 	DECLARE has_depot_link BIT(1);
-	DECLARE quantity DECIMAL(11, 2);
-	DECLARE product_code VARCHAR(16);
 	DECLARE depot_id INT(11);
 	DECLARE operation_id BIGINT(11);
 	DECLARE causal_id INT(11);
@@ -18939,20 +18939,9 @@ BEGIN
 		INTO has_ddt_link;
 
 	IF has_ddt_link = 0 THEN
-		
-		SELECT fnc_reportProductHasDepotLink(report_id, report_year, tab_id)
-			INTO has_depot_link;
-
-		IF has_depot_link = 1 THEN
-			SIGNAL SQLSTATE '45000'
-				SET MESSAGE_TEXT = 'Cannot insert report product becacuse of the depot link already exists.';
-		END IF;
-
-		SELECT quantità,
-			Id_materiale,
+		SELECT
 			id_magazzino
-		INTO quantity,
-			product_code,
+		INTO
 			depot_id
 		FROM rapporto_materiale
 		WHERE id_rapporto = report_id
@@ -18973,18 +18962,90 @@ CREATE PROCEDURE sp_ariesDepotsReportProductDelete(
 	report_id INT, report_year INT, tab_id INT
 )
 BEGIN
-	DECLARE operation_id BIGINT(11);
+	DECLARE done INT DEFAULT 0;
+	DECLARE operation_id BIGINT;
+	
+	DECLARE V_curA CURSOR FOR
+		SELECT
+			id_operazione
+		FROM magazzino_rapporto_materiale
+		WHERE id_rapporto = report_id and anno_rapporto = report_year and id_tab = tab_id;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
-	SELECT id_operazione
-	INTO operation_id
-	FROM magazzino_rapporto_materiale
-	WHERE id_rapporto = report_id
-		AND anno_rapporto = report_year
-		AND id_tab = tab_id;
+	OPEN V_curA;
+	loopA: LOOP
+		FETCH V_curA INTO operation_id;
+		IF done = 1 THEN 
+			LEAVE loopA;
+		END IF;
 
-	IF operation_id IS NOT NULL THEN
-  	CALL sp_ariesDepotOperationsDelete(operation_id);
-	END IF;
+		IF operation_id IS NOT NULL THEN
+			CALL sp_ariesDepotOperationsDelete(operation_id);
+		END IF;
+	END LOOP;
+	CLOSE V_curA;
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesDepotsSupplierInvoiceProductDelete;
+DELIMITER $$
+CREATE PROCEDURE sp_ariesDepotsSupplierInvoiceProductDelete(
+	invoice_id INT, invoice_year INT, tab_id INT
+)
+BEGIN
+	DECLARE done INT DEFAULT 0;
+	DECLARE operation_id BIGINT;
+	
+	DECLARE V_curA CURSOR FOR
+		SELECT
+			id_operazione
+		FROM magazzino_fornfattura
+		WHERE id_fattura = invoice_id and anno = invoice_year and id_tab = tab_id;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+	OPEN V_curA;
+	loopA: LOOP
+		FETCH V_curA INTO operation_id;
+		IF done = 1 THEN 
+			LEAVE loopA;
+		END IF;
+
+		IF operation_id IS NOT NULL THEN
+			CALL sp_ariesDepotOperationsDelete(operation_id);
+		END IF;
+	END LOOP;
+	CLOSE V_curA;
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesDepotsInvoiceProductDelete;
+DELIMITER $$
+CREATE PROCEDURE sp_ariesDepotsInvoiceProductDelete(
+	invoice_id INT, invoice_year INT, tab_id INT
+)
+BEGIN
+	DECLARE done INT DEFAULT 0;
+	DECLARE operation_id BIGINT;
+	
+	DECLARE V_curA CURSOR FOR
+		SELECT
+			id_operazione
+		FROM magazzino_fattura
+		WHERE id_fattura = invoice_id and anno = invoice_year and id_tab = tab_id;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+	OPEN V_curA;
+	loopA: LOOP
+		FETCH V_curA INTO operation_id;
+		IF done = 1 THEN 
+			LEAVE loopA;
+		END IF;
+
+		IF operation_id IS NOT NULL THEN
+			CALL sp_ariesDepotOperationsDelete(operation_id);
+		END IF;
+	END LOOP;
+	CLOSE V_curA;
 END $$
 DELIMITER ;
 
@@ -19121,9 +19182,9 @@ BEGIN
 	INSERT INTO magazzino_fornfattura(id_operazione,anno,id_fattura,id_tab)
 		VALUES (operation_id, invoice_year, invoice_id, tab_id);
   
-
 END $$
 DELIMITER ;
+
 
 DROP PROCEDURE IF EXISTS sp_ariesDepotsInvoiceProductInsert;
 DELIMITER $$
@@ -19251,24 +19312,71 @@ CREATE PROCEDURE sp_ariesDepotsDdtProductDelete(
 	ddt_id INT, ddt_year INT, tab_id INT
 )
 BEGIN
+	DECLARE done INT DEFAULT 0;
 	DECLARE operation_id BIGINT;
 	DECLARE reso_id BIGINT;
+	
+	DECLARE V_curA CURSOR FOR
+		SELECT
+			id_operazione,
+			id_reso
+		FROM magazzino_ddt_emessi
+		WHERE id_ddt = ddt_id and anno_ddt = ddt_year and id_tab = tab_id;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
-	SELECT id_operazione,
-		id_reso
-	INTO
-		operation_id,
-		reso_id
-	FROM magazzino_ddt_emessi
-	WHERE id_ddt = ddt_id and anno_ddt = ddt_year and id_tab = tab_id;
+	OPEN V_curA;
+	loopA: LOOP
+		FETCH V_curA INTO operation_id, reso_id;
+		IF done = 1 THEN 
+			LEAVE loopA;
+		END IF;
+		
+		IF reso_id IS NOT NULL THEN
+			CALL sp_ariesDepotOperationsDelete(reso_id);
+		END IF;
+		IF operation_id IS NOT NULL THEN
+			CALL sp_ariesDepotOperationsDelete(operation_id);
+		END IF;
+	END LOOP;
+	CLOSE V_curA;
 
-	-- delete operations
-	IF reso_id IS NOT NULL THEN
-  	CALL sp_ariesDepotOperationsDelete(reso_id);
-	END IF;
-	IF operation_id IS NOT NULL THEN
-  	CALL sp_ariesDepotOperationsDelete(operation_id);
-	END IF;
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesSystemsDdtProductDelete;
+DELIMITER $$
+CREATE PROCEDURE sp_ariesSystemsDdtProductDelete(
+	ddt_id INT, ddt_year INT, tab_id INT, product_code VARCHAR(16)
+)
+BEGIN
+	DECLARE done INT DEFAULT 0;
+	DECLARE operation_id BIGINT;
+	DECLARE reso_id BIGINT;
+	
+	DECLARE V_curA CURSOR FOR
+		SELECT
+			id_operazione,
+			id_reso
+		FROM magazzino_ddt_emessi
+		WHERE id_ddt = ddt_id and anno_ddt = ddt_year and id_tab = tab_id;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+	OPEN V_curA;
+	loopA: LOOP
+		FETCH V_curA INTO operation_id, reso_id;
+		IF done = 1 THEN 
+			LEAVE loopA;
+		END IF;
+		
+		IF reso_id IS NOT NULL THEN
+			CALL sp_ariesDepotOperationsDelete(reso_id);
+		END IF;
+		IF operation_id IS NOT NULL THEN
+			CALL sp_ariesDepotOperationsDelete(operation_id);
+		END IF;
+	END LOOP;
+	CLOSE V_curA;
+
 END $$
 DELIMITER ;
 
@@ -19279,27 +19387,37 @@ CREATE PROCEDURE sp_ariesDepotsReceivedDdtProductDelete(
 	ddt_id INT, ddt_year INT, tab_id INT
 )
 BEGIN
+	DECLARE done INT DEFAULT 0;
 	DECLARE operation_id BIGINT;
 	DECLARE reso_id BIGINT;
+	
+	DECLARE V_curA CURSOR FOR
+		SELECT
+			id_operazione,
+			id_reso
+		FROM magazzino_ddt_ricevuti
+		WHERE id_ddt = ddt_id and anno_ddt = ddt_year and id_tab = tab_id;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
-	SELECT id_operazione,
-		id_reso
-	INTO
-		operation_id,
-		reso_id
-	FROM magazzino_ddt_ricevuti
-	WHERE id_ddt = ddt_id and id_anno = ddt_year and id_tab = tab_id;
-
-	-- delete operations
-	IF reso_id IS NOT NULL THEN
-  	CALL sp_ariesDepotOperationsDelete(reso_id);
-	END IF;
-	IF operation_id IS NOT NULL THEN
-  	CALL sp_ariesDepotOperationsDelete(operation_id);
-	END IF;
+	OPEN V_curA;
+	loopA: LOOP
+		FETCH V_curA INTO operation_id, reso_id;
+		IF done = 1 THEN 
+			LEAVE loopA;
+		END IF;
+		
+		IF reso_id IS NOT NULL THEN
+			CALL sp_ariesDepotOperationsDelete(reso_id);
+		END IF;
+		IF operation_id IS NOT NULL THEN
+			CALL sp_ariesDepotOperationsDelete(operation_id);
+		END IF;
+	END LOOP;
+	CLOSE V_curA;
 	
 END $$
 DELIMITER ;
+
 
 DROP PROCEDURE IF EXISTS sp_ariesDepotsDdtProductInsert;
 DELIMITER $$
@@ -19504,117 +19622,125 @@ BEGIN
 END $$
 DELIMITER ;
 
-
 DROP PROCEDURE IF EXISTS ddt_impianto_componenti;
+DROP PROCEDURE IF EXISTS sp_ariesSystemsDdtProductInsert;
 DELIMITER $$
-CREATE  PROCEDURE `ddt_impianto_componenti`(in idDdt int,in annoDdt int,in arti varchar(14),in qt int,in tabi int)
-begin
-
-declare quan int;
-
-declare imp int;
-
-declare cod int;
-
-declare dat date;
-
-declare sn varchar(20);
-
-
-
-set dat:=(select data_documento from ddt where id_ddt=idddt and ddt.anno=annoDdt);
-
-set imp:=(select impianto from ddt where id_ddt=idDdt and anno=annoDdt);
-
-set quan=qt;
-
-
-
-if (imp)<>"" then
-
-
-
-if (arti is not null) then
-
-
-
-
-
-while quan > 0 do
-
-
-
-set cod:=(select if(max(id) is not null,max(id+1),"0") from impianto_componenti where id_impianto=imp and impianto_componenti.id_articolo=arti);
-
-
-
-    insert into impianto_componenti(id,id_impianto,id_articolo,data_scadenza,data_installazione,fine_garanzia,checked,garanzia_fornitore)
-
-		values(
-
-    cod,
-
-    imp,
-
-    arti,
-
-  (select if(dat>=(select dat+interval (select scadenza from articolo where codice_articolo=arti)
-
-  month),null,(select dat+interval (select scadenza from articolo where codice_articolo=arti) month))),
-
-dat,
-
-    (select dat+interval (select if(tipo_cliente=1,1,2) from clienti inner join ddt
-
-    on ddt.id_ddt=idddt and ddt.anno=annoDdt and clienti.id_cliente=ddt.id_cliente) year),
-
-    "2",
-
-
-
-  (select if(dat>=(select dat+interval (select garanzia from articolo where codice_articolo=arti)
-
-  month),null,(select dat+interval (select garanzia from articolo where codice_articolo=arti) month))));
-
-
-
-if qt=1 then
-
-set sn:=(select serial_number from articoli_ddt where id_ddt=idDdt and anno=annoDdt and numero_tab=tabi);
-
-if(sn is not null and sn<>"") then
-
-  insert into impianto_componenti_codice(id_impianto,id_articolo,codice,seriale,tipo)values(imp,arti,cod,sn,4);
-
-end if;
-
-
-
-end if;
-
-
-
- insert into impianto_componenti_ddt(id_impianto,id_articolo,codice,id_ddt,anno,id_tab)values
-
- (imp,arti,cod,idDdt,annoDdt,tabi);
-
-set quan=quan-1;
-
-
-
-end while;
-
-	end if;
-
-
-
-end if;
-
-
-
-
-
-end $$
+CREATE  PROCEDURE `sp_ariesSystemsDdtProductInsert`(
+	in ddt_id int,
+	in ddt_year int,
+	in product_code varchar(14),
+	IN qt DECIMAL(11,2),
+	IN tab_id INT(11),
+	IN serial_number VARCHAR(150)
+)
+BEGIN
+
+	DECLARE int_quantity INT;
+	DECLARE system_id INT;
+	DECLARE next_component_id INT;
+	DECLARE ddt_date DATE;
+	DECLARE product_expiration_months INT;
+	DECLARE product_warranty_months INT;
+	DECLARE customer_type_id INT;
+
+	-- Get ddt informations such as system id, customer type, etc
+	SELECT data_documento,
+		impianto,
+		tipo_cliente
+	INTO
+		ddt_date,
+		system_id,
+		customer_type_id
+	FROM ddt
+		INNER JOIN clienti ON clienti.id_cliente=ddt.id_cliente
+	WHERE id_ddt=ddt_id and anno=ddt_year;
+
+	-- set a new quantity var to iterate on
+	SET int_quantity = ROUND(qt);
+
+	IF (system_id IS NOT NULL) AND (product_code IS NOT NULL) THEN
+		
+		-- Get product data that we need to use n the next while
+		SELECT IFNULL(scadenza, 0),
+				IFNULL(garanzia, 0)
+			INTO product_expiration_months,
+				product_warranty_months
+		FROM articolo
+		WHERE codice_articolo = product_code;
+
+		WHILE int_quantity > 0 DO
+			SELECT
+				IF(max(id) IS NOT NULL, max(id+1), 0)
+			INTO
+				next_component_id
+			FROM impianto_componenti
+			WHERE id_impianto = system_id
+				AND impianto_componenti.id_articolo=product_code;
+
+			INSERT INTO impianto_componenti
+			SET id = next_component_id,
+				id_impianto = system_id,
+				id_articolo = product_code,
+				data_scadenza = IF(product_expiration_months = 0, NULL,  ddt_date + INTERVAL product_expiration_months month),
+				data_installazione = ddt_date,
+				fine_garanzia = ddt_date + INTERVAL if(customer_type_id=1, 1, 2) year,
+				checked = 2,
+				garanzia_fornitore =  IF(product_warranty_months = 0, NULL,  ddt_date + INTERVAL product_warranty_months month);
+
+
+			IF (serial_number IS NOT NULL AND serial_number <> "") THEN
+				INSERT INTO impianto_componenti_codice
+				SET 
+					id_impianto = system_id,
+					id_articolo = product_code,
+					codice = next_component_id,
+					seriale = serial_number,
+					tipo = 4;
+			END IF;
+
+
+			INSERT INTO impianto_componenti_ddt
+			SET id_impianto = system_id,
+				id_articolo = product_code,
+				codice = next_component_id,
+				id_ddt = ddt_id,
+				anno = ddt_year,
+				id_tab = tab_id;
+
+			SET int_quantity = int_quantity - 1;
+
+
+		END WHILE;
+	END IF;		
+
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesSystemsDdtProductDelete;
+DELIMITER $$
+CREATE  PROCEDURE `sp_ariesSystemsDdtProductDelete`(
+	in ddt_id int,
+	in ddt_year int,
+	in product_code varchar(14),
+	IN tab_id INT(11)
+)
+BEGIN
+	DELETE 	impianto_componenti 
+	FROM 		impianto_componenti 
+				INNER JOIN impianto_componenti_ddt ON
+					 impianto_componenti.id_articolo=impianto_componenti_ddt.id_articolo
+					 AND impianto_componenti_ddt.id_impianto=impianto_componenti.id_impianto
+					 AND id=codice
+					 AND anno=ddt_year
+					 AND id_ddt=ddt_id
+					 AND id_tab=tab_id
+	WHERE impianto_componenti.id_articolo=product_code; 
+
+	-- Delete system components - ddt associations
+	DELETE FROM impianto_componenti_ddt 
+	WHERE id_ddt=ddt_id and anno=ddt_year and id_tab=tab_id;
+
+END $$
 DELIMITER ;
 
 

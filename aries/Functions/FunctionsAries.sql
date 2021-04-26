@@ -261,7 +261,11 @@ DELIMITER ;
 
 DROP FUNCTION IF EXISTS  fnc_reportProductHasDepotLink;
 DELIMITER // 
-CREATE FUNCTION fnc_reportProductHasDepotLink(report_id INT, report_year INT, tab_id INT) RETURNS BIT(1)
+CREATE FUNCTION fnc_reportProductHasDepotLink(
+    report_id INT,
+    report_year INT,
+    tab_id INT
+) RETURNS BIT(1)
 BEGIN
 
 	DECLARE has_depot_link BIT(1);
@@ -297,6 +301,10 @@ BEGIN
 		SELECT  fnc_productAllowDepotsScale(product_code)
 			INTO allow_insert;
 	END IF;
+    
+    IF allow_insert IS NULL THEN
+        SET allow_insert = 0;
+    END IF;
 	
 	RETURN  allow_insert;
 	
@@ -323,8 +331,11 @@ BEGIN
 		SELECT  fnc_productAllowDepotsScale(product_code)
 			INTO allow_insert; 
 	END IF; 
+    
+    IF allow_insert IS NULL THEN
+        SET allow_insert = 0;
+    END IF;
 
-	
 	RETURN  allow_insert;
 	
 END // 
@@ -347,13 +358,6 @@ BEGIN
                     ON articolo.Categoria = categoria_merciologica.Id_categoria 
     WHERE 	articolo.Codice_articolo = product_code;
     
-    -- CHECK FOR KIT PRODUCT
-    IF allow_insert = 1 THEN
-        SELECT  IF(IFNULL(is_kit, 1) = 0, 1, 0)
-                INTO allow_insert
-        FROM  	articolo
-        WHERE 	articolo.Codice_articolo = product_code;
-    END IF;
 
     IF allow_insert IS NULL THEN
         SET allow_insert = 0;
@@ -386,6 +390,29 @@ BEGIN
     END IF;
 	
 	RETURN  allow_insert;
+	
+END // 
+DELIMITER ;
+
+
+
+DROP FUNCTION IF EXISTS  fnc_productIsKit;
+DELIMITER // 
+CREATE FUNCTION fnc_productIsKit(product_code VARCHAR(16)) RETURNS BIT(1)
+BEGIN
+
+	DECLARE is_kit BIT(1);
+	
+    SELECT  IFNULL(articolo.is_kit, 0)
+                INTO is_kit
+    FROM  	articolo
+    WHERE 	Codice_articolo = product_code;
+
+    IF is_kit IS NULL THEN
+        SET is_kit = 0;
+    END IF;
+	
+	RETURN  is_kit;
 	
 END // 
 DELIMITER ;

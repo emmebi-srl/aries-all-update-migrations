@@ -68,7 +68,7 @@ SOSTITUIRE REPORT ORDINE.RAV, PREVENTIVO.RAV, commessa
 			if (new.quantità<99) AND ((SELECT IF(new.quantità mod 1=0,"1","0"))="1") then
 
 			if (SELECT impianto FROM ddt WHERE id_ddt=new.id_ddt AND anno=new.anno)<>"" then
-			call ddt_impianto_componenti(new.id_Ddt,new.anno,new.id_articolo,new.quantità,new.numero_tab);
+			call sp_ariesSystemsDdtProductInsert(new.id_Ddt,new.anno,new.id_articolo,new.quantità,new.numero_tab);
 
 			end if;
 			end if;

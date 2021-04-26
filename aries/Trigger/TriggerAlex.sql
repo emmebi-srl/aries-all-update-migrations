@@ -33,7 +33,7 @@ BEGIN
 	IF allow_insert = 1 THEN
 		SET depot_type = 1; -- MAGAZZINO
 		CALL sp_ariesDepotsInvoiceProductInsert(NEW.id_fattura, NEW.anno, NEW.n_tab, NEW.quantità,
-			NEW.id_materiale, depot_type);
+				NEW.id_materiale, depot_type);
 	END IF;
 END 
 //
@@ -63,18 +63,7 @@ DROP TRIGGER IF EXISTS trg_beforeSupplierInvoiceProductDelete;
 delimiter //
 CREATE TRIGGER `trg_beforeSupplierInvoiceProductDelete` BEFORE DELETE ON `fornfattura_articoli` FOR EACH ROW 
 BEGIN
-	DECLARE operation_id BIGINT;
-
-	-- get operation id
-	SELECT id_operazione
-		INTO operation_id
-	FROM magazzino_fornfattura 
-	WHERE id_fattura=old.id_fattura AND anno=old.anno and id_tab=old.n_tab;
-	
-	-- delete operation
-	IF operation_id IS NOT NULL THEN
-  		CALL sp_ariesDepotOperationsDelete(operation_id);
-	END IF;
+	CALL sp_ariesDepotsSupplierInvoiceProductDelete(OLD.id_fattura, OLD.anno, OLD.n_tab);
 END 
 //
 delimiter ; 
@@ -85,17 +74,7 @@ DROP TRIGGER IF EXISTS trg_beforeInvoiceProductDelete;
 delimiter //
 CREATE TRIGGER `trg_beforeInvoiceProductDelete` BEFORE DELETE ON `fattura_articoli` FOR EACH ROW 
 BEGIN
-	DECLARE operation_id BIGINT;
-	-- get operation id
-	SELECT id_operazione
-		INTO operation_id
-	FROM magazzino_fattura 
-	WHERE id_fattura=old.id_fattura AND anno=old.anno and id_tab=old.n_tab;
-
-	-- delete operation
-	IF operation_id IS NOT NULL THEN
-  		CALL sp_ariesDepotOperationsDelete(operation_id);
-	END IF;
+	CALL sp_ariesDepotsInvoiceProductDelete(OLD.id_fattura, OLD.anno, OLD.n_tab);
 END 
 //
 delimiter ; 
@@ -146,8 +125,9 @@ delimiter ;
 
 DROP TRIGGER IF EXISTS modmag; 
 DROP TRIGGER IF EXISTS trg_afterInsertOperationDelete; 
+DROP TRIGGER IF EXISTS trg_afterDepotOperationInsert; 
 delimiter //
-CREATE TRIGGER `trg_afterInsertOperationDelete` AFTER INSERT ON `magazzino_operazione` FOR EACH ROW 
+CREATE TRIGGER `trg_afterDepotOperationInsert` AFTER INSERT ON `magazzino_operazione` FOR EACH ROW 
 BEGIN
 	DECLARE LastDepotBlockDate DATE; 
 	
@@ -178,9 +158,9 @@ END
 delimiter ; 
 
 DROP TRIGGER IF EXISTS upmag; 
-DROP TRIGGER IF EXISTS trg_afterInsertOperationUpdate;
+DROP TRIGGER IF EXISTS trg_afterDepotOperationUpdate;
 delimiter //
-CREATE TRIGGER `trg_afterInsertOperationUpdate` AFTER UPDATE ON `magazzino_operazione` FOR EACH ROW 
+CREATE TRIGGER `trg_afterDepotOperationUpdate` AFTER UPDATE ON `magazzino_operazione` FOR EACH ROW 
 BEGIN
 	DECLARE LastDepotBlockDate DATE; 
 	
@@ -212,8 +192,9 @@ delimiter ;
 
 
 DROP TRIGGER IF EXISTS ins_maga; 
+DROP TRIGGER IF EXISTS trg_afterDepotTypeInsert; 
 delimiter //
-CREATE TRIGGER `ins_maga` AFTER INSERT ON `tipo_magazzino` FOR EACH ROW 
+CREATE TRIGGER `trg_afterDepotTypeInsert` AFTER INSERT ON `tipo_magazzino` FOR EACH ROW 
 BEGIN
 	INSERT INTO causale_magazzino
 	(
@@ -261,28 +242,14 @@ BEGIN
 	CALL sp_ariesDepotsDdtProductDelete(OLD.id_ddt, OLD.anno, OLD.numero_tab);
 
 	-- ## RESET SYSTEM PRODUCTS
-	DELETE 	impianto_componenti 
-	FROM 		impianto_componenti 
-				INNER JOIN impianto_componenti_ddt ON
-					 impianto_componenti.id_articolo=impianto_componenti_ddt.id_articolo
-					 AND impianto_componenti_ddt.id_impianto=impianto_componenti.id_impianto
-					 AND id=codice
-					 AND old.anno=anno
-					 AND id_ddt=old.id_ddt
-					 AND id_tab=old.numero_tab
-	WHERE impianto_componenti.id_articolo=old.id_Articolo; 
-
-	-- Delete system components - ddt associations
-	DELETE FROM impianto_componenti_ddt 
-	WHERE id_ddt=old.id_ddt and anno=old.anno and id_tab=old.numero_tab;
+	CALL sp_ariesSystemsDdtProductDelete(OLD.id_ddt, OLD.anno,
+		OLD.id_Articolo, OLD.numero_tab);
 
 END
 //
 delimiter ; 
 
 
-
-DROP TRIGGER IF EXISTS ins_art_ddt; 
 DROP TRIGGER IF EXISTS sp_afterDdtProductInsert; 
 DELIMITER //
 CREATE TRIGGER `sp_afterDdtProductInsert` AFTER INSERT ON `articoli_ddt` FOR EACH ROW BEGIN		
@@ -298,11 +265,11 @@ CREATE TRIGGER `sp_afterDdtProductInsert` AFTER INSERT ON `articoli_ddt` FOR EAC
 
 	IF (allow_depots_movement = 1) AND (NEW.causale_scarico IS NOT NULL) THEN
 		CALL sp_ariesDepotsDdtProductInsert(NEW.id_Ddt, NEW.anno, NEW.numero_tab, NEW.quantità,
-			NEW.id_articolo, NEW.causale_scarico);
+				NEW.id_articolo, NEW.causale_scarico);
 	END IF; 
 
 	SELECT fnc_productAllowSystemScale(NEW.id_articolo)
-		INTO allow_depots_movement;
+		INTO allow_system_movement;
 
 	IF (allow_system_movement OR allow_system_movement IS NULL) THEN	
 		
@@ -313,9 +280,8 @@ CREATE TRIGGER `sp_afterDdtProductInsert` AFTER INSERT ON `articoli_ddt` FOR EAC
 		WHERE Id_ddt =  NEW.id_ddt AND anno = NEW.anno; 
 		
 		IF system_id IS NOT NULL AND system_id > 0 THEN
-			CALL ddt_impianto_componenti(NEW.id_Ddt,NEW.anno,NEW.id_articolo,NEW.quantità,NEW.numero_tab);
-		END IF; 
-		
+			CALL sp_ariesSystemsDdtProductInsert(NEW.id_Ddt,NEW.anno,NEW.id_articolo,NEW.quantità,NEW.numero_tab,NEW.serial_number);
+		END IF;
 	END IF;
 END 
 //
@@ -348,6 +314,50 @@ BEGIN
 	IF has_job_link = 1 THEN
 		SIGNAL SQLSTATE '45000'
      	SET MESSAGE_TEXT = 'Cannot update ddt product becacuse of the job link already exists.';
+	END IF;
+END;
+//
+DELIMITER ;
+
+
+DROP TRIGGER IF EXISTS trg_afterDdtProductUpdate;
+delimiter //
+CREATE TRIGGER `trg_afterDdtProductUpdate` AFTER UPDATE ON `articoli_ddt` FOR EACH ROW 
+BEGIN
+
+	DECLARE allow_depots_movement BIT; 
+	DECLARE allow_system_movement BIT; 
+	DECLARE system_id INT(11);
+
+	-- UNDO PREVIOUS STATE
+	CALL sp_ariesDepotsDdtProductDelete(OLD.id_ddt, OLD.anno, OLD.numero_tab);
+	CALL sp_ariesSystemsDdtProductDelete(OLD.id_ddt, OLD.anno,
+	  OLD.id_Articolo, OLD.numero_tab);
+
+	
+	-- SCALE BASED ON NEW PRODUCT
+	SELECT  fnc_productAllowDepotsScale(NEW.id_articolo)
+		INTO allow_depots_movement;
+
+	IF (allow_depots_movement = 1) AND (NEW.causale_scarico IS NOT NULL) THEN
+		CALL sp_ariesDepotsDdtProductInsert(NEW.id_Ddt, NEW.anno, NEW.numero_tab, NEW.quantità,
+				NEW.id_articolo, NEW.causale_scarico);
+	END IF; 
+
+	SELECT fnc_productAllowSystemScale(NEW.id_articolo)
+		INTO allow_system_movement;
+
+	IF (allow_system_movement OR allow_system_movement IS NULL) THEN	
+		
+		SELECT ddt.impianto
+			INTO 
+			system_id
+		FROM ddt 
+		WHERE Id_ddt =  NEW.id_ddt AND anno = NEW.anno; 
+		
+		IF system_id IS NOT NULL AND system_id > 0 THEN
+			CALL sp_ariesSystemsDdtProductInsert(NEW.id_Ddt,NEW.anno,NEW.id_articolo,NEW.quantità,NEW.numero_tab,NEW.serial_number);
+		END IF;
 	END IF;
 END;
 //
@@ -395,14 +405,19 @@ DROP TRIGGER IF EXISTS trg_afterReportProductInsert;
 CREATE TRIGGER `trg_afterReportProductInsert` AFTER INSERT ON `rapporto_materiale` FOR EACH ROW 
 BEGIN
 	DECLARE allow_insert BIT(1);
+	DECLARE is_kit BIT(1);
 
-  -- TO DO NOW ASAP
-	SELECT  fnc_productAllowDepotsScale(new.id_materiale)
-		INTO allow_insert; 
-		
-	-- CHECK IF IS PRODCUT AND HAI DEPOTS ID
-	IF (allow_insert = 1) AND (new.id_magazzino IS NOT NULL) THEN
-		CALL sp_ariesDepotsScaleByReportProduct(new.id_rapporto, new.anno, new.id_tab);
+	IF new.id_materiale IS NOT NULL THEN
+
+		SELECT  fnc_productAllowDepotsScale(new.id_materiale)
+			INTO allow_insert;
+
+			
+		-- CHECK IF IS PRODCUT AND HAI DEPOTS ID
+		IF (allow_insert = 1) AND (new.id_magazzino IS NOT NULL) THEN
+			CALL sp_ariesDepotsScaleByReportProduct(new.id_rapporto, new.anno, new.id_tab,
+				new.quantità, new.id_materiale);
+		END IF;
 	END IF;
 END
 //
