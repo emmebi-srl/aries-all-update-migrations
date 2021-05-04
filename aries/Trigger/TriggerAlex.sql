@@ -123,6 +123,7 @@ END
 //
 delimiter ;  
 
+
 DROP TRIGGER IF EXISTS modmag; 
 DROP TRIGGER IF EXISTS trg_afterInsertOperationDelete; 
 DROP TRIGGER IF EXISTS trg_afterDepotOperationInsert; 
@@ -135,7 +136,7 @@ BEGIN
 		INTO LastDepotBlockDate
 	FROM magazzino_blocco 
 	ORDER BY id_blocco DESC 
-	LIMIT 1; 
+	LIMIT 1;
 	
 	IF (new.data >= LastDepotBlockDate OR LastDepotBlockDate IS NULL) THEN
 		INSERT INTO magazzino 
@@ -159,6 +160,7 @@ delimiter ;
 
 DROP TRIGGER IF EXISTS upmag; 
 DROP TRIGGER IF EXISTS trg_afterDepotOperationUpdate;
+DROP TRIGGER IF EXISTS trg_afterInsertOperationUpdate;
 delimiter //
 CREATE TRIGGER `trg_afterDepotOperationUpdate` AFTER UPDATE ON `magazzino_operazione` FOR EACH ROW 
 BEGIN
@@ -225,8 +227,9 @@ delimiter ;
 -- ############################# DDT PRODuCT ############################################################################## 
 DROP TRIGGER IF EXISTS del_Art_ddt_bf;
 DROP TRIGGER IF EXISTS sp_beforeDdtProductDelete; 
+DROP TRIGGER IF EXISTS trg_beforeDdtProductDelete; 
 delimiter //
-CREATE TRIGGER `sp_beforeDdtProductDelete` BEFORE DELETE ON `articoli_ddt` FOR EACH ROW 
+CREATE TRIGGER `trg_beforeDdtProductDelete` BEFORE DELETE ON `articoli_ddt` FOR EACH ROW 
 BEGIN
 	DECLARE has_job_link BIT(1);
 
@@ -250,9 +253,10 @@ END
 delimiter ; 
 
 
-DROP TRIGGER IF EXISTS sp_afterDdtProductInsert; 
+DROP TRIGGER IF EXISTS sp_afterDdtProductInsert;
+DROP TRIGGER IF EXISTS trg_afterDdtProductInsert;  
 DELIMITER //
-CREATE TRIGGER `sp_afterDdtProductInsert` AFTER INSERT ON `articoli_ddt` FOR EACH ROW BEGIN		
+CREATE TRIGGER `trg_afterDdtProductInsert` AFTER INSERT ON `articoli_ddt` FOR EACH ROW BEGIN		
 
 	DECLARE allow_depots_movement BIT; 
 	DECLARE allow_system_movement BIT; 

@@ -9209,6 +9209,59 @@ END//
 DELIMITER ;
 
 
+-- Dump della struttura di procedura emmebi.sp_ariesOrderSupplierMarkAsComplete
+DROP PROCEDURE IF EXISTS sp_ariesOrderSupplierMarkAsComplete;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesOrderSupplierMarkAsComplete`( 
+	enter_id INT, 
+	enter_year INT
+)
+BEGIN
+	DECLARE previous_status INT(11);
+
+	SELECT stato INTO previous_status
+	FROM ordine_fornitore
+	WHERE id_ordine = enter_id AND Anno = enter_year; 
+
+	IF previous_status = 3 OR previous_status = 1 THEN
+		UPDATE ordine_fornitore
+		SET segna_come_evaso = 1,
+			utente_evasione = @USER_ID,
+			stato_pre_evasione = previous_status,
+			stato = 4
+		WHERE id_ordine = enter_id AND Anno = enter_year; 
+	END IF;	
+END//
+DELIMITER ;
+
+-- Dump della struttura di procedura emmebi.sp_ariesOrderSupplierUnmarkAsComplete
+DROP PROCEDURE IF EXISTS sp_ariesOrderSupplierUnmarkAsComplete;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesOrderSupplierUnmarkAsComplete`( 
+	enter_id INT, 
+	enter_year INT
+)
+BEGIN
+	DECLARE pre_completed_status INT(11);
+
+	SELECT stato_pre_evasione INTO pre_completed_status
+	FROM ordine_fornitore
+	WHERE id_ordine = enter_id AND Anno = enter_year; 
+
+	IF pre_completed_status IS NOT NULL  THEN
+		UPDATE ordine_fornitore
+		SET segna_come_evaso = 0,
+			utente_evasione = @USER_ID,
+			stato_pre_evasione = NULL,
+			stato = pre_completed_status
+		WHERE id_ordine = enter_id AND Anno = enter_year; 
+	END IF;	
+END//
+DELIMITER ;
+
+
+
+
 -- Dump della struttura di procedura emmebi.sp_ariesOrderSupplierRowDeleteByOrderSupplier
 DROP PROCEDURE IF EXISTS sp_ariesOrderSupplierRowDeleteByOrderSupplier;
 DELIMITER //
@@ -18909,8 +18962,15 @@ BEGIN
 	WHERE tipo_magazzino = depot_id
 		AND Operazione = 2;
 
-	INSERT INTO magazzino_operazione (`Data`, causale, articolo, quantità, id_magazzino, sorgente)
-		VALUES (CURRENT_DATE,  causal_id, product_code, concat('-',quantity), depot_id, 2);
+	CALL sp_ariesDepotOperationsInsert(
+		quantity * -1,
+		product_code,
+		depot_id,
+		CURRENT_DATE,
+		3,
+		causal_id,
+		operation_id
+	); 
 
 	SET operation_id = LAST_INSERT_ID(); 
 
@@ -19174,10 +19234,15 @@ BEGIN
 	WHERE id_fattura = invoice_id
 		AND anno = invoice_year;
 
-	INSERT INTO magazzino_operazione (`Data`, causale, articolo, quantità, id_magazzino, sorgente)
-		VALUES (doc_date,  causal_id, product_code, quantity, depot_id, 6);
-
-	SET operation_id = LAST_INSERT_ID(); 
+	CALL sp_ariesDepotOperationsInsert(
+		quantity,
+		product_code,
+		depot_id,
+		doc_date,
+		6,
+		causal_id,
+		operation_id
+	);
 
 	INSERT INTO magazzino_fornfattura(id_operazione,anno,id_fattura,id_tab)
 		VALUES (operation_id, invoice_year, invoice_id, tab_id);
@@ -19216,10 +19281,15 @@ BEGIN
 	WHERE id_fattura = invoice_id
 		AND anno = invoice_year;
 
-	INSERT INTO magazzino_operazione (`Data`, causale, articolo, quantità, id_magazzino, sorgente)
-		VALUES (doc_date,  causal_id, product_code, quantity * -1, depot_id, 7);
-
-	SET operation_id = LAST_INSERT_ID(); 
+	CALL sp_ariesDepotOperationsInsert(
+		quantity * -1,
+		product_code,
+		depot_id,
+		doc_date,
+		7,
+		causal_id,
+		operation_id
+	);
 
 	INSERT INTO magazzino_fattura(id_operazione,anno,id_fattura,id_tab)
 		VALUES (operation_id, invoice_year, invoice_id, tab_id);
@@ -19283,19 +19353,30 @@ BEGIN
 		AND Operazione = IF(operation_type > 2, operation_type - 2, operation_type);
 
 	-- scale from depot
-	INSERT INTO magazzino_operazione (`Data`, causale, articolo, quantità, id_magazzino, sorgente)
-		VALUES (doc_date,  causal_id, product_code, new_quantity, depot_id, 8);
+	CALL sp_ariesDepotOperationsInsert(
+		new_quantity,
+		product_code,
+		depot_id,
+		doc_date,
+		8,
+		causal_id,
+		operation_id
+	);
 
-	SET operation_id = LAST_INSERT_ID(); 
 	INSERT INTO magazzino_ddt_ricevuti(id_operazione,id_anno,id_ddt,id_tab)
 		VALUES (operation_id, ddt_year, ddt_id, tab_id);
 
 	-- IF ooperation type is 3 or 4 we are moving produt between depots, scale from other depot
 	IF (operation_type = 3) OR (operation_type = 4) THEN 
-		INSERT INTO magazzino_operazione (`Data`, causale, articolo, quantità, id_magazzino, sorgente)
-			VALUES (doc_date,  causal_id, product_code, new_quantity * -1, move_depot_id, 8);
-
-		SET operation_id = LAST_INSERT_ID();
+		CALL sp_ariesDepotOperationsInsert(
+			new_quantity * -1,
+			product_code,
+			move_depot_id,
+			doc_date,
+			8,
+			causal_id,
+			operation_id
+		);
 
 		UPDATE magazzino_ddt_ricevuti
 		SET id_reso = operation_id
@@ -19474,19 +19555,29 @@ BEGIN
 		AND Operazione = IF(operation_type > 2, operation_type - 2, operation_type);
 
 	-- scale from depot
-	INSERT INTO magazzino_operazione (`Data`, causale, articolo, quantità, id_magazzino, sorgente)
-		VALUES (doc_date,  causal_id, product_code, new_quantity, depot_id, 3);
-
-	SET operation_id = LAST_INSERT_ID(); 
+	CALL sp_ariesDepotOperationsInsert(
+			new_quantity,
+			product_code,
+			depot_id,
+			doc_date,
+			3,
+			causal_id,
+			operation_id
+		); 
 	INSERT INTO magazzino_ddt_emessi(id_operazione, anno_ddt, id_ddt, id_tab)
 		VALUES (operation_id, ddt_year, ddt_id, tab_id);
 
 	-- IF ooperation type is 3 or 4 we are moving produt between depots, scale from other depot
-	IF (operation_type = 3) OR (operation_type = 4) THEN 
-		INSERT INTO magazzino_operazione (`Data`, causale, articolo, quantità, id_magazzino, sorgente)
-			VALUES (doc_date,  causal_id, product_code, new_quantity * -1, move_depot_id, 3);
-
-		SET operation_id = LAST_INSERT_ID();
+	IF (operation_type = 3) OR (operation_type = 4) THEN
+		CALL sp_ariesDepotOperationsInsert(
+			new_quantity * -1,
+			product_code,
+			move_depot_id,
+			doc_date,
+			3,
+			causal_id,
+			operation_id
+		);
 
 		UPDATE magazzino_ddt_emessi
 		SET id_reso = operation_id
@@ -19502,14 +19593,27 @@ CREATE PROCEDURE sp_ariesDepotsReceivedDdtDelete(
 	ddt_id INT, ddt_year INT
 )
 BEGIN
+	DECLARE done INT DEFAULT 0;
+	DECLARE V_operation_id BIGINT(11);
+	DECLARE V_reso_id BIGINT(11);
+	DECLARE V_curA CURSOR FOR SELECT id_operazione, id_reso
+		FROM magazzino_ddt_emessi 
+		WHERE id_ddt = ddt_id AND anno_ddt = ddt_year;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
-  DELETE magazzino_operazione
-	FROM magazzino_operazione
-  	INNER JOIN magazzino_ddt_emessi 
-			ON magazzino_operazione.id_operazione IN (magazzino_ddt_emessi.id_operazione, magazzino_ddt_emessi.id_reso)
-				AND magazzino_ddt_emessi.id_ddt = ddt_id 
-				AND anno_ddt = ddt_year;
-	
+	OPEN V_curA;
+	loopA: LOOP
+		FETCH V_curA INTO V_operation_id, V_reso_id;
+		IF done = 1 THEN 
+			LEAVE loopA;
+		END IF;
+		
+		CALL sp_ariesDepotOperationsDelete(V_operation_id);
+		IF V_reso_id IS NOT NULL THEN
+			CALL sp_ariesDepotOperationsDelete(V_reso_id);
+		END IF;
+	END LOOP;
+	CLOSE V_curA;
 END $$
 DELIMITER ;
 
@@ -19521,6 +19625,8 @@ CREATE PROCEDURE sp_ariesDepotOperationsDelete(
 BEGIN
 
 	DECLARE source_id INT(11);
+	DECLARE is_kit BIT(1); 
+	DECLARE product_code VARCHAR(16);
 
 	SELECT sorgente
 		INTO source_id
@@ -19567,6 +19673,13 @@ BEGIN
 		END IF;
 	END IF;
 
+	SET is_kit = fnc_productIsKit(product_code);
+	IF is_kit = 1 AND source_id IS NOT NULL THEN
+		SET max_sp_recursion_depth = 255;
+		CALL sp_ariesDepotOperationsUnscaleKitProducts(operation_id, source_id);
+		SET max_sp_recursion_depth = 0;
+	END IF;
+
   DELETE magazzino_operazione
 	FROM magazzino_operazione
   WHERE magazzino_operazione.id_operazione = operation_id;
@@ -19587,14 +19700,30 @@ CREATE PROCEDURE sp_ariesDepotOperationsInsert(
 )
 BEGIN
 
+	DECLARE is_kit BIT(1);
+
 	INSERT INTO magazzino_operazione (`Data`, causale, articolo, quantità, id_magazzino, sorgente)
 		VALUES (doc_date,  causal_id, product_code, quantity, depot_id, source_id);
 
 	SET result = LAST_INSERT_ID();
 
+	SET is_kit = fnc_productIsKit(product_code);
+	IF is_kit = 1 AND source_id IS NOT NULL THEN
+		SET max_sp_recursion_depth = 255;
+		CALL sp_ariesDepotOperationsScaleKitProducts(
+			quantity,
+			product_code,
+			depot_id,
+			source_id,
+			doc_date,
+		  result,
+			causal_id
+		);
+		SET max_sp_recursion_depth = 0;
+	END IF;
+
 END $$
 DELIMITER ;
-
 
 DROP PROCEDURE IF EXISTS sp_ariesDepotOperationsUpdate;
 DELIMITER $$
@@ -19621,6 +19750,100 @@ BEGIN
 
 END $$
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesDepotOperationsScaleKitProducts;
+DELIMITER $$
+CREATE PROCEDURE sp_ariesDepotOperationsScaleKitProducts
+(
+	quantity DECIMAL(11, 2),
+	product_code VARCHAR(16),
+	depot_id INT(11),
+	source_id SMALLINT,
+	doc_date DATE,
+	kit_operation_id BIGINT(11),
+	kit_causal_id INT(11)
+)
+BEGIN
+	DECLARE done INT DEFAULT 0;
+	DECLARE single_insert_result INT(11);
+	DECLARE causal_id INT(11);
+	DECLARE kit_depot_operation INT(11);
+	DECLARE V_quantity DECIMAL(11,2);
+	DECLARE V_product_code VARCHAR(16);
+	DECLARE V_curA CURSOR FOR SELECT id_articolo, quantita
+		FROM riferimento_kit_articoli
+		WHERE id_kit = product_code;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+	IF source_id = 1 THEN -- WE WANT TO SCALED ONLY FOR MANUAL OPERATION
+		SELECT Operazione
+			INTO kit_depot_operation
+		FROM causale_magazzino
+		WHERE Id_causale = kit_causal_id;
+		
+		SELECT Id_causale
+			INTO causal_id
+		FROM causale_magazzino
+		WHERE tipo_magazzino = depot_id
+			AND operazione = IF(kit_depot_operation = 1, 2, 1);
+
+		OPEN V_curA;
+		loopA: LOOP
+			FETCH V_curA INTO V_product_code, V_quantity;
+			IF done = 1 THEN 
+				LEAVE loopA;
+			END IF;
+			
+			CALL sp_ariesDepotOperationsInsert(
+				(V_quantity * quantity) * -1,
+				v_product_code,
+				depot_id,
+				doc_date,
+				source_id,
+				causal_id,
+				single_insert_result
+			);
+
+			INSERT INTO magazzino_kit_riferimento
+			SET Id_operazione_kit = kit_operation_id,
+				Id_operazione_articolo = LAST_INSERT_ID();
+		END LOOP;
+		CLOSE V_curA;
+	END IF;
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesDepotOperationsUnscaleKitProducts;
+DELIMITER $$
+CREATE PROCEDURE sp_ariesDepotOperationsUnscaleKitProducts
+(
+	IN kit_operation_id BIGINT(11),
+	IN kit_source_id INT(11)
+)
+BEGIN
+	DECLARE done INT DEFAULT 0;
+	DECLARE V_product_operation_id BIGINT(11);
+	DECLARE V_id INT(11);
+	DECLARE V_curA CURSOR FOR SELECT id, Id_operazione_articolo
+		FROM magazzino_kit_riferimento
+		WHERE Id_operazione_kit = kit_operation_id;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+	IF kit_source_id = 1 THEN -- WE WANT TO UNSCALE ONLY FOR MANUAL OPERATION
+		OPEN V_curA;
+		loopA: LOOP
+			FETCH V_curA INTO V_id, V_product_operation_id;
+			IF done = 1 THEN 
+				LEAVE loopA;
+			END IF;
+			
+			DELETE FROM magazzino_kit_riferimento WHERE Id = V_id;
+			DELETE FROM magazzino_operazione WHERE Id_operazione = V_product_operation_id;
+		END LOOP;
+		CLOSE V_curA;
+	END IF;
+END $$
+DELIMITER ; 
 
 DROP PROCEDURE IF EXISTS ddt_impianto_componenti;
 DROP PROCEDURE IF EXISTS sp_ariesSystemsDdtProductInsert;

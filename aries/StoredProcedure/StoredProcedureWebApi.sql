@@ -3125,15 +3125,15 @@ BEGIN
 		SET quantity = quantity * -1; 
 	END IF;
 	
-	INSERT INTO magazzino_operazione 
-	SET Articolo = product_code, 
-		Id_magazzino = warehouse_id,
-		causale = causal_id,
-		Quantità = quantity,
-		Data = operation_date,
-		sorgente = 5;
-
-	SET operation_id = LAST_INSERT_ID(); 
+	CALL sp_ariesDepotOperationsInsert(
+		quantity,
+		product_code,
+		warehouse_id,
+		operation_date,
+		5,
+		causal_id,
+		operation_id
+	); 
 	
 END; //
 DELIMITER ;
