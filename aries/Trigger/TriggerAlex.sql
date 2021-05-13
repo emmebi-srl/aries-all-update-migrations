@@ -328,7 +328,6 @@ DROP TRIGGER IF EXISTS trg_afterDdtProductUpdate;
 delimiter //
 CREATE TRIGGER `trg_afterDdtProductUpdate` AFTER UPDATE ON `articoli_ddt` FOR EACH ROW 
 BEGIN
-
 	DECLARE allow_depots_movement BIT; 
 	DECLARE allow_system_movement BIT; 
 	DECLARE system_id INT(11);

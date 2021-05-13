@@ -1,0 +1,1 @@
+INSERT INTO `aspetto` (`Id_aspetto`, `Nome`) VALUES ('BU', 'BUSTA');

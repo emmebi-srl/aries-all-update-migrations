@@ -12,3 +12,7 @@ ALTER TABLE `ordine_fornitore`
 
 ALTER TABLE `ordine_fornitore`
 	ADD CONSTRAINT `FK_ordine_fornitore_9` FOREIGN KEY (`utente_evasione`) REFERENCES `utente` (`Id_utente`) ON UPDATE CASCADE ON DELETE SET NULL;
+
+ALTER TABLE `ordine_fornitore`
+	CHANGE COLUMN `segna_come_evaso` `segna_come_evaso` BIT(1) NOT NULL DEFAULT b'0' AFTER `stato`;
+
