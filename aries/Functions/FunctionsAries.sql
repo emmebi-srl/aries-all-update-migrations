@@ -219,7 +219,7 @@ CREATE FUNCTION fnc_jobremainingamountforspecificproduct(JobId SMALLINT, JobYear
 BEGIN
 	DECLARE outVal DECIMAL(11,2);
 	
-	SELECT qta_commessa - qta_utilizzata
+	SELECT SUM(qta_commessa - qta_utilizzata)
 	INTO outVal
 	FROM vw_jobbody
 	WHERE Id_commessa = JobId 
