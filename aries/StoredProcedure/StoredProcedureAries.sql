@@ -9598,6 +9598,32 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Dump della struttura di procedura emmebi.sp_ariesPrinterFormsGetByDocumentAndForm
+DROP PROCEDURE IF EXISTS sp_ariesPrinterFormsGetByDocumentAndForm;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesPrinterFormsGetByDocumentAndForm`(
+	IN document_id INT(11), 
+	IN form_id INT(11)
+)
+BEGIN
+	SELECT 
+		`id_documento`,
+		`modulo`,
+		`Id_modulo`,
+		`mail`,
+		`pdf`,
+		`fax`,
+		`stampa`,
+		`anteprima`,
+		IFNULL(`File_name`, '') AS File_name,
+		IFNULL(`Report_name`, '') AS Report_name,
+		`Attivo`
+	FROM stampante_moduli
+	WHERE Id_documento = document_id
+		AND Id_modulo = form_id; 
+END//
+DELIMITER ;
+
 
 -- Dump della struttura di procedura emmebi.sp_ariesProductCategoryDelete
 DROP PROCEDURE IF EXISTS sp_ariesProductCategoryDelete;
