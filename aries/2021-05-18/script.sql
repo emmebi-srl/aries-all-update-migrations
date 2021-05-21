@@ -13,9 +13,9 @@ BEGIN
 	WHERE partita_iva = '03173480967';
 
 	IF is_siantel THEN
-		SET report_filename = 'ordine_siantel.rav';
+		SET report_filename = 'Ordine_siantel.rav';
 	ELSE
-		SET report_filename = 'ordine.rav';
+		SET report_filename = 'Ordine.rav';
 	END IF;
 
 	UPDATE stampante_moduli
