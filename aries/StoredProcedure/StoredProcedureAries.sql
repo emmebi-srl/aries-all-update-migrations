@@ -7910,16 +7910,13 @@ CREATE  PROCEDURE `sp_ariesInvoicePaymentGetByInvoice`(
 )
 BEGIN
 
-	DECLARE iva_value INT(11); 
-	SELECT aliquota 
-		INTO iva_value
+	DECLARE iva_collectability VARCHAR(5); 
+	SELECT esigibilita 
+		INTO iva_collectability
 	FROM fattura INNER JOIN tipo_iva ON fattura.id_iv = tipo_iva.id_iva
 	WHERE Fattura.Id_fattura = invoice_id 
 		AND fattura.anno = invoice_year;
-	
-	IF iva_value = NULL THEN
-		SET iva_value = 0;
-	END IF; 
+
 
 	SELECT 
 		IF(fattura_pagamenti.id_fattura IS NULL, false, True) AS 'Exists',
@@ -7934,7 +7931,10 @@ BEGIN
 		fattura_pagamenti.anno_prima_nota,
 		fattura_pagamenti.id_trasferimento_verso,
 		fattura_pagamenti.anno_trasferimento_verso,
-		ROUND(fattura.importo_totale/a.mesi, 2) AS "importo_rata", 
+		ROUND(IF(iva_collectability <> 'S', fattura.importo_totale, fattura.importo_imponibile)/a.mesi, 2) AS "importo_rata", 
+		ROUND(fattura.importo_imponibile/a.mesi, 2) AS "importo_rata_imponibile", 
+		ROUND(IF(iva_collectability <> 'S', fattura.importo_iva/a.mesi, 0), 2) AS "importo_rata_iva",  
+		if (iva_collectability = 'S', 1, 0)  AS "split_payment", -- in questo caso l'iva non va a fare parte dell'importo della rata
 		IFNULL(fattura_pagamenti.`data`, LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY) AS "data"
 		
 	FROM fattura
@@ -7946,8 +7946,6 @@ BEGIN
 		AND fattura.anno = invoice_year 
 	GROUP BY fattura.id_fattura, fattura.anno, id_pagamento_fix
 	ORDER BY fattura.anno desc, fattura.id_fattura desc;
-
-	
 
 END//
 DELIMITER ;
@@ -7962,17 +7960,12 @@ CREATE  PROCEDURE `sp_ariesInvoicePaymentGetById`(
 	IN `payment_id` INT(11)
 )
 BEGIN
-
-	DECLARE iva_value INT(11); 
-	SELECT aliquota 
-		INTO iva_value
+	DECLARE iva_collectability VARCHAR(5); 
+	SELECT esigibilita 
+		INTO iva_collectability
 	FROM fattura INNER JOIN tipo_iva ON fattura.id_iv = tipo_iva.id_iva
 	WHERE Fattura.Id_fattura = invoice_id 
-		AND fattura.anno = invoice_year ;
-	
-	IF iva_value = NULL THEN
-		SET iva_value = 0;
-	END IF; 
+		AND fattura.anno = invoice_year;
 
 	SELECT 
 		IF(fattura_pagamenti.id_fattura IS NULL, false, True) AS 'Exists',
@@ -7987,7 +7980,10 @@ BEGIN
 		fattura_pagamenti.anno_prima_nota,
 		fattura_pagamenti.id_trasferimento_verso,
 		fattura_pagamenti.anno_trasferimento_verso,
-		ROUND(fattura.importo_totale/a.mesi, 2) AS "importo_rata", 
+		ROUND(IF(iva_collectability <> 'S', fattura.importo_totale, fattura.importo_imponibile)/a.mesi, 2) AS "importo_rata", 
+		ROUND(fattura.importo_imponibile/a.mesi, 2) AS "importo_rata_imponibile", 
+		ROUND(IF(iva_collectability <> 'S', fattura.importo_iva/a.mesi, 0), 2) AS "importo_rata_iva",  
+		if (iva_collectability = 'S', 1, 0)  AS "split_payment", -- in questo caso l'iva non va a fare parte dell'importo della rata
 		IFNULL(fattura_pagamenti.`data`, LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY) AS "data"
 		
 	FROM fattura
