@@ -18064,6 +18064,7 @@ BEGIN
 		AND ap.id_revisione = QuoteRevision 
 		AND tipo IN("A", "AL") 
 		AND id_articolo IS NULL
+	GROUP BY lotto 
 	HAVING id_tab IS NOT NULL; -- for some reason we get one row with all null result, this having is a workaround to avoid it
 
 	INSERT INTO commessa_preventivo(id_commessa, anno, id_sottocommessa,
