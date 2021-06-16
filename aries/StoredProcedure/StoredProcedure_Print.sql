@@ -459,7 +459,7 @@ BEGIN
 
 	SELECT * 
 	FROM tmp_job_associates_documents
-	ORDER BY Data; 
+	ORDER BY id_lotto, Data; 
 
 END $$
 DELIMITER ;
