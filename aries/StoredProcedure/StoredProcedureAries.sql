@@ -18051,7 +18051,7 @@ BEGIN
 		SubJobId,
 		ap.desc_brev,
 		lotto, 
-		SUM(quantità), id_articolo, ap.codice_fornitore, ap.unità_misura, id_tab, 
+		quantità, id_articolo, ap.codice_fornitore, ap.unità_misura, id_tab, 
 		ROUND(prezzo-prezzo * IF(pl.tipo_ricar = 1, 0, sconto)/100, 2), IF(montato, ap.tempo_installazione, "0"), 
 		costo_h, costo, (prezzo_h-prezzo_h * scontolav/100), scontoriga, iva 
 	FROM articolo_preventivo ap 
@@ -18064,7 +18064,6 @@ BEGIN
 		AND ap.id_revisione = QuoteRevision 
 		AND tipo IN("A", "AL") 
 		AND id_articolo IS NULL
-	GROUP BY lotto 
 	HAVING id_tab IS NOT NULL; -- for some reason we get one row with all null result, this having is a workaround to avoid it
 
 	INSERT INTO commessa_preventivo(id_commessa, anno, id_sottocommessa,
