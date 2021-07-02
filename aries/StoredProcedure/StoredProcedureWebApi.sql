@@ -4337,3 +4337,27 @@ DELIMITER ;
 
 
 
+
+
+DROP PROCEDURE IF EXISTS sp_apiDownloadFileHistory;
+DELIMITER //
+CREATE  PROCEDURE `sp_apiDownloadFileHistory`(
+	IN `user_id` INT(11),
+	IN `employee_id` INT(11),
+	IN `file_path` VARCHAR(500),
+	IN `file_name` VARCHAR(100),
+	IN `application_ref` VARCHAR(50),
+	OUT result INT(11)
+)
+BEGIN
+	INSERT INTO storico_download_file
+	SET `id_utente` = user_id,
+		`id_operaio` = employee_id,
+		`rif_applicazione` = application_ref,
+		`file_path` = file_path,
+		`file_name` = file_name;
+END//
+DELIMITER ;
+
+
+
