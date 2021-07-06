@@ -4356,6 +4356,8 @@ BEGIN
 		`rif_applicazione` = application_ref,
 		`file_path` = file_path,
 		`file_name` = file_name;
+
+	SET result = 1;
 END//
 DELIMITER ;
 
