@@ -4339,9 +4339,9 @@ DELIMITER ;
 
 
 
-DROP PROCEDURE IF EXISTS sp_apiDownloadFileHistory;
+DROP PROCEDURE IF EXISTS sp_apiDownloadFileHistoryInsert;
 DELIMITER //
-CREATE  PROCEDURE `sp_apiDownloadFileHistory`(
+CREATE  PROCEDURE `sp_apiDownloadFileHistoryInsert`(
 	IN `user_id` INT(11),
 	IN `employee_id` INT(11),
 	IN `file_path` VARCHAR(500),
