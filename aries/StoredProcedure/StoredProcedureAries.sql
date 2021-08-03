@@ -20604,7 +20604,7 @@ BEGIN
 	DECLARE quoted_quantity DECIMAL(11,2);
 
 	SELECT preventivati INTO quoted_quantity
-	FROM commessa_articcoli
+	FROM commessa_articoli
 	WHERE Id_commessa = job_id
 		AND Anno = job_year
 		AND id_sottocommessa = sub_job_id
