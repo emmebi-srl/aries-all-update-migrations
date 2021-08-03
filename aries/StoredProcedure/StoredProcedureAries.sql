@@ -20555,3 +20555,86 @@ BEGIN
 END//
 DELIMITER ;
 
+
+
+DROP PROCEDURE IF EXISTS sp_ariesDepotTypeDelete;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesDepotTypeDelete`(
+	IN `depot_id` INT(11),
+	OUT result INT(11)
+)
+BEGIN
+	DECLARE `_rollback` BOOL DEFAULT 0;
+	DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET `_rollback` = 1;
+	
+	START TRANSACTION;
+	
+	DELETE FROM magazzino_azzera WHERE id_tipo_magazzino = depot_id;
+	DELETE FROM magazzino_operazione WHERE id_magazzino = depot_id;
+	DELETE FROM magazzino_stored WHERE tipo_magazzino = depot_id;
+	DELETE FROM causale_magazzino WHERE tipo_magazzino = depot_id;
+	DELETE FROM magazzino WHERE tipo_magazzino = depot_id;
+	DELETE FROM tipo_magazzino WHERE Id_tipo = depot_id;
+	
+	SET Result = 1;
+	
+	IF `_rollback` THEN
+	  ROLLBACK;
+	  SET Result = 0; 
+	ELSE
+		COMMIT; 
+	END IF;
+END//
+DELIMITER ;
+
+
+
+-- Dump della struttura di procedura emmebi.sp_ariesJobProductDelete
+DROP PROCEDURE IF EXISTS sp_ariesJobProductDelete;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesJobProductDelete`(
+	IN job_id INT, 
+	IN job_year SMALLINT, 
+	IN lot_id INT,
+	IN sub_job_id INT,
+	IN tab_id INT
+)
+BEGIN
+
+	DECLARE quoted_quantity DECIMAL(11,2);
+
+	SELECT preventivati INTO quoted_quantity
+	FROM commessa_articcoli
+	WHERE Id_commessa = job_id
+		AND Anno = job_year
+		AND id_sottocommessa = sub_job_id
+		AND id_lotto = lot_id
+		AND id_tab = tab_id;
+		
+	DELETE FROM commessa_articolo_comp
+	WHERE Id_commessa = job_id
+		AND Anno = job_year
+		AND id_sottocommessa = sub_job_id
+		AND lotto = lot_id
+		AND id_dettaglio = tab_id;
+
+	IF (quoted_quantity IS NOT NULL) AND (quoted_quantity > 0) THEN
+		UPDATE commessa_articoli
+		SET quantità = 0
+		WHERE Id_commessa = job_id
+			AND Anno = job_year
+			AND id_sottocommessa = sub_job_id
+			AND id_lotto = lot_id
+			AND id_tab = tab_id;
+	ELSE
+		DELETE FROM commessa_articoli
+		WHERE Id_commessa = job_id
+			AND Anno = job_year
+			AND id_sottocommessa = sub_job_id
+			AND id_lotto = lot_id
+			AND id_tab = tab_id;
+			
+	END IF; 
+
+END//
+DELIMITER ;
