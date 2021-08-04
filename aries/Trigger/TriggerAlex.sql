@@ -750,3 +750,16 @@ BEGIN
 END
 //
 DELIMITER ;
+
+
+DROP TRIGGER IF EXISTS trg_afterSystemAfterDelete; 
+delimiter //
+CREATE TRIGGER `trg_afterSystemAfterDelete` AFTER DELETE ON `impianto` FOR EACH ROW 
+BEGIN
+	UPDATE commessa_lotto
+	SET impianto = NULL
+	WHERE impianto = OLD.id_impianto;
+END
+
+//
+delimiter ; 
