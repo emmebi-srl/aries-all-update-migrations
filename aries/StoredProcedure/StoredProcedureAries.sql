@@ -13676,51 +13676,7 @@ BEGIN
 		IFNULL(gsm, "") AS gsm, 
 		IFNULL(combinatore_telefonico, "") AS combinatore_telefonico, 
 		IFNULL(flag_abbonamento, 0) As flag_abbonamento,
-		IFNULL(
--- Dump della struttura di procedura emmebi.sp_ariesSystemGetByManagerId
-DROP PROCEDURE IF EXISTS sp_ariesSystemGetByManagerId;
-DELIMITER //
-CREATE  PROCEDURE `sp_ariesSystemGetByManagerId`( 
-  manager_id INT
-)
-BEGIN
-	SELECT Id_impianto,
-		id_cliente, 
-		id_gestore, 
-		id_occupante, 
-		CAST(IFNULL(Data_funzione,'1970-01-01') AS DATE) AS Data_funzione,
-		CAST(IFNULL(Data_terminazione,'1970-01-01') AS DATE) AS Data_terminazione,
-		IFNULL(altro, "") AS altro, 
-		IFNULL(Abbonamento, 0) abbonamento, 
-		Tipo_impianto,  
-		IFNULL(Stato, 0) AS Stato , 
-		CAST(IFNULL(Data_terminazione,'1970-01-01') AS DATE) AS scadenza_garanzia,
-		IFNULL(Descrizione, '') As Descrizione, 
-		IFNULL(Destinazione, 0) AS Destinazione , 
-		IFNULL(Tempo_manutenzione, 0) AS Tempo_manutenzione, 
-		IFNULL(Costo_Manutenzione, 0) AS Costo_Manutenzione, 
-		CAST(IFNULL(Data_registrazione ,'1970-01-01') AS DATE) AS Data_registrazione,
-		IFNULL(Persone, 0) AS Persone, 
-		Data_modifica, 
-		Contr, 
-		IFNULL(sub, 0) AS sub, 
-		IFNULL(orario_prog, 0) AS orario_prog, 
-		IFNULL(id_utente, 0) AS id_utente, 
-		IFNULL(auto, 0) AS Auto, 
-		IFNULL(condizione, 0) AS condizione, 
-		IFNULL(eta, 0) AS eta, 
-		IFNULL(Stato_invio_doc, "") As stato_invio_doc, 
-		CAST(IFNULL(Data_invio_doc,'1970-01-01') AS DATE) AS Data_invio_doc,
-		IFNULL(Checklist, 0) AS Checklist,
-		IFNULL(Centrale, "") AS Centrale, 
-		IFNULL(gsm, "") AS gsm, 
-		IFNULL(combinatore_telefonico, "") AS combinatore_telefonico, 
-		IFNULL(flag_abbonamento, 0) As flag_abbonamento,
 		IFNULL(flag_abbonamento_anno, 0) AS flag_abbonamento_anno
-	FROM Impianto
-	WHERE (id_cliente = manager_id); 	
-END//
-DELIMITER ;flag_abbonamento_anno, 0) AS flag_abbonamento_anno
 	FROM Impianto;
 		
 END//
@@ -13784,6 +13740,7 @@ CREATE  PROCEDURE `sp_ariesSystemGetByManagerId`(
   manager_id INT
 )
 BEGIN
+      
 	SELECT Id_impianto,
 		id_cliente, 
 		id_gestore, 
