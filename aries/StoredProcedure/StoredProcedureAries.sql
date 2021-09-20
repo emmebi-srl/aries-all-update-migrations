@@ -20644,7 +20644,7 @@ DELIMITER ;
 -- Dump della struttura di procedura emmebi.sp_ariesJobProductDelete
 DROP PROCEDURE IF EXISTS sp_ariesCustomerMarkAsVaried;
 DELIMITER //
-CREATE  PROCEDURE `sp_ariesCustomeClone`(
+CREATE  PROCEDURE `sp_ariesCustomerMarkAsVaried`(
 	IN customer_id INT, 
 	OUT new_customer_id INT
 )
