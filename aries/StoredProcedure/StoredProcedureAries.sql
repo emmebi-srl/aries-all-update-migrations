@@ -20644,13 +20644,8 @@ DELIMITER ;
 -- Dump della struttura di procedura emmebi.sp_ariesJobProductDelete
 DROP PROCEDURE IF EXISTS sp_ariesCustomerMarkAsVaried;
 DELIMITER //
-CREATE  PROCEDURE `sp_ariesCustomerMarkAsVaried`(
+CREATE  PROCEDURE `sp_ariesCustomeClone`(
 	IN customer_id INT, 
-	IN company_name VARCHAR(70), 
-	IN company_name2 VARCHAR(50),
-	IN vat_number VARCHAR(12),
-	IN fiscal_code VARCHAR(20),
-	IN e_recipient_code VARCHAR(7),
 	OUT new_customer_id INT
 )
 BEGIN
@@ -20665,7 +20660,7 @@ BEGIN
 		condizione_pagamento, Sito_internet, password, Utente_sito, iva, modi, rc, posta, ex, tipo_rapporto,
 		id_utente, id_agente, id_abbona, id_attività, pec
 	)
-	SELECT company_name, company_name2, vat_number, fiscal_code, e_recipient_code,
+	SELECT Ragione_Sociale, Ragione_sociale2, Partita_iva, Codice_Fiscale, e_codice_destinatario,
 		Cortese_attenzione, Data_inserimento, Stato_cliente, Tipo_Cliente, stato_economico,
 		condizione_pagamento, Sito_internet, password, Utente_sito, iva, modi, rc, posta, ex, 
 		tipo_rapporto, @USER_ID, id_agente, id_abbona, id_attività, pec
