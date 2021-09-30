@@ -20775,6 +20775,123 @@ END//
 DELIMITER ;
 
 
+DROP PROCEDURE IF EXISTS sp_ariesTagGet;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesTagGet`(
+)
+BEGIN
+
+	SELECT 
+		`id_tag`,
+		`tag`,
+		`tipo_documento`,
+		`utente_ins`,
+		`utente_mod`,
+		`data_ins`,
+		`data_mod`
+	FROM tag;
+
+END//
+DELIMITER ;
 
 
+
+DROP PROCEDURE IF EXISTS sp_ariesTicketTagGetByTicket;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesTicketTagGetByTicket`(
+	OUT ticket_id INT
+)
+BEGIN
+	SELECT 
+		`id_ticket`,
+		ticket_tag.`id_tag`,
+		tag.tag
+	FROM ticket_tag
+		INNER JOIN tag ON tag.id_tag = ticket_tag.id_tag
+	WHERE id_ticket = ticket_id;
+
+END//
+DELIMITER ;
+
+
+-- Dump della struttura di procedura emmebi.sp_ariesTagInsert
+DROP PROCEDURE IF EXISTS `sp_ariesTagInsert`;
+DELIMITER //
+CREATE PROCEDURE `sp_ariesTagInsert`(
+	IN tag_value VARCHAR(50),
+	IN document_type INT(11),
+	IN user_id INT(11),
+	OUT result INT(11)
+)
+BEGIN
+
+	INSERT INTO tag
+	SET 
+		`tag` = tag_value,
+		`tipo_documento` = document_type,
+		`utente_ins` = user_id,
+		`utente_mod` = user_id,
+		`data_ins` = NOW(),
+		`data_mod` = NOW();
+
+
+	SET Result = LAST_INSERT_ID(); 
+
+				
+END//
+DELIMITER ;
+
+
+-- Dump della struttura di procedura emmebi.sp_ariesTagUpdate
+DROP PROCEDURE IF EXISTS sp_ariesTagUpdate;
+DELIMITER //
+CREATE PROCEDURE `sp_ariesTagUpdate`(
+	IN enter_id INT(11),
+	IN tag_value VARCHAR(50),
+	IN user_id INT(11),
+	OUT result INT(11)
+)
+BEGIN
+
+	UPDATE tag
+	SET `tag` = tag_value,
+		`utente_mod` = user_id,
+		`data_mod` = NOW();
+	WHERE id_tag = enter_id;
+
+
+	SET Result = 1; 
+				
+END//
+DELIMITER ;
+
+
+-- Dump della struttura di procedura emmebi.sp_ariesTagDelete
+DROP PROCEDURE IF EXISTS sp_ariesTagDelete;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesTagDelete`( 
+	enter_id INTEGER
+)
+BEGIN
+
+	DELETE FROM tag 
+	WHERE id_tag = enter_id;
+
+END//
+DELIMITER ;
+
+
+-- Dump della struttura di procedura emmebi.sp_ariesTagDelete
+DROP PROCEDURE IF EXISTS sp_ariesTagTicketDeleteByTicket;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesTagTicketDeleteByTicket`( 
+	ticket_id INTEGER
+)
+BEGIN
+
+	DELETE FROM ticket_tag 
+	WHERE id_ticket = ticket_id;
+
+END//
+DELIMITER ;
 
