@@ -20881,7 +20881,7 @@ END//
 DELIMITER ;
 
 
--- Dump della struttura di procedura emmebi.sp_ariesTagDelete
+-- Dump della struttura di procedura emmebi.sp_ariesTagTicketDeleteByTicket
 DROP PROCEDURE IF EXISTS sp_ariesTagTicketDeleteByTicket;
 DELIMITER //
 CREATE  PROCEDURE `sp_ariesTagTicketDeleteByTicket`( 
