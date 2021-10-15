@@ -20799,16 +20799,40 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS sp_ariesTicketTagGetByTicket;
 DELIMITER //
 CREATE  PROCEDURE `sp_ariesTicketTagGetByTicket`(
-	OUT ticket_id INT
+	IN ticket_id INT,
+	IN ticket_year INT
 )
 BEGIN
 	SELECT 
 		`id_ticket`,
-		ticket_tag.`id_tag`,
+		anno_ticket,
+		ticket_tag.id_tag,
 		tag.tag
 	FROM ticket_tag
 		INNER JOIN tag ON tag.id_tag = ticket_tag.id_tag
-	WHERE id_ticket = ticket_id;
+	WHERE id_ticket = ticket_id
+		AND anno_ticket = ticket_year;
+
+END//
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesInvoiceTagGetByInvoice;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesInvoiceTagGetByInvoice`(
+	IN invoice_id INT,
+	IN invoice_year INT
+)
+BEGIN
+	SELECT 
+		`id_fattura`,
+		anno_fattura,
+		fattura_tag.id_tag,
+		tag.tag
+	FROM fattura_tag
+		INNER JOIN tag ON tag.id_tag = fattura_tag.id_tag
+	WHERE id_fattura = invoice_id
+		AND anno_fattura = invoice_year;
 
 END//
 DELIMITER ;
@@ -20856,7 +20880,7 @@ BEGIN
 	UPDATE tag
 	SET `tag` = tag_value,
 		`utente_mod` = user_id,
-		`data_mod` = NOW();
+		`data_mod` = NOW()
 	WHERE id_tag = enter_id;
 
 
@@ -20881,16 +20905,36 @@ END//
 DELIMITER ;
 
 
--- Dump della struttura di procedura emmebi.sp_ariesTagTicketDeleteByTicket
-DROP PROCEDURE IF EXISTS sp_ariesTagTicketDeleteByTicket;
+-- Dump della struttura di procedura emmebi.sp_ariesTicketTagDeleteByTicket
+DROP PROCEDURE IF EXISTS sp_ariesTicketTagDeleteByTicket;
 DELIMITER //
-CREATE  PROCEDURE `sp_ariesTagTicketDeleteByTicket`( 
-	ticket_id INTEGER
+CREATE  PROCEDURE `sp_ariesTicketTagDeleteByTicket`( 
+	IN ticket_id INT(11),
+	IN ticket_year INT(11)
 )
 BEGIN
 
 	DELETE FROM ticket_tag 
-	WHERE id_ticket = ticket_id;
+	WHERE id_ticket = ticket_id
+		AND anno_ticket = ticket_year;
+
+END//
+DELIMITER ;
+
+
+
+-- Dump della struttura di procedura emmebi.sp_ariesInvoiceTagDeleteByTicket
+DROP PROCEDURE IF EXISTS sp_ariesInvoiceTagDeleteByTicket;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesInvoiceTagDeleteByTicket`( 
+	IN invoice_id INT(11),
+	IN invoice_year INT(11)
+)
+BEGIN
+
+	DELETE FROM fattura_tag
+	WHERE id_fattura = invoice_id
+		AND anno_fattura = invoice_year;
 
 END//
 DELIMITER ;
