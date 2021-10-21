@@ -7838,6 +7838,64 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Dump della struttura di procedura emmebi.sp_ariesInvoiceGetByTagId
+DROP PROCEDURE IF EXISTS sp_ariesInvoiceGetByTagId;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesInvoiceGetByTagId`(
+	IN tag_id INT(11)
+)
+BEGIN
+
+	SELECT
+		`Id`,
+		fattura.`Id_fattura`,
+		`anno`,
+		1 as `Id_bollettario`,
+		`id_cliente`,
+		`id_destinazione`,
+		`destinazione`,
+		`Data_registrazione`,
+		CAST(IFNULL(data_modifica ,'1970-01-01') AS DATETIME) data_modifica,
+		`data`,
+		`cond_pagamento`,
+		`banca` ,
+		`annotazioni`,
+		`Stato`,
+		`causale_fattura`,
+		`nota_interna`,
+		`iban`,
+		`abi`,
+		`cab`,
+		`tipo_fattura`,
+		`incasso`,
+		`bollo`,
+		`trasporto`,
+		`inviato`,
+		CAST(IFNULL(pagato_il ,'00:00:00') AS TIME) pagato_il,
+		IFNULL(`tramite`, 0) tramite,
+		`insoluto`,
+		`stampato`,
+		`subappalto`,
+		IFNULL(`id_utente`, 0) id_utente,
+		`scont_mat`,
+		IFNULL(`id_iv`, 0) id_iv,
+		id_tipo_natura_iva,
+		CAST(IFNULL(data_invio_promemoria ,'1970-01-01') AS DATETIME) data_invio_promemoria,
+		IFNULL(`controllo_promemoria`, 1) controllo_promemoria,
+		`area_attivita`,
+		IFNULL(`nostra`, 0) nostra,
+		`data_ultima_modifica`,
+		importo_imponibile, 
+		importo_iva,
+		importo_totale,
+		costo_totale,
+		id_documento_ricezione
+	FROM Fattura
+		INNER JOIN fattura_tag ON Fattura.id_fattura = fattura_tag.id_fattura AND Fattura.anno = fattura_tag.anno_fattura
+	WHERE fattura_tag.id_tag = tag_id; 
+		
+END//
+DELIMITER ;
 
 -- Dump della struttura di procedura emmebi.sp_ariesInvoiceInsert
 DROP PROCEDURE IF EXISTS sp_ariesInvoiceInsert;
@@ -9024,6 +9082,27 @@ BEGIN
 	Utente_mod	
 	FROM Comune
 	WHERE Id_Comune = municipality_id;
+END//
+DELIMITER ;
+
+-- Dump della struttura di procedura emmebi.sp_ariesMunicipalityGetByName
+DROP PROCEDURE IF EXISTS sp_ariesMunicipalityGetByName;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesMunicipalityGetByName`( 
+	IN `name` VARCHAR(100)
+)
+BEGIN
+	SELECT Id_comune,
+	Nome,
+	Provincia, 
+	Cap, 
+	Id_Provincia,
+	Data_ins, 
+	Data_mod,
+	Utente_ins, 
+	Utente_mod	
+	FROM Comune
+	WHERE nome = `name`;
 END//
 DELIMITER ;
 
@@ -14776,6 +14855,48 @@ BEGIN
 	 ORDER BY Ticket.data_ora ;  
  
  END//
+DELIMITER ;
+
+
+
+-- Dump della struttura di procedura emmebi.sp_ariesTicketGetByTagId
+DROP PROCEDURE IF EXISTS sp_ariesTicketGetByTagId;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesTicketGetByTagId`( 
+  tag_id INT
+)
+BEGIN
+        
+
+	SELECT 
+		Id,
+		Ticket.Id_ticket, 
+		Anno,
+		IFNULL(Id_impianto, 0) AS id_impianto, 
+		CAST(IFNULL(data_ora, '1970-01-01') AS DATETIME) As data_ora,
+		IFNULL(Id_cliente, 0) AS Id_cliente, 
+		IFNULL(Descrizione, "") AS Descrizione, 
+		IFNULL(Causale, 0) As Causale, 
+		IFNULL(Urgenza, 0) AS Urgenza, 
+		IFNULL(intervento, 0) As Intervento, 
+		IFNULL(comunicazione, 0) AS comunicazione, 
+		IFNULL(id_destinazione, 0) AS Id_destinazione,  
+		IFNULL(sede_principale, 0) AS sede_principale, 
+		IFNULL(stato_ticket, 0) AS stato_ticket, 
+		IFNULL(tempo, 0) As Tempo, 
+		CAST(IFNULL(scadenza, '1970-01-01') AS DATETIME) AS scadenza,
+		IFNULL(id_utente, 0) AS Id_utente, 
+		IFNULL(stampato, 0) As Stampato, 
+		CAST(IFNULL(data_ticket, '1970-01-01') AS DATETIME) AS data_ticket,
+		IFNULL(num_tick, 0) As num_tick,
+		IFNULL(inviato, 0) As inviato,
+		CAST(IFNULL(data_promemoria, '1970-01-01') AS DATETIME) AS data_promemoria		
+	FROM Ticket
+		INNER JOIN ticket_tag ON Ticket.id_ticket = ticket_tag.id_ticket AND Ticket.anno = ticket_tag.anno_ticket
+	WHERE ticket_tag.id_tag = tag_id; 
+		
+			
+END//
 DELIMITER ;
 
 
@@ -20794,6 +20915,52 @@ BEGIN
 END//
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS sp_ariesTagSearch;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesTagSearch`(
+	IN tag_value VARCHAR(250),
+	IN document_type INT
+)
+BEGIN
+
+	SELECT 
+		`id_tag`,
+		`tag`,
+		`tipo_documento`,
+		`utente_ins`,
+		`utente_mod`,
+		`data_ins`,
+		`data_mod`
+	FROM tag
+	WHERE tipo_documento = document_type
+		AND tag LIKE CONCAT("%", tag_value, "%")
+	ORDER BY tag;
+
+END//
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesTagGetByDocumentType;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesTagGetByDocumentType`(
+	IN document_type INT
+)
+BEGIN
+
+	SELECT 
+		`id_tag`,
+		`tag`,
+		`tipo_documento`,
+		`utente_ins`,
+		`utente_mod`,
+		`data_ins`,
+		`data_mod`
+	FROM tag
+	WHERE tipo_documento = document_type;
+
+END//
+DELIMITER ;
+
+
 
 
 DROP PROCEDURE IF EXISTS sp_ariesTicketTagGetByTicket;
@@ -20923,10 +21090,10 @@ DELIMITER ;
 
 
 
--- Dump della struttura di procedura emmebi.sp_ariesInvoiceTagDeleteByTicket
-DROP PROCEDURE IF EXISTS sp_ariesInvoiceTagDeleteByTicket;
+-- Dump della struttura di procedura emmebi.sp_ariesInvoiceTagDeleteByInvoice
+DROP PROCEDURE IF EXISTS sp_ariesInvoiceTagDeleteByInvoice;
 DELIMITER //
-CREATE  PROCEDURE `sp_ariesInvoiceTagDeleteByTicket`( 
+CREATE  PROCEDURE `sp_ariesInvoiceTagDeleteByInvoice`( 
 	IN invoice_id INT(11),
 	IN invoice_year INT(11)
 )
