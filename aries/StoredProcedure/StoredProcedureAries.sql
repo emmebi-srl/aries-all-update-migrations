@@ -20179,6 +20179,19 @@ BEGIN
 END $$
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS sp_ariesQuoteSettingsGetByKey;
+DELIMITER $$
+CREATE PROCEDURE sp_ariesQuoteSettingsGetByKey(
+ IN in_key VARCHAR(100)
+)
+BEGIN
+	SELECT tipo,
+		valore
+	FROM preventivo_impost
+	WHERE tipo = in_key;
+END $$
+DELIMITER ;
+
 
 DROP PROCEDURE IF EXISTS sp_ariesQuoteSettingsDelete;
 DELIMITER $$
