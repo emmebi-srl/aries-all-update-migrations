@@ -15,7 +15,7 @@ BEGIN
 	IF is_siantel THEN
 		insert into preventivo_impost VALUES ('note_editor_default_width', '625');
 	ELSE
-		insert into preventivo_impost VALUES ('note_editor_default_width', '665');
+		insert into preventivo_impost VALUES ('note_editor_default_width', '738');
 	END IF;
 
 END
