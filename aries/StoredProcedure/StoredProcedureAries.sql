@@ -3236,6 +3236,50 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Dump della struttura di procedura emmebi.sp_ariesCustomerGetOrderByCompanyName
+DROP PROCEDURE IF EXISTS sp_ariesCustomerGetByTagId;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesCustomerGetByTagId`(
+	tag_id INT
+)
+BEGIN
+
+	SELECT clienti.Id_cliente,
+		`Ragione_Sociale` ,
+		IFNULL(`Ragione_sociale2`, '') Ragione_Sociale2,
+		IFNULL(`Partita_iva` , '') Partita_iva,
+		IFNULL(`Codice_Fiscale`, '') Codice_fiscale,
+		IFNULL(`Cortese_attenzione`, '') 'Cortese_attenzione',
+		STR_TO_DATE( IFNULL(`Data_inserimento`, '1970-01-01 00:00:00'), '%Y-%m-%d') data_inserimento,
+		IFNULL(`Stato_cliente`,'') Stato_cliente,
+		IFNULL(`Tipo_Cliente`, 0) 'Tipo_cliente',
+		IFNULL(`stato_economico`, 0) 'stato_economico',
+		IFNULL(`condizione_pagamento`, 0 ) 'condizione_pagamento',
+		IFNULL(`Sito_internet` , '') Sito_internet,
+		IFNULL(`password`, '') 'password',
+		IFNULL(`Utente_sito`, '') Utente_sito,
+		IFNULL(`iva` ,0) 'iva',
+		`modi`,
+		`rc` ,
+		`posta` ,
+		IFNULL(`ex` , 0) ex,
+		IFNULL(`tipo_rapporto`  , 0) tipo_rapporto,
+		IFNULL(`id_utente` , 0) id_utente,
+		IFNULL(`id_agente` , 0) id_agente,
+		IFNULL(`id_abbona` , 0) id_abbona,
+		IFNULL(`id_attività` , 0) id_attività,
+		IFNULL(`pec`, '') pec ,
+		IFNULL(`codice_univoco`, '') codice_univoco,
+		e_codice_destinatario,
+		`data_ultima_modifica`
+	FROM Clienti
+		INNER JOIN cliente_tag ON clienti.Id_cliente = cliente_tag.id_cliente
+	WHERE cliente_tag.id_tag = tag_id; 
+	
+END//
+DELIMITER ;
+
+
 
 -- Dump della struttura di procedura emmebi.sp_ariesCustomerGroupEmailSent
 DROP PROCEDURE IF EXISTS sp_ariesCustomerGroupEmailSent;
@@ -20976,6 +21020,24 @@ DELIMITER ;
 
 
 
+DROP PROCEDURE IF EXISTS sp_ariesCustomerTagGetByCustomer;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesCustomerTagGetByCustomer`(
+	IN customer_id INT
+)
+BEGIN
+	SELECT 
+		`id_cliente`,
+		cliente_tag.id_tag,
+		tag.tag
+	FROM cliente_tag
+		INNER JOIN tag ON tag.id_tag = cliente_tag.id_tag
+	WHERE id_cliente = customer_id;
+
+END//
+DELIMITER ;
+
+
 DROP PROCEDURE IF EXISTS sp_ariesTicketTagGetByTicket;
 DELIMITER //
 CREATE  PROCEDURE `sp_ariesTicketTagGetByTicket`(
@@ -21119,3 +21181,17 @@ BEGIN
 END//
 DELIMITER ;
 
+
+-- Dump della struttura di procedura emmebi.sp_ariesCustomerTagDeleteByCustomer
+DROP PROCEDURE IF EXISTS sp_ariesCustomerTagDeleteByCustomer;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesCustomerTagDeleteByCustomer`( 
+	IN customer_id INT(11)
+)
+BEGIN
+
+	DELETE FROM cliente_tag
+	WHERE id_cliente = customer_id;
+
+END//
+DELIMITER ;

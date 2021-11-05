@@ -55,6 +55,23 @@ ENGINE=InnoDB
 ;
 
 
+CREATE TABLE `cliente_tag` (
+	`id_cliente` INT(11) NOT NULL,
+	`id_tag` INT(11) NOT NULL,
+	`utente_ins` INT(11) NULL DEFAULT NULL,
+	`data_ins` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id_cliente`, `id_tag`),
+	INDEX `FK_cliente_tag_tag` (`id_tag`),
+	INDEX `FK_cliente_tag_cliente` (`id_cliente`),
+	INDEX `FK_cliente_tag_utente_ins` (`utente_ins`),
+	CONSTRAINT `FK_cliente_tag_tag` FOREIGN KEY (`id_tag`) REFERENCES `tag` (`id_tag`) ON UPDATE CASCADE,
+	CONSTRAINT `FK_cliente_tag_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `clienti` (`id_cliente`) ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT `FK_cliente_tag_utente_ins` FOREIGN KEY (`utente_ins`) REFERENCES `utente` (`Id_utente`) ON UPDATE CASCADE ON DELETE SET NULL
+)
+COLLATE='latin1_swedish_ci'
+ENGINE=InnoDB
+;
+
 
 ALTER TABLE `tag`
 	ADD UNIQUE INDEX `tag_tipo_documento` (`tag`, `tipo_documento`);
