@@ -21195,3 +21195,157 @@ BEGIN
 
 END//
 DELIMITER ;
+
+
+-- Dump della struttura di procedura emmebi.sp_ariesOrderSupplierUnmarkAsComplete
+DROP PROCEDURE IF EXISTS sp_ariesOrderSupplierValidate;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesOrderSupplierValidate`( 
+	enter_id INT, 
+	enter_year INT,
+	use_current_date BIT,
+	OUT result INT(11)
+)
+BEGIN
+
+	DECLARE creation_date DATE;
+	DECLARE new_order_year INT;
+	DECLARE new_order_id INT;
+
+	DECLARE V_supplier_id INT;
+
+	DECLARE `_rollback` BOOL DEFAULT 0;
+	DECLARE exit_loop BOOLEAN;
+	DECLARE order_cursor CURSOR FOR
+		SELECT DISTINCT id_fornitore
+		FROM ordine_dettaglio
+		WHERE id_ordine = enter_id AND anno = enter_year;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET exit_loop = TRUE;
+	DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET `_rollback` = 1;
+
+
+	IF enter_year = 0 THEN
+		
+		-- init result to success 
+		SET result = 1;
+
+		IF use_current_date = 1 THEN
+			SET creation_date = CURDATE();
+		ELSE
+			SELECT data_creazione INTO creation_date
+			FROM ordine_fornitore
+			WHERE id_ordine = enter_id AND anno = enter_year;
+		END IF;
+
+		-- Get new id-year for validated order
+		SET new_order_year = YEAR(creation_date);
+		SELECT IFNULL(MAX(id_ordine)+1, 1) INTO new_order_id
+		FROM ordine_fornitore
+		WHERE anno = new_order_year;
+
+		START TRANSACTION;
+
+			-- Delete inconsistent rows
+			DELETE FROM ordine_dettaglio
+			WHERE id_ordine = enter_id AND anno = enter_year AND qt = 0;
+		
+			OPEN order_cursor;
+			order_loop: LOOP
+				FETCH order_cursor INTO V_supplier_id;
+				IF exit_loop = 1 THEN 
+					LEAVE order_loop;
+				END IF;
+
+				INSERT INTO ordine_fornitore (id_ordine, descrizione, data_ordine, data_creazione, nota_interna, nota,
+						id_fornitore, condizione_pagamento, id_utente, data_ultima_modifica, anno, destinazione,
+						id_cliente, vettore, porto_reso, trasporto_cura, stato, inviato, stampato)
+				SELECT new_order_id,
+					descrizione,
+					data_ordine,
+					creation_date,
+					nota_interna,
+					nota,
+					V_supplier_id,
+					condizione_pagamento,
+					id_utente,
+					data_ultima_modifica, 
+					new_order_year,
+					destinazione,
+					id_cliente,
+					vettore,
+					porto_reso,
+					trasporto_cura,
+					1,
+					0,
+					0
+				FROM ordine_fornitore
+				WHERE id_ordine = enter_id AND anno = enter_year;
+
+				INSERT INTO ordine_dettaglio(id_ordine, anno, numero_tab, id_Articolo, desc_breve,
+					codice_fornitore, id_cliente, id_fornitore, qt, scadenza, prez, tipo, iva,
+					id_commessa, anno_commessa, id_sottocommessa, com_lotto)
+				SELECT new_order_id,
+					new_order_year,
+					numero_tab,
+					id_Articolo,
+					desc_breve,
+					codice_fornitore,
+					id_cliente,
+					NULL,
+					qt,
+					scadenza,
+					prez,
+					tipo,
+					iva,
+					id_commessa,
+					anno_commessa,
+					id_sottocommessa,
+					com_lotto
+				FROM ordine_dettaglio
+				WHERE id_ordine = enter_id
+					AND anno = enter_year
+					AND id_fornitore = V_supplier_id;
+
+				SET new_order_id = new_order_id + 1;
+
+			END LOOP order_loop;
+
+
+			-- Remoove previous order	
+			DELETE FROM ordine_dettaglio
+			WHERE id_ordine = enter_id
+				AND anno = enter_year;
+
+			DELETE FROM ordine_fornitore
+			WHERE id_ordine = enter_id
+				AND anno = enter_year;
+
+
+			
+		IF `_rollback` THEN
+			ROLLBACK;
+			SET Result = 0; 
+		ELSE
+			COMMIT; 
+		END IF;
+	ELSE
+		SET Result = -1; -- Input order year is not zero
+	END IF;
+
+END//
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesEnvVariablesGetByKey;
+DELIMITER $$
+CREATE PROCEDURE sp_ariesEnvVariablesGetByKey(
+ IN in_key VARCHAR(100)
+)
+BEGIN
+	SELECT var_key,
+		var_value
+	FROM environment_variables
+	WHERE var_key = in_key;
+END $$
+DELIMITER ;
+
