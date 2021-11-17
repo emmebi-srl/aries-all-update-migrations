@@ -21349,3 +21349,24 @@ BEGIN
 END $$
 DELIMITER ;
 
+-- Dump della struttura di procedura sp_ariesInvoiceAttachsGetByInvoice
+DROP PROCEDURE IF EXISTS sp_ariesInvoiceAttachsGetByInvoice;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesInvoiceAttachsGetByInvoice`(
+	IN invoice_id INT(11), 
+	IN invoice_year INT(11)
+)
+BEGIN
+	SELECT
+		`id`,
+		`id_fattura`,
+		`Anno_fattura`,
+		`Nome` ,
+		`Descrizione`,
+		`Formato`,
+		`File_path`,
+		`Timestamp`
+	FROM fattura_allegati
+	WHERE id_fattura = invoice_id AND Anno_fattura = invoice_year;
+END//
+DELIMITER ;
