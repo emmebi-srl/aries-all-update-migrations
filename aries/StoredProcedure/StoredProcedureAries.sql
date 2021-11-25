@@ -21370,3 +21370,15 @@ BEGIN
 	WHERE id_fattura = invoice_id AND Anno_fattura = invoice_year;
 END//
 DELIMITER ;
+
+-- Dump della struttura di procedura sp_ariesInvoiceAttachsDelete
+DROP PROCEDURE IF EXISTS sp_ariesInvoiceAttachsDelete;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesInvoiceAttachsDelete`(
+	IN input_id INT(11)
+)
+BEGIN
+	DELETE FROM fattura_allegati
+	WHERE id = input_id;
+END//
+DELIMITER ;
