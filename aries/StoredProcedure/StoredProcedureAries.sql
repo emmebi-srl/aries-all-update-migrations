@@ -15766,13 +15766,52 @@ DELIMITER ;
 -- Dump della struttura di procedura emmebi.sp_getJobTotals
 DROP PROCEDURE IF EXISTS sp_getJobTotals;
 DELIMITER //
-CREATE  PROCEDURE `sp_getJobTotals`(IN `id_job` INT, IN `year_job` INT, IN `id_lot` INT,  OUT `total_price_quote` Decimal(11,2), OUT `total_cost` Decimal(11,2), OUT `total_hours_worked_economy` Decimal(11,2), OUT `total_hours_worked` Decimal(11,2), OUT `Total_hours` Decimal(11,2), OUT `total_hours_travel` Decimal(11,2), OUT `total_price_quote_body_products` Decimal(11,2), OUT `total_cost_body_products_economy` Decimal(11,2), OUT `total_cost_worked_economy` Decimal(11,2), OUT `total_cost_body_products` Decimal(11,2), OUT `total_cost_worked` Decimal(11,2), OUT `total_km` Decimal(11,2), OUT `total_cost_hours_travel` Decimal(11,2), OUT `total_cost_km` Decimal(11,2), OUT `total_cost_transfert` Decimal(11,2), OUT `total_cost_extra` Decimal(11,2), OUT `total_cost_parking` Decimal(11.2), OUT `total_cost_speedway` Decimal(11,2), OUT `total_price_body_products` Decimal(11,2), OUT `total_price_worked` Decimal(11,2), OUT `total_price_hours_travel` Decimal(11,2), OUT `total_price_km` Decimal(11,2), OUT `total_price_transfert` Decimal(11,2), OUT `total_price_extra` Decimal(11,2), OUT `total_price_parking` Decimal(11.2), OUT `total_price_speedway` Decimal(11,2), OUT `total_price_body_products_economy` Decimal(11,2), OUT `total_price_worked_economy` Decimal(11,2), OUT `total_price` Decimal(11,2), OUT `total_price_quote_worked` Decimal(11,2)
-		
+CREATE  PROCEDURE `sp_getJobTotals`(
+	IN `id_job` INT,
+	IN `year_job` INT,
+	IN `sub_job_id` INT,
+	IN `id_lot` INT,
+	OUT `total_cost_quote` Decimal(11,2),
+	OUT `total_price_quote` Decimal(11,2),
+	OUT `total_cost` Decimal(11,2),
+	OUT `total_hours_worked_economy` Decimal(11,2),
+	OUT `total_hours_worked` Decimal(11,2),
+	OUT `Total_hours` Decimal(11,2),
+	OUT `total_hours_travel` Decimal(11,2),
+	OUT `total_cost_quote_body_products` Decimal(11,2),
+	OUT `total_price_quote_body_products` Decimal(11,2),
+	OUT `total_cost_body_products_economy` Decimal(11,2),
+	OUT `total_cost_worked_economy` Decimal(11,2),
+	OUT `total_cost_body_products` Decimal(11,2),
+	OUT `total_cost_worked` Decimal(11,2),
+	OUT `total_km` Decimal(11,2),
+	OUT `total_cost_hours_travel` Decimal(11,2),
+	OUT `total_cost_km` Decimal(11,2),
+	OUT `total_cost_transfert` Decimal(11,2),
+	OUT `total_cost_extra` Decimal(11,2),
+	OUT `total_cost_parking` Decimal(11.2),
+	OUT `total_cost_speedway` Decimal(11,2),
+	OUT `total_price_body_products` Decimal(11,2),
+	OUT `total_price_worked` Decimal(11,2),
+	OUT `total_price_hours_travel` Decimal(11,2),
+	OUT `total_price_km` Decimal(11,2),
+	OUT `total_price_transfert` Decimal(11,2),
+	OUT `total_price_extra` Decimal(11,2),
+	OUT `total_price_parking` Decimal(11.2),
+	OUT `total_price_speedway` Decimal(11,2),
+	OUT `total_price_body_products_economy` Decimal(11,2),
+	OUT `total_price_worked_economy` Decimal(11,2),
+	OUT `total_price` Decimal(11,2),
+	OUT `total_cost_quote_worked` Decimal(11,2),
+	OUT `total_price_quote_worked` Decimal(11,2)
 )
 BEGIN
 
 	SELECT 
 		CAST(SUM(jb.Tempo_installazione/60 * jb.Qta_preventivati) AS DECIMAL(11,2)),
+		SUM(CAST((jb.Tempo_installazione/60 * jb.Costo_ora ) AS DECIMAL(11,2))*jb.Qta_preventivati) +
+			SUM(CAST(jb.Costo AS DECIMAL(11, 2)) * jb.Qta_preventivati),
+		SUM(CAST((jb.Costo * jb.Qta_preventivati) AS DECIMAL(11,2))),
 		SUM(CAST((jb.Tempo_installazione/60 * jb.Prezzo_ora ) * ((100 - jb.Sconto) / 100) AS DECIMAL(11,2))*jb.Qta_preventivati)+
 			SUM(CAST(jb.prezzo   * (100 - sconto) / 100 AS DECIMAL(11, 2)) * jb.Qta_preventivati),
 		SUM(CAST((jb.Prezzo * jb.Qta_preventivati)* (100 - jb.Sconto) / 100 AS DECIMAL(11,2))),
@@ -15782,6 +15821,8 @@ BEGIN
 		SUM(CAST((jb.prezzo * jb.Qta_utilizzata)* (100 - jb.Sconto) / 100 AS DECIMAL(11,2)))
 	INTO 
 		total_hours,
+		total_cost_quote,
+		total_cost_quote_body_products,
 		total_price_quote,
 		total_price_quote_body_products,
 		total_cost_body_products_economy,
@@ -15792,6 +15833,7 @@ BEGIN
 	FROM vw_jobbody jb
 	WHERE jb.id_commessa = id_job
 		AND jb.anno = year_job
+		AND IF(sub_job_id > 0, jb.id_sottocommessa = sub_job_id, TRUE)
 		AND IF(id_lot > 0, jb.lotto = id_lot, TRUE);
 
 
@@ -15807,6 +15849,7 @@ BEGIN
 	WHERE twi.Economia = 0 
 		AND twi.id_commessa = id_job
 		AND twi.anno_commessa = year_job
+		AND IF(sub_job_id > 0, twi.id_sottocommessa = sub_job_id, TRUE)
 		AND IF(id_lot > 0, twi.id_lotto = id_lot, TRUE);
 		
 	SELECT 
@@ -15821,6 +15864,7 @@ BEGIN
 	WHERE twi.Economia = 1
 		AND twi.id_commessa = id_job
 		AND twi.anno_commessa = year_job
+		AND IF(sub_job_id > 0, twi.id_sottocommessa = sub_job_id, TRUE)
 		AND IF(id_lot > 0, twi.id_lotto = id_lot, TRUE);
 	
 	SELECT 
@@ -15848,6 +15892,7 @@ BEGIN
 	FROM vw_jobtotaltravelinterventions tti
 	WHERE tti.id_commessa = id_job
 		AND tti.anno_commessa = year_job
+		AND IF(sub_job_id > 0, tti.id_sottocommessa = sub_job_id, TRUE)
 		AND IF(id_lot > 0, tti.id_lotto = id_lot, TRUE);
 		
 	SET total_price_parking = total_cost_parking;
@@ -15883,8 +15928,7 @@ BEGIN
 	SET total_price_speedway = IFNULL(total_price_speedway, 0); 
 	SET total_price_body_products_economy = IFNULL(total_price_body_products_economy, 0); 
 	SET total_price_worked_economy = IFNULL(total_price_worked_economy, 0); 
-	SET total_price = IFNULL(total_price, 0); 
-	SET total_price_quote_worked = IFNULL(total_price_quote_worked, 0); 	
+	SET total_price = IFNULL(total_price, 0);	
 		
 		
 	SET total_cost = total_cost_body_products_economy
@@ -15911,7 +15955,7 @@ BEGIN
 				
 				
 	SET total_price_quote_worked = total_price_quote-total_price_quote_body_products;
-				
+	SET total_cost_quote_worked = total_cost_quote-total_cost_quote_body_products;
 END//
 DELIMITER ;
 

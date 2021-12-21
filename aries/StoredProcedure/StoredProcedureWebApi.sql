@@ -3318,7 +3318,8 @@ BEGIN
 	SET start_date = CAST(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 MONTH),'%Y-%m-01') AS DATE);
 	SET end_date = LAST_DAY(DATE_ADD(NOW(), INTERVAL months_number MONTH));
 
-	SELECT impianto_ricarica_tipo.Id_impianto, 
+	SELECT impianto_ricarica_tipo.id,
+		impianto_ricarica_tipo.Id_impianto, 
 		impianto_ricarica_tipo.Tipo_ricarica, 
 		Tipo_ricarica.Nome AS 'nome_tipo_ricarica', 
 		impianto_ricarica_tipo.`nota`,
@@ -3329,7 +3330,9 @@ BEGIN
 		impianto_ricarica_tipo.`acarico`,
 		impianto_ricarica_tipo.`data_attivazione`,
 		impianto_ricarica_tipo.`data_rinnovo`,
-		impianto_ricarica_tipo.`data_scadenza`
+		impianto_ricarica_tipo.`data_scadenza`,
+		impianto_ricarica_tipo.`richiedi_invio_promemoria`,
+		impianto_ricarica_tipo.`data_ultimo_promemoria`
 	FROM impianto_ricarica_tipo
 		INNER JOIN Tipo_ricarica ON Tipo_ricarica.Id_tipo = impianto_ricarica_tipo.Tipo_ricarica
 	WHERE (data_scadenza < end_date) 
@@ -3338,6 +3341,54 @@ BEGIN
 	ORDER BY data_scadenza DESC, data_rinnovo DESC;
 
 END; //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_apiSystemSimTopUpGetBetweenDates;
+DELIMITER //
+CREATE PROCEDURE sp_apiSystemSimTopUpGetBetweenDates (
+	from_date DATE,
+	to_date DATE
+)
+BEGIN
+
+	SELECT impianto_ricarica_tipo.id,
+		impianto_ricarica_tipo.Id_impianto, 
+		impianto_ricarica_tipo.Tipo_ricarica, 
+		Tipo_ricarica.Nome AS 'nome_tipo_ricarica', 
+		impianto_ricarica_tipo.`nota`,
+		impianto_ricarica_tipo.`importo`,
+		impianto_ricarica_tipo.`durata`,
+		impianto_ricarica_tipo.`numero`,
+		impianto_ricarica_tipo.`intestatario`,
+		impianto_ricarica_tipo.`acarico`,
+		impianto_ricarica_tipo.`data_attivazione`,
+		impianto_ricarica_tipo.`data_rinnovo`,
+		impianto_ricarica_tipo.`data_scadenza`,
+		impianto_ricarica_tipo.`richiedi_invio_promemoria`,
+		impianto_ricarica_tipo.`data_ultimo_promemoria`
+	FROM impianto_ricarica_tipo
+		INNER JOIN Tipo_ricarica ON Tipo_ricarica.Id_tipo = impianto_ricarica_tipo.Tipo_ricarica
+	WHERE (data_scadenza BETWEEN from_date AND to_date
+		OR data_rinnovo BETWEEN from_date AND to_date); 
+END; //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_apiSystemSimTopUpdateRequireReminder; 
+DELIMITER $$
+
+CREATE PROCEDURE sp_apiSystemSimTopUpdateRequireReminder(
+IN id_array MEDIUMTEXT,
+IN require_customer_reminder BIT)
+BEGIN
+  UPDATE impianto_ricarica_tipo 
+  SET richiedi_invio_promemoria = require_customer_reminder,
+	data_ultimo_promemoria = NOW()
+  WHERE FIND_IN_SET(Id, idArray);
+END
+$$
+
 DELIMITER ;
 
 

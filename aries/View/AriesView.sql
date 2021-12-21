@@ -333,17 +333,22 @@ CREATE VIEW `vw_jobtotalworkinterventions` AS
 		`cr`.`anno_commessa` AS `anno_commessa`,
 		`cr`.`id_sottocommessa` AS `id_sottocommessa`,
 		`cr`.`id_lotto` AS `id_lotto`,
-		cast(if(isnull(sum(((`r`.`totale` / 60) * `r`.`ora_normale`))),0,sum(((`r`.`totale` / 60) * `r`.`ora_normale`))) as decimal(11,2)) AS `Totale_prezzo_lavoro`,
-		cast(if(isnull(sum(((`r`.`totale` / 60) * `t`.`Costo_h`))),0,sum(((`r`.`totale` / 60) * `t`.`Costo_h`))) as decimal(11,2)) AS `Totale_costo_lavoro`,
+		CAST(
+			IFNULL(SUM((`r`.`totale` / 60) * `r`.`ora_normale`), 0) AS DECIMAL(11,2)
+		) AS `Totale_prezzo_lavoro`,
+		CAST(
+			IFNULL(SUM((`r`.`totale` / 60) * 
+				IF((`r`.`straordinario` = 1) or (`r`.`straordinario` = 4), Straordinario_c, `t`.`Costo_h`)
+			), 0) AS DECIMAL(11,2)
+		) AS `Totale_costo_lavoro`,
 		cast(sum((`r`.`totale` / 60)) as decimal(11,2)) AS `Totale_ore_lavorate`,if(((`r`.`straordinario` = 3) or (`r`.`straordinario` = 4)),1,0) AS `Economia`,
-		if(((`r`.`straordinario` = 1) or (`r`.`straordinario` = 4)),1,0) AS `Straordinario` 
+		IF(((`r`.`straordinario` = 1) or (`r`.`straordinario` = 4)),1,0) AS `Straordinario` 
 	FROM `rapporto_tecnico_lavoro` `r`
 		JOIN `commessa_rapporto` `cr` ON `cr`.`id_rapporto` = `r`.`Id_rapporto`
 			AND `r`.`anno` = `cr`.`anno_rapporto`
 		LEFT JOIN `operaio_contratto` `oc` ON `oc`.`id_operaio` = `r`.`tecnico`
 		LEFT JOIN `tariffario` `t` ON `t`.`Id_tariffario` = `oc`.`id_tariffario`
 	GROUP BY `cr`.`id_commessa`,`cr`.`anno_commessa`,cr.id_sottocommessa,`cr`.`id_lotto`,`r`.`straordinario`;
-
 -- 
 -- Table structure for table vw_mapsmarkersinformation
 -- 
