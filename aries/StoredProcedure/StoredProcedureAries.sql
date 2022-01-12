@@ -15776,8 +15776,9 @@ CREATE  PROCEDURE `sp_getJobTotals`(
 	OUT `total_cost` Decimal(11,2),
 	OUT `total_hours_worked_economy` Decimal(11,2),
 	OUT `total_hours_worked` Decimal(11,2),
-	OUT `Total_hours` Decimal(11,2),
+	OUT `Total_hours_quote` Decimal(11,2),
 	OUT `total_hours_travel` Decimal(11,2),
+	OUT `Total_hours` Decimal(11,2),
 	OUT `total_cost_quote_body_products` Decimal(11,2),
 	OUT `total_price_quote_body_products` Decimal(11,2),
 	OUT `total_cost_body_products_economy` Decimal(11,2),
@@ -15820,7 +15821,7 @@ BEGIN
 		SUM(CAST((jb.prezzo * jb.Qta_economia)* (100 - jb.Sconto) / 100 AS DECIMAL(11,2))),
 		SUM(CAST((jb.prezzo * jb.Qta_utilizzata)* (100 - jb.Sconto) / 100 AS DECIMAL(11,2)))
 	INTO 
-		total_hours,
+		total_hours_quote,
 		total_cost_quote,
 		total_cost_quote_body_products,
 		total_price_quote,
@@ -15901,10 +15902,11 @@ BEGIN
 	SET total_price_transfert = total_cost_transfert;
 		
 	SET total_price_quote = IFNULL(total_price_quote, 0); 
+	SET total_cost_quote = IFNULL(total_cost_quote, 0); 
 	SET total_cost = IFNULL(total_cost, 0); 
 	SET total_hours_worked_economy = IFNULL(total_hours_worked_economy, 0); 
 	SET total_hours_worked = IFNULL(total_hours_worked, 0); 
-	SET Total_hours = IFNULL(Total_hours, 0); 
+	SET Total_hours_quote = IFNULL(Total_hours_quote, 0); 
 	SET total_hours_travel = IFNULL(total_hours_travel, 0); 
 	SET total_price_quote_body_products = IFNULL(total_price_quote_body_products, 0); 
 	SET total_cost_body_products_economy = IFNULL(total_cost_body_products_economy, 0); 
@@ -15918,6 +15920,8 @@ BEGIN
 	SET total_cost_extra = IFNULL(total_cost_extra, 0); 
 	SET total_cost_parking  = IFNULL(total_cost_parking , 0); 
 	SET total_cost_speedway = IFNULL(total_cost_speedway, 0); 
+	SET total_cost_quote_body_products = IFNULL(total_cost_quote_body_products, 0); 
+	SET total_cost_quote_worked = IFNULL(total_cost_quote_worked, 0); 
 	SET total_price_body_products = IFNULL(total_price_body_products, 0); 
 	SET total_price_worked = IFNULL(total_price_worked, 0); 
 	SET total_price_hours_travel = IFNULL(total_price_hours_travel, 0); 
@@ -15953,6 +15957,10 @@ BEGIN
 				+ total_cost_parking
 				+ total_cost_speedway ;
 				
+							
+	SET total_hours = total_hours_travel
+				+ total_hours_worked
+				+ total_hours_worked_economy;
 				
 	SET total_price_quote_worked = total_price_quote-total_price_quote_body_products;
 	SET total_cost_quote_worked = total_cost_quote-total_cost_quote_body_products;
