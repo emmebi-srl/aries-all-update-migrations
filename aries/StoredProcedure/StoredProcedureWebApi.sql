@@ -794,16 +794,18 @@ DELIMITER //
 CREATE PROCEDURE sp_apiReportGet ()
 BEGIN
 	SELECT Id_rapporto,
-	anno, 
-	Id_impianto, 
-	id_destinazione, 
-	id_cliente, 
-	Stato,
-	CAST(Data_esecuzione AS DATETIME) Data_esecuzione, 
-	CONCAT(IFNULL(relazione, ""), "\nNOTE IN EVIDENZA: ", IFNULL(note_generali, ""),
-		"\nAPPUNTI: ", IFNULL(appunti, "")) relazione,
-	IFNULL(note_generali, "") note_generali
+		anno, 
+		Id_impianto, 
+		id_destinazione, 
+		id_cliente, 
+		Stato,
+		CAST(Data_esecuzione AS DATETIME) Data_esecuzione, 
+		CONCAT(IFNULL(relazione, ""), "\nNOTE IN EVIDENZA: ", IFNULL(note_generali, ""),
+			"\nAPPUNTI: ", IFNULL(appunti, "")) relazione,
+		IFNULL(note_generali, "") note_generali,
+		stato_rapporto.fatturato
 	FROM  rapporto
+		INNER JOIN stato_rapporto ON stato_rapporto.Id_stato = rapporto.stato
 	WHERE id_impianto IS NOT NULL;
 END; //
 DELIMITER ;
