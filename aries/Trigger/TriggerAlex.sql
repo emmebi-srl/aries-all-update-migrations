@@ -573,6 +573,27 @@ END
 //
 DELIMITER ;
 
+
+-- ############################# JOB PRODUCTS ############################################################################## 
+DROP TRIGGER IF EXISTS trg_afterJobProductsUpdate; 
+DELIMITER //
+CREATE TRIGGER `trg_afterJobProductsUpdate` BEFORE UPDATE ON commessa_articoli FOR EACH ROW 
+BEGIN
+	IF (NEW.preventivati <> OLD.preventivati)
+		OR (NEW.`quantità` <> OLD.`quantità`)
+		OR (NEW.`costo_ora` <> OLD.`costo_ora`)
+		OR (NEW.`prezzo_ora` <> OLD.`prezzo_ora`)
+		OR (NEW.`costo` <> OLD.`costo`)
+		OR (NEW.`prezzo` <> OLD.`prezzo`)
+		OR (NEW.`tempo` <> OLD.`tempo`)
+		OR (NEW.`sconto` <> OLD.`sconto`)
+	THEN
+		CALL sp_ariesJobProductHistoryCreate(NEW.id_commessa, NEW.anno, NEW.id_sottocommessa, NEW.id_lotto, NEW.id_tab);
+	END IF;
+END
+//
+DELIMITER ; 
+
 -- ############################# DDT REPORT LINK ############################################################################## 
 DELIMITER //
 DROP TRIGGER IF EXISTS trg_afterDdtReportLinkDelete; 

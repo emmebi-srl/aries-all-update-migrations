@@ -21434,3 +21434,82 @@ BEGIN
 	WHERE id = input_id;
 END//
 DELIMITER ;
+
+
+-- Dump della struttura di procedura sp_ariesJobProductHistoryCreate
+DROP PROCEDURE IF EXISTS sp_ariesJobProductHistoryCreate;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesJobProductHistoryCreate`(
+	IN job_id INT(11),
+	IN job_year INT(11),
+	IN subjob_id INT(11),
+	IN lot_id INT(11),
+	IN tab_id INT(11)
+)
+BEGIN
+
+	DECLARE user_id INT(11);
+	SET user_id = @USER_ID;
+
+	IF user_id IS NULL THEN
+		SELECT id_utente
+		INTO user_id
+		FROM utente
+		WHERE Nome = 'admin';
+	END IF;
+
+	INSERT INTO commessa_articoli_storico (
+		`id_commessa`,
+		`anno`,
+		`id_sottocommessa`,
+		`descrizione`,
+		`quantità`,
+		`codice_articolo`,
+		`codice_fornitore`,
+		`UM`,
+		`id_tab`,
+		`economia`,
+		`id_lotto`,
+		`prezzo`,
+		`costo`,
+		`costo_ora`,
+		`tempo`,
+		`sconto`,
+		`prezzo_ora`,
+		`preventivati`,
+		`portati`,
+		`Lunghezza`,
+		`iva`,
+		`id_utente`,
+		`timestamp`
+	) SELECT `id_commessa`,
+		`anno`,
+		`id_sottocommessa`,
+		`descrizione`,
+		`quantità`,
+		`codice_articolo`,
+		`codice_fornitore`,
+		`UM`,
+		`id_tab`,
+		`economia`,
+		`id_lotto`,
+		`prezzo`,
+		`costo`,
+		`costo_ora`,
+		`tempo`,
+		`sconto`,
+		`prezzo_ora`,
+		`preventivati`,
+		`portati`,
+		`Lunghezza`,
+		`iva`,
+		user_id,
+		NOW()
+	FROM commessa_articoli
+	WHERE id_commessa = job_id
+		AND anno = job_year
+		AND id_sottocommessa = subjob_id
+		AND id_lotto = lot_id
+		AND id_tab = tab_id;
+END//
+DELIMITER ;
