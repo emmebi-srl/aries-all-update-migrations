@@ -610,7 +610,8 @@ BEGIN
 	WHERE tipo="tip_REP";
 
 
-	SELECT 
+	SELECT
+		IFNULL(rcl.titolo, "Spett.le") as titolo_cliente,
 		cl.codice_fiscale, 
 		condizione_pagamento,
 		ragione_sociale2, 
