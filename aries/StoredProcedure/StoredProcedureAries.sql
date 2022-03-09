@@ -5637,10 +5637,11 @@ BEGIN
 			Data_mod = CURRENT_TIMESTAMP, 
 			Utente_mod = @USER_ID
 		WHERE Id = enter_id; 
+
+		DELETE FROM evento_gruppo_evento
+		WHERE id_evento = enter_id;
+
 	END IF; 
-		
-	
-		
 END//
 DELIMITER ;
 
@@ -6440,6 +6441,20 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Dump della struttura di procedura emmebi.sp_ariesEventGroupDelete
+DROP PROCEDURE IF EXISTS sp_ariesEventGroupDelete;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesEventGroupDelete`( 
+	event_group_id INT,
+	OUT result INT
+)
+BEGIN
+	SET result = 1; 
+	DELETE FROM Evento_gruppo
+	WHERE evento_gruppo.Id = event_group_id;
+END//
+DELIMITER ;
+
 
 -- Dump della struttura di procedura emmebi.sp_ariesEventGroupSetNotificationStatus
 DROP PROCEDURE IF EXISTS sp_ariesEventGroupSetNotificationStatus;
@@ -6615,7 +6630,7 @@ BEGIN
 			giorni_ricorrenza = recurrence_days,
 			Data_esecuzione = execution_date, 
 			Sveglia = has_alarm, 
-			Data_sveglia = alarm,
+			Data_sveglia = IFNULL(alarm, '1970-01-01 00:00:00'), 
 			Ora_inizio_esecuzione = execution_start_time, 
 			ora_fine_esecuzione = execution_end_time,
 			Data_mod = CURRENT_TIMESTAMP, 
@@ -21512,4 +21527,204 @@ BEGIN
 		AND id_lotto = lot_id
 		AND id_tab = tab_id;
 END//
+DELIMITER ;
+
+
+-- Dump della struttura di procedura sp_ariesCoursesDeleteEvents
+DROP PROCEDURE IF EXISTS sp_ariesCoursesDeleteEvents;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesCoursesDeleteEvents`(
+	IN course_id INT(11),
+	OUT result INT(11)
+)
+BEGIN
+	DECLARE event_id INT;
+	DECLARE event_group_id INT;
+	DECLARE done INT DEFAULT 0;
+
+
+	DECLARE V_curA CURSOR FOR
+		SELECT id_evento
+		FROM evento_gruppo_evento
+		WHERE id_gruppo_evento = (
+			SELECT 
+				`id_evento_gruppo`
+			FROM corso
+			WHERE id_corso = course_id
+		);
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+	OPEN V_curA;
+	loopA: LOOP
+		FETCH V_curA INTO event_id;
+		IF done = 1 THEN 
+			LEAVE loopA;
+		END IF;
+
+		IF event_id IS NOT NULL THEN
+			CALL sp_ariesEventEmployeeDeleteByEventId(event_id, result);
+			CALL sp_ariesEventDelete(event_id, result);
+		END IF;
+	END LOOP;
+	CLOSE V_curA;
+	
+	SELECT 
+		`id_evento_gruppo`
+	INTO
+		event_group_id
+	FROM corso
+	WHERE id_corso = course_id;
+	
+	IF event_group_id IS NOT NULL THEN
+		CALL sp_ariesEventGroupDelete(event_group_id, result);
+		UPDATE corso SET id_evento_gruppo = NULL WHERE id_corso = course_id; 
+	END IF;
+	
+	SET result = 1;
+END//
+DELIMITER ;
+
+
+-- Dump della struttura di procedura sp_ariesCoursesCreateEvents
+DROP PROCEDURE IF EXISTS sp_ariesCoursesCreateEvents;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesCoursesCreateEvents`(
+	IN course_id INT(11),
+	OUT result INT (11)
+)
+BEGIN
+	DECLARE event_group_id INT;
+	DECLARE event_id INT;
+	DECLARE resul BIT;
+	DECLARE course_description VARCHAR(145);
+	DECLARE course_topics MEDIUMTEXT;
+	DECLARE course_speaker VARCHAR(45);
+	DECLARE course_start_date DATE;
+	DECLARE course_end_date DATE;
+	DECLARE course_start_time TIME;
+	DECLARE course_end_time TIME;
+	DECLARE course_duration_months INT;
+	DECLARE course_expiration_date DATE;
+	DECLARE course_date_loop DATE;
+
+	SELECT 
+		corso.`descrizione`,
+		corso.`argomenti`,
+		corso.`relatore`,
+		corso.`data_inizio`,
+		corso.`data_fine`,
+		corso.`ora_inizio`,
+		corso.`ora_fine`,
+		tipo_corso.`durata`
+	INTO
+		course_description,
+		course_topics,
+		course_speaker,
+		course_start_date,
+		course_end_date,
+		course_start_time,
+		course_end_time,
+		course_duration_months
+	FROM corso
+		INNER JOIN tipo_corso ON corso.id_tipo = tipo_corso.id_tipo
+	WHERE id_corso = course_id;
+
+	IF (course_duration_months IS NOT NULL AND course_duration_months != 0) THEN
+
+		SET course_expiration_date = DATE_ADD(course_end_date, INTERVAL course_duration_months MONTH);
+
+		CALL sp_ariesEventGroupInsert(
+			CONCAT('CORSO: ', course_description),
+			CONCAT(
+				'CORSO: ', course_description, '\n',
+				'RELATORE: ', IFNULL(course_speaker, ''), '\n',
+				'ARGOMENTI: ', IFNULL(course_topics, ''), '\n'
+			),
+			5, 
+			1, -- opened 
+			CONCAT(course_start_date, ' ', course_start_time),
+			CONCAT(course_end_date, ' ', course_end_time),
+			null,
+			null,
+			event_group_id
+		);
+
+		CALL sp_ariesEventInsert(
+			CONCAT('PROMEM. SCADENZA CORSO ', course_description),
+			CONCAT('La validità del corso "', course_description, '" scadrà tra un mese.'),
+			NULL,
+			event_group_id,
+			5,
+			0,
+			0,
+			0,
+			0,
+			DATE_ADD(course_expiration_date, INTERVAL -1 MONTH),
+			'09:00:00',
+			'10:00:00',
+			NULL,
+			result,
+			event_id
+		);
+		INSERT INTO evento_operaio (id_evento, id_operaio, Utente_ins, Utente_mod, Data_ins, Data_mod)
+		SELECT event_id, id_operaio, @USER_ID, @USER_ID, NOW(), NOW() FROM operaio_corso WHERE id_corso = course_id;
+
+		CALL sp_ariesEventInsert(
+			CONCAT('SCADENZA CORSO ', course_description),
+			CONCAT('La validità del corso "', course_description, '" è scaduta.'),
+			NULL,
+			event_group_id,
+			5,
+			0,
+			0,
+			0,
+			0,
+			course_expiration_date,
+			'09:00:00',
+			'10:00:00',
+			NULL,
+			result,
+			event_id
+		);
+		INSERT INTO evento_operaio (id_evento, id_operaio, Utente_ins, Utente_mod, Data_ins, Data_mod)
+		SELECT event_id, id_operaio, @USER_ID, @USER_ID, NOW(), NOW() FROM operaio_corso WHERE id_corso = course_id;
+
+
+		SET course_date_loop = course_start_date;
+
+		WHILE(course_date_loop <= course_end_date) DO
+
+			CALL sp_ariesEventInsert(
+				CONCAT('CORSO: ', course_description),
+				CONCAT(
+					'CORSO: ', course_description, '\n',
+					'RELATORE: ', IFNULL(course_speaker, ''), '\n',
+					'ARGOMENTI: ', IFNULL(course_topics, ''), '\n'
+				),
+				NULL,
+				event_group_id,
+				5,
+				0,
+				0,
+				0,
+				0,
+				course_date_loop,
+				course_start_time,
+				course_end_time,
+				NULL,
+				result,
+				event_id
+			);
+
+			INSERT INTO evento_operaio (id_evento, id_operaio, Utente_ins, Utente_mod, Data_ins, Data_mod)
+			SELECT event_id, id_operaio, @USER_ID, @USER_ID, NOW(), NOW() FROM operaio_corso WHERE id_corso = course_id;
+
+			SET course_date_loop = DATE_ADD(course_date_loop, INTERVAL 1 DAY);
+		END WHILE;
+
+		UPDATE corso SET id_evento_gruppo = event_group_id WHERE id_corso = course_id; 
+	END IF;
+
+	SET result = 1;
+END //
 DELIMITER ;
