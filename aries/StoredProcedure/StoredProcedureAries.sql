@@ -21728,3 +21728,43 @@ BEGIN
 	SET result = 1;
 END //
 DELIMITER ;
+
+
+-- Dump della struttura di procedura sp_ariesDepotRebuildAll
+DROP PROCEDURE IF EXISTS sp_ariesDepotRebuildAll;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesDepotRebuildAll`(
+	OUT result INT (11)
+)
+BEGIN
+	DECLARE quantity FLOAT(11,2);
+	DECLARE product_code VARCHAR(100);
+	DECLARE depot_id INT(11);
+	DECLARE done INT DEFAULT 0;
+
+
+	DECLARE V_curA CURSOR FOR
+		SELECT `quantità`, articolo, id_magazzino
+		FROM magazzino_operazione;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+	UPDATE magazzino SET giacenza = 0;
+
+	OPEN V_curA;
+	loopA: LOOP
+		FETCH V_curA INTO quantity, product_code, depot_id;
+		IF done = 1 THEN 
+			LEAVE loopA;
+		END IF;
+
+		UPDATE magazzino
+		SET 
+			giacenza = giacenza + quantity
+		WHERE id_articolo = product_code AND tipo_magazzino = depot_id;
+		
+	END LOOP;
+	CLOSE V_curA;
+	
+	SET result = 1;
+END //
+DELIMITER ;
