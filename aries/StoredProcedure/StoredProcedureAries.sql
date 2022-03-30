@@ -21650,7 +21650,7 @@ BEGIN
 		);
 
 		CALL sp_ariesEventInsert(
-			CONCAT('PROMEM. SCADENZA CORSO ', course_description),
+			CONCAT('PROMEM. SCADENZA CORSO 1 MESE', course_description),
 			CONCAT('La validità del corso "', course_description, '" scadrà tra un mese.'),
 			NULL,
 			event_group_id,
@@ -21660,6 +21660,27 @@ BEGIN
 			0,
 			0,
 			DATE_ADD(course_expiration_date, INTERVAL -1 MONTH),
+			'09:00:00',
+			'10:00:00',
+			NULL,
+			result,
+			event_id
+		);
+		INSERT INTO evento_operaio (id_evento, id_operaio, Utente_ins, Utente_mod, Data_ins, Data_mod)
+		SELECT event_id, id_operaio, @USER_ID, @USER_ID, NOW(), NOW() FROM operaio_corso WHERE id_corso = course_id;
+
+		
+		CALL sp_ariesEventInsert(
+			CONCAT('PROMEM. SCADENZA CORSO 3 MESI', course_description),
+			CONCAT('La validità del corso "', course_description, '" scadrà tra tre mesi.'),
+			NULL,
+			event_group_id,
+			5,
+			0,
+			0,
+			0,
+			0,
+			DATE_ADD(course_expiration_date, INTERVAL -3 MONTH),
 			'09:00:00',
 			'10:00:00',
 			NULL,
@@ -21766,5 +21787,56 @@ BEGIN
 	CLOSE V_curA;
 	
 	SET result = 1;
+END //
+DELIMITER ;
+
+
+-- Dump della struttura di procedura sp_ariesCoursesUpdateVerification
+DROP PROCEDURE IF EXISTS sp_ariesCoursesUpdateVerification;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesCoursesUpdateVerification`(
+	IN course_id INT (11),
+	OUT is_verified BIT(1)
+)
+BEGIN
+	DECLARE current_is_verified BIT(1);
+	DECLARE new_is_verified BIT(1) DEFAULT 0;
+	DECLARE verification_required BIT (1);
+
+	DECLARE number_of_employees INT(11) DEFAULT 0;
+	DECLARE number_of_verified_employees INT(11) DEFAULT 0;
+
+	SELECT richiede_verifica,
+		verificato
+	INTO
+		verification_required,
+		current_is_verified
+	FROM corso
+	WHERE id_corso = course_id;
+
+	IF verification_required = False THEN
+		SET new_is_verified = 1;
+	ELSE 
+
+		SELECT COUNT(passato),
+			SUM(IF(passato = 1, 1, 0))
+		INTO
+			number_of_employees,
+			number_of_verified_employees
+		FROM operaio_corso
+		WHERE id_corso = course_id;
+
+		SET new_is_verified = (number_of_employees = number_of_verified_employees);
+
+	END IF;
+
+	IF new_is_verified != current_is_verified THEN
+		UPDATE corso
+		SET verificato = new_is_verified
+		WHERE id_corso = course_id;
+	END IF;
+
+	SET is_verified = new_is_verified;
+
 END //
 DELIMITER ;
