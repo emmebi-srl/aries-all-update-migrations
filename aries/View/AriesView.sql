@@ -1125,6 +1125,7 @@ CREATE VIEW vw_ticket_details AS
 		impianto.Descrizione as impianto,
 		tipo_impianto.nome as tipo_impianto,
 		ticket.`Descrizione` as descrizione,
+		stato_ticket.id_stato AS id_stato_ticket,
 		stato_ticket.nome AS stato_ticket,
 		causale_ticket.Nome as Causale,
 		IF(`Urgenza`= 0, 'BASSA', IF(Urgenza = 1, 'NORMALE', 'ALTA')) AS Urgenza,

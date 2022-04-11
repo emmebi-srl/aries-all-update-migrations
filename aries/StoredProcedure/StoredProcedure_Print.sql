@@ -1522,3 +1522,20 @@ END $$
 DELIMITER ;
 
 
+
+
+-- Dump della struttura di procedura emmebi.sp_printTicketGetBetweenDatesByStatus
+DROP PROCEDURE IF EXISTS sp_printTicketGetBetweenExpirationDates;
+DELIMITER //
+CREATE  PROCEDURE `sp_printTicketGetBetweenExpirationDates`( 
+	fromDate DATE,
+	toDate DATE,
+	includeWithoutDate BIT(1)
+)
+BEGIN
+	SELECT *
+	FROM vw_ticket_details
+	WHERE id_stato_ticket IN (1, 2) AND (scadenza BETWEEN fromDate AND toDate 
+		OR IF(includeWithoutDate,  scadenza IS NULL, False));
+END//
+DELIMITER ;
