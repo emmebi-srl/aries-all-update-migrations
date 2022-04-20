@@ -107,11 +107,12 @@ BEGIN
 	WHERE
 		commessa_lotto.id_commessa = job_id
 		AND commessa_lotto.anno = job_year
-		AND commessa_lotto.id_sottocommessa = sub_job_id
+		AND IF(sub_job_id = -1, -1, commessa_lotto.id_sottocommessa) = sub_job_id
 		AND IF(job_lot_id = -1, -1, commessa_lotto.id_lotto) = job_lot_id
 	
 	GROUP BY
-		commessa_lotto.id_lotto 
+		commessa_lotto.id_sottocommessa,
+		commessa_lotto.id_lotto
 	HAVING COUNT(*) > 0;
 END $$
 DELIMITER ;
@@ -1538,4 +1539,104 @@ BEGIN
 	WHERE id_stato_ticket IN (1, 2) AND (scadenza BETWEEN fromDate AND toDate 
 		OR IF(includeWithoutDate,  scadenza IS NULL, False));
 END//
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_printJobRequirementsBody; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printJobRequirementsBody`(
+	IN job_id INT(11),
+	IN job_year INT(11),
+	IN sub_job_id INT(11)
+)
+BEGIN
+
+	SELECT *
+	FROM (
+		SELECT IF(is_kit=1,2,0) AS "is_kit",
+			" " AS "cod_art_3",
+			IF(is_kit=1, commessa_articoli.codice_articolo," ") AS "codice_articolo2",
+			IF(is_kit=0, commessa_articoli.codice_articolo," ") AS "codice_articolo",
+			" " AS cod_forn2,
+			commessa_articoli.codice_fornitore,
+			" " AS "Descrizione3",
+			IF(is_kit=1, CONCAT(commessa_Articoli.descrizione, " composto da:")," ") AS "Descrizione2",
+			IF(is_kit=0, commessa_Articoli.descrizione," ") AS "Descrizione",
+			IF(is_kit=0, REPLACE(REPLACE(REPLACE(FORMAT(IFNULL(quantità,"0")+ IFNULL(commessa_articoli.economia, "0"), 2), ".", "@"), ",", "."), "@", ","), " ") AS "quantità",
+			" " AS "q2",
+			commessa_lotto.id_sottocommessa AS "id_sottocommessa",
+			commessa_LOTTO.id_lotto AS "id_lotto",
+			commessa_lotto.descrizione AS "lotto",
+			id_tab
+		FROM commessa_articoli
+			LEFT JOIN commessa_lotto ON commessa_articoli.id_lotto=commessa_lotto.id_lotto
+				AND commessa_articoli.anno=commessa_lotto.anno
+				AND commessa_Articoli.id_commessa=commessa_lotto.id_commessa
+				AND commessa_Articoli.id_sottocommessa = commessa_lotto.id_sottocommessa
+			LEFT JOIN articolo ON articolo.codice_articolo=commessa_articoli.codice_articolo
+		WHERE commessa_articoli.codice_articolo IS NOT NULL
+			AND commessa_articoli.codice_articolo<>""
+			AND commessa_lotto.id_commessa = job_id
+			AND commessa_lotto.anno = job_year
+			AND IF(sub_job_id > 0, commessa_lotto.id_sottocommessa = sub_job_id, True)
+		
+		UNION ALL
+		SELECT IF(is_kit=1,2,0) AS "is_kit",
+			" " AS "cod_art_3",
+			IF(is_kit=1, commessa_articoli.codice_articolo," ") AS "codice_articolo2",
+			" " AS "codice_articolo",
+			" " AS cod_forn2,
+			commessa_articoli.codice_fornitore,
+			" " AS "Descrizione3",
+			" " AS "Descrizione2",
+			commessa_Articoli.descrizione AS "Descrizione",
+			IF(is_kit=0, REPLACE(REPLACE(REPLACE(FORMAT(IFNULL(quantità,"0")+ IFNULL(commessa_articoli.economia,"0"), 2), ".", "@"), ",", "."), "@", ","), " ") AS "quantità",
+			" " AS "q2",
+			commessa_lotto.id_sottocommessa AS "id_sottocommessa",
+			commessa_lotto.id_lotto AS "id_lotto",
+			commessa_lotto.descrizione AS "lotto",
+			id_tab
+		FROM commessa_articoli
+			LEFT JOIN commessa_lotto ON commessa_articoli.id_lotto=commessa_lotto.id_lotto
+				AND commessa_articoli.anno=commessa_lotto.anno
+				AND commessa_Articoli.id_commessa=commessa_lotto.id_commessa
+				AND commessa_Articoli.id_sottocommessa = commessa_lotto.id_sottocommessa
+			LEFT JOIN articolo ON articolo.codice_articolo=commessa_articoli.codice_articolo
+		WHERE (commessa_articoli.codice_articolo IS NULL OR commessa_articoli.codice_articolo="")
+			AND commessa_lotto.id_commessa = job_id
+			AND commessa_lotto.anno = job_year
+			AND IF(sub_job_id > 0, commessa_lotto.id_sottocommessa = sub_job_id, True)
+		
+		UNION ALL
+		SELECT articolo.is_kit,
+			riferimento_kit_articoli.id_articolo AS "cod_art_3",
+			" " AS "codice_articolo2",
+			" " AS "codice_articolo",
+			articolo_kit.codice_fornitore,
+			" " AS "codice_fornitore",
+			articolo_kit.desc_brev AS "Descrizione3",
+			" " AS "Descrizione2",
+			" " AS "Descrizione",
+			"  " AS "quantità",
+			REPLACE(REPLACE(REPLACE(FORMAT((IFNULL(quantità, "0")+ IFNULL(commessa_articoli.economia,"0"))*riferimento_kit_articoli.quantita, 2), ".", "@"), ",", "."), "@", ",") AS "q2",
+			commessa_lotto.id_sottocommessa AS "id_sottocommessa",
+			commessa_lotto.id_lotto AS "id_lotto",
+			commessa_lotto.descrizione AS "lotto",
+			id_tab
+		FROM commessa_articoli
+			LEFT JOIN commessa_lotto ON commessa_articoli.id_lotto=commessa_lotto.id_lotto
+				AND commessa_articoli.anno=commessa_lotto.anno
+				AND commessa_Articoli.id_commessa=commessa_lotto.id_commessa
+				AND commessa_Articoli.id_sottocommessa = commessa_lotto.id_sottocommessa
+			LEFT JOIN riferimento_kit_articoli ON id_kit=commessa_articoli.codice_articolo
+			LEFT JOIN articolo ON articolo.codice_articolo=commessa_articoli.codice_articolo
+			LEFT JOIN articolo AS articolo_kit ON articolo_kit.codice_articolo=riferimento_kit_articoli.id_articolo
+		WHERE articolo.is_kit=1
+			AND commessa_lotto.id_commessa = job_id
+			AND commessa_lotto.anno = job_year
+			AND IF(sub_job_id > 0, commessa_lotto.id_sottocommessa = sub_job_id, True)
+	) AS temp_job_print_requirements
+	ORDER BY id_sottocommessa, id_lotto, id_tab;
+
+END$$
 DELIMITER ;
