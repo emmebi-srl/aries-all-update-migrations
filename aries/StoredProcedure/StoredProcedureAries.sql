@@ -21840,3 +21840,37 @@ BEGIN
 
 END //
 DELIMITER ;
+
+-- Dump della struttura di procedura sp_ariesJobLotFindSingle
+DROP PROCEDURE IF EXISTS sp_ariesJobLotFindSingle;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesJobLotFindSingle`(
+	IN job_id INT (11),
+	IN job_year INT (11),
+	IN lot_id INT (11),
+	IN sub_job_id INT (11)
+)
+BEGIN
+	SELECT `id_lotto`,
+		`id_commessa`,
+		`id_sottocommessa`,
+		`anno`,
+		`descrizione`,
+		`impianto`,
+		`numero`,
+		`codice`,
+		`data_inizio`,
+		`data_fine`,
+		`scadenza`,
+		`stato`,
+		`nota`,
+		`csora`,
+		`prora`,
+		`sc`
+	FROM commessa_lotto
+	WHERE id_commessa = job_id
+		AND anno = job_year
+		AND id_lotto = lot_id
+		AND id_sottocommessa = sub_job_id;
+END //
+DELIMITER ;
