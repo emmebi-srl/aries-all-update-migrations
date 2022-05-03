@@ -19267,7 +19267,7 @@ BEGIN
 		product_code,
 		depot_id,
 		CURRENT_DATE,
-		3,
+		2,
 		causal_id,
 		operation_id
 	); 
