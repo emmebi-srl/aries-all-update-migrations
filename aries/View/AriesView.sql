@@ -293,6 +293,7 @@ DROP VIEW IF EXISTS vw_jobbodyproductswithreports;
 
 DROP VIEW IF EXISTS vw_jobbodywithreports;
 
+
 -- 
 -- Table structure for table vw_jobtotaltravelinterventions
 -- 
@@ -416,7 +417,7 @@ CREATE VIEW `vw_jobbody` AS
 		`ca`.`codice_articolo` AS `Codice_articolo`,
 		`ca`.`codice_fornitore` AS `Codice_fornitore`,
 		`ca`.`descrizione` AS `Descrizione`,
-		ca.portati AS `Qta_utilizzata`,
+		IF(ca.codice_articolo IS NULL, ca.`quantità`, ca.portati) AS `Qta_utilizzata`,
 		CAST(`ca`.`quantità` as decimal(11,2)) AS `Qta_commessa`,
 		CAST(`ca`.`preventivati` as decimal(11,2)) AS `Qta_preventivati`,
 		`ca`.`UM` AS `UM`,
