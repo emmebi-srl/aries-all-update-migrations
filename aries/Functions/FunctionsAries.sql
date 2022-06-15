@@ -1,3 +1,5 @@
+SET GLOBAL log_bin_trust_function_creators = 1;
+
 DROP FUNCTION IF EXISTS  fnc_jobScaleProductsFromReports;
 DELIMITER // 
 CREATE FUNCTION fnc_jobscaleproductsfromreports(JobId INT, JobYear INT) RETURNS TINYINT
