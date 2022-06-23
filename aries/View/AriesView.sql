@@ -551,7 +551,7 @@ CREATE VIEW `vw_depotsOperationsNotOrdered` AS
 		causale_magazzino.nome AS 'nome_causale',
 		CONCAT(causale_magazzino.nome," da Ddt emesso ", magazzino_ddt_emessi.id_ddt,"/", magazzino_ddt_emessi.anno_ddt) AS "Causale",
 		"DDT EMESSO" AS "documento",
-		clienti.ragione_sociale AS "ragione_sociale",
+		IFNULL(clienti.ragione_sociale, fornitore.ragione_sociale) AS "ragione_sociale",
 		magazzino_ddt_emessi.id_ddt AS "id_doc",
 		magazzino_ddt_emessi.anno_ddt AS "anno_doc",
 		sorgente
@@ -561,7 +561,8 @@ CREATE VIEW `vw_depotsOperationsNotOrdered` AS
 		INNER JOIN magazzino_ddt_emessi ON magazzino_ddt_emessi.id_operazione = magazzino_operazione.id_operazione
 		INNER JOIN ddt ON magazzino_ddt_emessi.id_ddt = ddt.id_ddt
 		AND magazzino_ddt_emessi.anno_ddt = ddt.anno
-		INNER JOIN clienti ON ddt.id_cliente = clienti.id_cliente
+		LEFT JOIN clienti ON ddt.id_cliente = clienti.id_cliente
+		LEFT JOIN fornitore ON ddt.id_fornitore = fornitore.id_fornitore
 		WHERE magazzino_operazione.sorgente = 3
 
 	-- DDT EMESSO RESO
@@ -576,7 +577,7 @@ CREATE VIEW `vw_depotsOperationsNotOrdered` AS
 		causale_magazzino.nome AS 'nome_causale',
 		CONCAT(causale_magazzino.nome," da Ddt emesso ", magazzino_ddt_emessi.id_ddt,"/", magazzino_ddt_emessi.anno_ddt) AS "Causale",
 		"DDT EMESSO" AS "documento",
-		clienti.ragione_sociale AS "ragione_sociale",
+		IFNULL(clienti.ragione_sociale, fornitore.ragione_sociale) AS "ragione_sociale",
 		magazzino_ddt_emessi.id_ddt AS "id_doc",
 		magazzino_ddt_emessi.anno_ddt AS "anno_doc",
 		sorgente
@@ -586,7 +587,8 @@ CREATE VIEW `vw_depotsOperationsNotOrdered` AS
 		INNER JOIN magazzino_ddt_emessi ON (magazzino_ddt_emessi.id_reso IS NOT NULL AND magazzino_ddt_emessi.id_reso=magazzino_operazione.id_operazione)
 		INNER JOIN ddt ON magazzino_ddt_emessi.id_ddt = ddt.id_ddt
 		AND magazzino_ddt_emessi.anno_ddt = ddt.anno
-		INNER JOIN clienti ON ddt.id_cliente = clienti.id_cliente
+		LEFT JOIN clienti ON ddt.id_cliente = clienti.id_cliente
+		LEFT JOIN fornitore ON ddt.id_fornitore = fornitore.id_fornitore
 		WHERE magazzino_operazione.sorgente = 3
 	
 	-- Trasferimento Magazzini
