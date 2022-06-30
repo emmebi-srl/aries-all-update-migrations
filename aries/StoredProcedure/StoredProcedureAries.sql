@@ -21874,3 +21874,37 @@ BEGIN
 		AND id_sottocommessa = sub_job_id;
 END //
 DELIMITER ;
+
+
+-- Dump della struttura di procedura sp_ariesDefaultLotGetByName
+DROP PROCEDURE IF EXISTS sp_ariesDefaultLotGetByName;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesDefaultLotGetByName`(
+	IN lot_name VARCHAR(255)
+)
+BEGIN
+	SELECT `id_lotto`,
+		`nome`,
+		`descrizione`,
+		`stato`
+	FROM lotto
+	WHERE nome = lot_name
+	ORDER BY id_lotto DESC;
+END //
+DELIMITER ;
+
+
+-- Dump della struttura di procedura sp_ariesDefaultLotExclusionGetByLotId
+DROP PROCEDURE IF EXISTS sp_ariesDefaultLotExclusionGetByLotId;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesDefaultLotExclusionGetByLotId`(
+	IN lot_id INT(11)
+)
+BEGIN
+	SELECT `id_lotto`,
+		`id_esc`
+	FROM lotto_escass
+	WHERE id_lotto = lot_id
+	ORDER BY id_esc DESC;
+END //
+DELIMITER ;
