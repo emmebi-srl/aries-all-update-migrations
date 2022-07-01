@@ -18266,7 +18266,7 @@ BEGIN
     WHERE id_commessa = JobId AND anno = JobYear;
 		
 	INSERT INTO commessa_sotto(id_commessa, anno, id_sotto, stato, nome, destinazione, inizio) 
-	SELECT JobId, JobYear, SubJobId, 1, CONCAT("SOTTOCOMMESSA PREVENTIVO ", JobId, "/", JobYear), destinazione, CURRENT_DATE 
+	SELECT JobId, JobYear, SubJobId, 1, CONCAT("SOTTOCOMMESSA PREVENTIVO ", QuoteId, "/", QuoteYear), destinazione, CURRENT_DATE 
 	FROM preventivo p
 		LEFT JOIN revisione_preventivo rp ON p.id_preventivo = rp.id_preventivo
 			AND p.anno = rp.anno 
