@@ -132,33 +132,45 @@ BEGIN
 	DROP TABLE IF EXISTS tmp_Job_hours_worked; 
 	CREATE TABLE tmp_Job_hours_worked(
 		svolte DECIMAL(11,2), 
+		Id_sottocommessa INT(11),
 		Id_lotto INT(11)
 	);
 
-	INSERT INTO tmp_Job_hours_worked (svolte, Id_lotto)
+	INSERT INTO tmp_Job_hours_worked (svolte, id_sottocommessa, Id_lotto)
 	SELECT 
 		IFNULL(SUM(rapporto_tecnico_lavoro.totale)/60, 0) AS "svolte", 
+		commessa_rapporto.id_sottocommessa,
 		commessa_rapporto.id_lotto 
 	FROM commessa_rapporto 
 		INNER JOIN rapporto_tecnico_lavoro 
 			ON commessa_rapporto.id_rapporto=rapporto_tecnico_lavoro.id_rapporto 
 			AND commessa_rapporto.anno_rapporto=rapporto_tecnico_lavoro.anno AND straordinario < 3
-	WHERE id_commessa = job_id AND anno_commessa = job_year  AND id_sottocommessa = sub_job_id
+	WHERE id_commessa = job_id AND anno_commessa = job_year
 	GROUP BY commessa_rapporto.id_lotto;
 	
 	IF considers_trip_hours THEN
 
+		INSERT INTO tmp_Job_hours_worked (svolte, id_sottocommessa, Id_lotto)
 		SELECT 
 			IFNULL(SUM(tempo_viaggio)/60, 0) AS "svolte", 
+			commessa_rapporto.id_sottocommessa,
 			commessa_rapporto.id_lotto 
 		FROM commessa_rapporto 
 			INNER JOIN rapporto_tecnico AS a 
 				ON commessa_rapporto.id_rapporto=a.id_rapporto AND commessa_rapporto.anno_rapporto=a.anno 
-		WHERE id_commessa = job_id AND anno_commessa = job_year AND id_sottocommessa = sub_job_id
+		WHERE id_commessa = job_id AND anno_commessa = job_year
 		GROUP BY commessa_rapporto.id_lotto;
 		
 	END IF;
+
 	
+	IF (sub_job_id <> -1) THEN
+
+		DELETE 
+		FROM tmp_Job_hours_worked
+		WHERE id_sottocommessa = sub_job_id;
+
+	END IF;	
 	
 	IF (job_lot_id <> -1) THEN
 
@@ -280,6 +292,7 @@ BEGIN
 	 CREATE TEMPORARY TABLE tmp_job_body
 	SELECT `Id_commessa`
 		,`Anno`
+		,`id_sottocommessa`
 		,`Lotto`
 		,`Posizionamento`
 		,`Codice_articolo`
@@ -302,12 +315,19 @@ BEGIN
 	WHERE
 	id_commessa = job_id 
 		AND anno = job_year
-		AND id_sottocommessa = sub_job_id
 	ORDER BY Lotto, Posizionamento;
 	
    		
    ALTER TABLE tmp_job_body ADD COLUMN Id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT, ADD PRIMARY KEY (`Id`);
-   		
+	
+	IF (sub_job_id <> -1) THEN
+
+		DELETE 
+		FROM tmp_job_body
+		WHERE id_sottocommessa <> sub_job_id;
+
+	END IF;
+
    IF (job_lot_id <> -1) THEN
 
 		DELETE 
@@ -364,6 +384,7 @@ BEGIN
   		causale_trasporto.causale AS "Causale",
 		"DDT" AS "Documento", 
 		id_lotto, 
+		id_sottocommessa,
 		CONCAT(fattura," / ", anno_fattura) AS "fattura"
 	FROM ddt 
 		INNER JOIN causale_trasporto 
@@ -374,7 +395,7 @@ BEGIN
 		  	ON b1.id_comune=b.comune  
    		INNER JOIN commessa_ddt AS A 
 		   ON a.id_ddt=ddt.ID_DDT AND ddt.anno=anno_ddt 
-	WHERE id_commessa = job_id AND anno_commessa = job_year AND id_sottocommessa = sub_job_id
+	WHERE id_commessa = job_id AND anno_commessa = job_year
 
    	UNION ALL 
 	SELECT 
@@ -384,6 +405,7 @@ BEGIN
 		tipo_intervento.nome AS "Causale",
 		"RAPPORTO" AS "Documento", 
 		id_lotto,
+		id_sottocommessa,
 		CONCAT(fattura," / ", anno_fattura) AS "fattura"
 	FROM rapporto 
 		INNER JOIN tipo_intervento 
@@ -396,7 +418,7 @@ BEGIN
 			ON b.comune=b1.id_comune 
 		INNER JOIN commessa_rapporto AS A 
 			ON a.id_rapporto=rapporto.ID_rapporto AND rapporto.anno=anno_rapporto 
-	WHERE id_commessa = job_id AND anno_commessa = job_year AND id_sottocommessa = sub_job_id
+	WHERE id_commessa = job_id AND anno_commessa = job_year
 	
    	UNION ALL 
   	SELECT 
@@ -406,13 +428,14 @@ BEGIN
 	  tipo_com_fat.nome AS "Causale",
 	  "FATTURA" AS "Documento", 
 	  id_lotto,
+	  id_sottocommessa,
 	  "" AS "fattura" 
 	FROM commessa_fattura 
 		INNER JOIN FATTURA  
    			ON fattura.id_fattura=commessa_fattura.id_fattura AND anno=anno_fattura 
    		INNER JOIN tipo_com_fat 
 			ON id_tipo=tipo 
-   	WHERE id_commessa = job_id AND anno_commessa = job_year AND id_sottocommessa = sub_job_id
+   	WHERE id_commessa = job_id AND anno_commessa = job_year
 
    	UNION ALL 
 	SELECT 
@@ -422,6 +445,7 @@ BEGIN
 		lotto.nome,
 		"PREVENTIVO", 
 		commessa_preventivo.lotto,
+		commessa_preventivo.id_sottocommessa,
 		"" 
    	FROM commessa_preventivo 
    		INNER JOIN preventivo_lotto 
@@ -431,7 +455,7 @@ BEGIN
    		INNER JOIN preventivo 
 		   	ON preventivo.id_preventivo=preventivo_lotto.id_preventivo AND preventivo.anno=preventivo_lotto.anno 
 
-	WHERE id_commessa = job_id AND commessa_preventivo.anno = job_year AND id_sottocommessa = sub_job_id
+	WHERE id_commessa = job_id AND commessa_preventivo.anno = job_year
 	 
 	UNION ALL
 	SELECT DISTINCT
@@ -441,13 +465,20 @@ BEGIN
 		"", 
 		"ORDINE" AS "Documento", 
 		com_lotto,
+		id_sottocommessa,
 		"" AS "fattura" 	
 	FROM ordine_dettaglio
 		INNER JOIN ordine_fornitore
 			ON ordine_fornitore.id_ordine = ordine_dettaglio.id_ordine AND ordine_fornitore.anno = ordine_dettaglio.anno
-	WHERE id_commessa = job_id AND anno_commessa = job_year AND id_sottocommessa = sub_job_id; 
+	WHERE id_commessa = job_id AND anno_commessa = job_year; 
 
+   IF (sub_job_id <> -1) THEN
 
+		DELETE 
+		FROM tmp_job_associates_documents
+		WHERE id_sottocommessa = sub_job_id;
+
+	END IF;
 
 	   		
    IF (job_lot_id <> -1) THEN
@@ -460,7 +491,7 @@ BEGIN
 
 	SELECT * 
 	FROM tmp_job_associates_documents
-	ORDER BY id_lotto, Data; 
+	ORDER BY id_sottocommessa, id_lotto, Data; 
 
 END $$
 DELIMITER ;
@@ -483,6 +514,7 @@ BEGIN
 	SELECT 
 		Id_commessa, 
 		anno_commessa, 
+		id_sottocommessa,
 		id_lotto, 
 		ROUND(SUM(totale/60), 2) Ore_totali, 
 		causale_lavoro.Nome
@@ -494,10 +526,17 @@ BEGIN
 			ON rapporto_tecnico_lavoro.Id_lavoro = causale_lavoro.Id_causale
 	WHERE  id_commessa = job_id 
    		AND anno_commessa = job_year
-		AND id_sottocommessa = sub_job_id
 	GROUP BY Id_commessa, anno_commessa, id_sottocommessa, id_lotto
 	ORDER BY Id_lotto;
-   		
+
+   IF (sub_job_id <> -1) THEN
+
+		DELETE 
+		FROM tmp_job_hours_details
+		WHERE id_sottocommessa <> sub_job_id;
+
+	END IF;
+
    IF (job_lot_id <> -1) THEN
 
 		DELETE 

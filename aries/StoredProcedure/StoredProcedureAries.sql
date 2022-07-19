@@ -21908,3 +21908,29 @@ BEGIN
 	ORDER BY id_esc DESC;
 END //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesSubJobGetByJob;
+DELIMITER //
+CREATE PROCEDURE `sp_ariesSubJobGetByJob`(
+	IN job_id INT(11),
+	IN job_year INT(11)
+)
+BEGIN
+	SELECT
+		`id_sotto`,
+		`id_commessa`,
+		`anno`,
+		`destinazione`,
+		`descrizione`,
+		`scadenza`,
+		`inizio`,
+		`fine`,
+		`numero`,
+		`codice`,
+		`stato`,
+		`nome`
+	FROM commessa_sotto
+	WHERE id_commessa = job_id AND anno = job_year;
+
+END //
+DELIMITER ;
