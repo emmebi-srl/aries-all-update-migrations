@@ -1304,3 +1304,54 @@ FROM articolo_preventivo as ap
 	LEFT JOIN Lotto AS l
 		ON l.id_lotto = pl.id_lotto
 ORDER BY anno desc, id_preventivo desc, id_lotto, id_tab;
+
+
+DROP VIEW IF EXISTS vw_systems_exports_to_contact;
+CREATE VIEW vw_systems_exports_to_contact AS
+	SELECT 
+		clienti.id_cliente as "ID Cliente",
+      	clienti.ragione_sociale as "Ragione Sociale",
+		tipo_cliente.nome as "Tipo Cliente",
+		tipo_rapclie.nome AS "Tipo Rapporto",
+		stato_clienti.nome AS "Stato Cliente",
+		riferimento_clienti.telefono AS "Telefono",
+		riferimento_clienti.mail AS "Email",
+		riferimento_clienti.altro_telefono AS "Cellulare",
+		IF(frazione IS NULL, c.nome, CONCAT(c.nome, " - ", f.nome)) AS "Città",
+		c.cap AS "CAP", 
+		dc.provincia AS "Provincia",
+		IF(numero_civico IS NULL OR indirizzo = "", indirizzo, CONCAT(indirizzo, ", ", numero_civico)) AS Indirizzo,
+		impianto.id_impianto AS "ID Impianto",
+		tipo_impianto.nome as "Tipo Impianto",
+		impianto.descrizione AS "Descrizione",
+		impianto.data_funzione AS "Data Funzione",
+		impianto.scadenza_garanzia AS "Scadenza Garanzia",
+		tempo_manutenzione/60 AS "Tempo Manutenzione",
+		MAX(impianto_uscita.manutenzione) AS "Costo Manutenzione",
+		costo_manutenzione AS "Costo Ipotetico Manutenzione",
+		abbonamento.nome AS "Abbonamento",
+		persone as "Persone Necessarie",
+		CAST(GROUP_CONCAT(DISTINCT substring(mese.nome,1,3) separator ", ")  AS CHAR(150) CHARACTER SET utf8) AS "Controlli",
+		(SELECT data_esecuzione FROM rapporto WHERE id_impianto = impianto.id_impianto ORDER BY data_esecuzione DESC LIMIT 1) AS "Data Ultimo Rapporto",
+		(
+			SELECT data
+			FROM revisione_preventivo
+				INNER JOIN preventivo ON preventivo.id_preventivo = revisione_preventivo.id_preventivo
+					AND preventivo.anno = revisione_preventivo.anno AND preventivo.stato IN (3, 5, 6, 12, 13, 10, 11) 
+			WHERE id_cliente = clienti.id_cliente ORDER BY data DESC LIMIT 1
+		) AS "Data Ultimo Preventivo Aperto"
+   	FROM impianto
+	   	INNER JOIN tipo_impianto ON impianto.tipo_impianto = tipo_impianto.id_tipo
+		INNER JOIN clienti ON clienti.id_cliente=impianto.id_cliente
+		INNER JOIN stato_clienti ON clienti.stato_cliente=stato_clienti.id_stato
+		INNER JOIN tipo_cliente ON clienti.tipo_cliente=tipo_cliente.id_tipo
+		INNER JOIN tipo_rapclie ON clienti.tipo_rapporto=tipo_rapclie.id_tipo
+		LEFT JOIN impianto_uscita ON impianto_uscita.id_impianto=impianto.id_impianto AND impianto_uscita.id_impianto
+		INNER JOIN riferimento_clienti ON clienti.id_cliente=riferimento_clienti.id_cliente AND riferimento_clienti.id_riferimento=1
+		LEFT JOIN destinazione_cliente dc ON dc.id_cliente = clienti.id_cliente AND id_destinazione = impianto.destinazione
+		LEFT JOIN comune c ON c.id_comune = dc.comune
+		LEFT JOIN frazione f ON f.id_frazione = dc.frazione
+		LEFT JOIN abbonamento ON abbonamento.id_abbonamento=impianto_uscita.id_abbonamento 
+		LEFT JOIN impianto_abbonamenti_mesi ON impianto.id_impianto=impianto_abbonamenti_mesi.impianto AND impianto_abbonamenti_mesi.anno=DATE_FORMAT(NOW(),'%Y')
+      	LEFT JOIN mese ON mese.id_mese=impianto_abbonamenti_mesi.mese
+   	GROUP BY impianto.id_impianto
