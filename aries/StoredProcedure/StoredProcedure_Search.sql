@@ -25,6 +25,37 @@ BEGIN
 END $$
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS sp_searchSystemsLight; 
+DELIMITER $$
+CREATE PROCEDURE `sp_searchSystemsLight`(
+	IN `search_text` VARCHAR(100),
+	IN `system_id` INT(11),
+	IN `customer_id` INT(11)
+)
+BEGIN
+	SET customer_id = IFNULL(customer_id, -1);
+	
+	SELECT Id_impianto,
+		impianto.Id_cliente,
+		tipo_impianto.nome as Tipo_impianto,
+		stato_impianto.nome as Stato_impianto,
+		stato_impianto.colore as Stato_impianto_colore,
+		impianto.Descrizione,
+		CONCAT(comune.nome," ", indirizzo) AS indirizzo
+	FROM impianto
+		INNER JOIN tipo_impianto ON tipo_impianto = id_tipo
+		INNER JOIN stato_impianto ON Stato = id_stato
+		LEFT JOIN destinazione_cliente AS a ON a.id_cliente=impianto.id_cliente	AND a.id_destinazione = impianto.destinazione
+		LEFT JOIN comune ON comune.id_comune=comune
+	WHERE (impianto.descrizione LIKE CONCAT('%', search_text, '%') or (impianto.id_impianto = IFNULL(system_id, -1)))
+		AND customer_id = IF(customer_id = -1, -1, impianto.id_cliente) 
+	GROUP BY impianto.id_impianto  
+	ORDER BY impianto.Descrizione LIKE CONCAT(search_text, '%') desc, impianto.descrizione   
+	LIMIT 200;
+
+END $$
+DELIMITER ;
+
 DROP PROCEDURE IF EXISTS sp_searchQuotesLight; 
 DELIMITER $$
 CREATE PROCEDURE `sp_searchQuotesLight`(
