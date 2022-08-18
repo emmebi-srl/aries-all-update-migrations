@@ -1679,3 +1679,40 @@ BEGIN
 
 END$$
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_printCustomerDashboardQuotes; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printCustomerDashboardQuotes`(
+	IN customer_id INT(11)
+)
+BEGIN
+	SELECT 
+		preventivo.Id_preventivo,
+		preventivo.anno,
+		preventivo.revisione,
+		preventivo.Note as Descrizione,
+		revisione_preventivo.data as data,
+		tipo_preventivo.nome as Tipo,
+		stato_preventivo.Nome as Stato,
+		stato_preventivo.Nome as Stato_colore,
+		SUM(CAST(ROUND(prezzo * (100 - IF(preventivo_lotto.tipo_ricar = 1, 0, sconto)) / 100, 2) * (100 - IFNULL(NULLIF(scontoriga, ""), 0)) / 100 AS DECIMAL(11, 2)) * quantità) 
+		+ SUM(CAST((IF(montato = "0", 0, articolo_preventivo.tempo_installazione / 60 * prezzo_h * (100 - scontolav) / 100) * ((100 - IFNULL(scontoriga, 0)) / 100)) AS DECIMAL(11, 2)) * quantità) as prezzo
+	FROM preventivo
+		INNER JOIN revisione_preventivo ON revisione_preventivo.Id_revisione = preventivo.revisione
+			AND preventivo.id_preventivo = revisione_Preventivo.id_preventivo
+			AND preventivo.anno = revisione_preventivo.Anno
+		INNER JOIN articolo_preventivo ON revisione_preventivo.Id_revisione = articolo_preventivo.Id_revisione
+			AND articolo_preventivo.id_preventivo = revisione_Preventivo.id_preventivo
+			AND articolo_preventivo.anno = revisione_preventivo.Anno
+		INNER JOIN preventivo_lotto ON preventivo_lotto.id_preventivo = articolo_preventivo.id_preventivo 
+			AND preventivo_lotto.anno = articolo_preventivo.anno 
+			AND preventivo_lotto.id_revisione = articolo_preventivo.id_revisione 
+			AND articolo_preventivo.lotto = preventivo_lotto.posizione 
+		INNER JOIN tipo_preventivo ON preventivo.tipo_preventivo = tipo_preventivo.id_tipo
+		INNER JOIN stato_preventivo ON preventivo.Stato = stato_preventivo.Id_stato
+	WHERE revisione_preventivo.id_cliente = customer_id
+	GROUP BY id_preventivo, anno
+	ORDER BY anno DESC, id_preventivo DESC;
+
+END$$
+DELIMITER ;
