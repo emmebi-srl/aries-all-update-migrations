@@ -21934,3 +21934,175 @@ BEGIN
 
 END //
 DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesReportGroupTotalsRefreshByReport;
+DELIMITER //
+CREATE PROCEDURE `sp_ariesReportGroupTotalsRefreshByReport`(
+	IN report_id INT(11),
+	IN report_year INT(11)
+)
+BEGIN
+	DECLARE report_group_id INT(11);
+	DECLARE report_group_year INT(11);
+
+	SELECT id_resoconto, anno_reso
+	INTO report_group_id, report_group_year
+	FROM resoconto_rapporto
+	WHERE id_rapporto = report_id
+		AND anno = report_year;
+
+
+	IF report_group_id IS NOT NULL THEN
+		CALL sp_ariesReportGroupTotalsRefresh(report_group_id, report_group_year);
+	END IF;
+
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesReportGroupTotalsRefresh;
+DELIMITER //
+CREATE PROCEDURE `sp_ariesReportGroupTotalsRefresh`(
+	IN report_group_id INT(11),
+	IN report_group_year INT(11)
+)
+BEGIN
+
+	DECLARE total_trip_price DECIMAL(11,2);
+	DECLARE total_trip_cost DECIMAL(11,2);
+	DECLARE total_work_price DECIMAL(11,2);
+	DECLARE total_work_cost DECIMAL(11,2);
+	DECLARE total_products_price DECIMAL(11,2);
+	DECLARE total_products_cost DECIMAL(11,2);
+	DECLARE total_price DECIMAL(11,2);
+	DECLARE total_cost DECIMAL(11,2);
+
+	
+	SELECT
+		SUM(costo_lavoro),
+		SUM(prezzo_lavoro),
+		SUM(costo_viaggio),
+		SUM(prezzo_viaggio),
+		SUM(costo_materiale),
+		SUM(prezzo_materiale),
+		SUM(costo_totale),
+		SUM(prezzo_totale)
+	INTO
+		total_work_cost,
+		total_work_price,
+		total_trip_cost,
+		total_trip_price,
+		total_products_cost,
+		total_products_price,
+		total_cost,
+		total_price
+	FROM resoconto_rapporto
+		LEFT JOIN rapporto_totali ON resoconto_rapporto.id_rapporto = rapporto_totali.id_rapporto and resoconto_rapporto.anno = rapporto_totali.anno
+	WHERE resoconto_rapporto.id_resoconto = report_group_id AND anno_reso = report_group_year;
+
+
+
+	SET total_work_cost = IFNULL(total_work_cost, 0);
+	SET total_work_price = IFNULL(total_work_price, 0);
+	SET total_trip_cost = IFNULL(total_trip_cost, 0);
+	SET total_trip_price = IFNULL(total_trip_price, 0);
+	SET total_products_cost = IFNULL(total_products_cost, 0);
+	SET total_products_price = IFNULL(total_products_price, 0);
+	SET total_cost = IFNULL(total_cost, 0);
+	SET total_price = IFNULL(total_price, 0);
+
+	UPDATE resoconto_totali
+	SET 
+		costo_lavoro = total_work_cost,
+		prezzo_lavoro = total_work_price,
+		costo_viaggio = total_trip_cost,
+		prezzo_viaggio = total_trip_price,
+		costo_materiale = total_products_cost,
+		prezzo_materiale = total_products_price,
+		costo_totale = total_cost,
+		prezzo_totale = total_price
+	WHERE resoconto_totali.id_resoconto = report_group_id AND resoconto_totali.anno = report_group_year;
+
+END //
+DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS sp_ariesReportTotalsRefresh;
+DELIMITER //
+CREATE PROCEDURE `sp_ariesReportTotalsRefresh`(
+	IN report_id INT(11),
+	IN report_year INT(11)
+)
+BEGIN
+	DECLARE total_trip_price DECIMAL(11,2);
+	DECLARE total_trip_cost DECIMAL(11,2);
+	DECLARE total_work_price DECIMAL(11,2);
+	DECLARE total_work_cost DECIMAL(11,2);
+	DECLARE total_products_price DECIMAL(11,2);
+	DECLARE total_products_cost DECIMAL(11,2);
+	DECLARE total_price DECIMAL(11,2);
+	DECLARE total_cost DECIMAL(11,2);
+	DECLARE default_hourly_price DECIMAL(11, 2);
+	DECLARE default_hourly_cost DECIMAL(11, 2);
+	DECLARE default_hourly_cost_extra DECIMAL(11, 2);
+	DECLARE default_km_cost DECIMAL(11,2);
+
+	SELECT costo_h, straordinario_c, costo_km, prezzo
+		INTO default_hourly_cost, default_hourly_cost_extra, default_km_cost, default_hourly_price
+	FROM tariffario
+	ORDER BY normale DESC
+	LIMIT 1;
+
+	SELECT SUM(CAST(ROUND(IFNULL(ora_normale, 0) * (totale / 60), 2) AS DECIMAL(10, 2))) as 'prezzo_lavoro',
+		SUM(CAST(ROUND(IF(straordinario = 1, IFNULL(straordinario_c, default_hourly_cost_extra), IFNULL(costo_h, default_hourly_cost)) * (totale / 60), 2) AS DECIMAL(10, 2))) as 'costo_lavoro'
+		INTO total_work_price, total_work_cost
+	FROM rapporto_tecnico_lavoro
+		INNER JOIN operaio ON operaio.Id_operaio = rapporto_tecnico_lavoro.tecnico
+		LEFT JOIN tariffario ON operaio.Tariffario = tariffario.Id_tariffario
+	WHERE id_rapporto = report_id AND anno = report_year
+	GROUP BY id_rapporto, anno;
+
+
+	SELECT SUM(CAST(ROUND((km * IFNULL(costo_km, default_km_cost)) + autostrada + parcheggio + spesa_trasferta + altro + (Tempo_viaggio/ 60 * IFNULL(costo_h, default_hourly_cost)), 2) AS DECIMAL(11,2))) as costo_viaggio,
+		SUM(CAST(ROUND((km * IFNULL(costo_km, default_km_cost)) + autostrada + parcheggio + spesa_trasferta + altro + (Tempo_viaggio/ 60 *  IFNULL(prezzo, default_hourly_price)), 2) AS DECIMAL(11,2))) as prezzo_viaggio
+		INTO total_trip_price, total_trip_cost
+	FROM rapporto_tecnico
+		INNER JOIN operaio ON operaio.Id_operaio = rapporto_tecnico.tecnico
+		LEFT JOIN tariffario ON operaio.Tariffario = tariffario.Id_tariffario
+	WHERE id_rapporto = report_id AND anno = report_year
+	GROUP BY id_rapporto, anno;
+
+	SELECT SUM(CAST(ROUND(ROUND(IFNULL(prezzo, 0) * (100 - IFNULL(sconto, 0)) / 100, 2) * IFNULL(quantità, 0), 2)  AS DECIMAL(11, 2))) as Prezzo_materiale,
+		SUM(CAST(ROUND(ROUND(IFNULL(costo, 0) * (100 - IFNULL(sconto, 0)) / 100, 2) * IFNULL(quantità, 0), 2)  AS DECIMAL(11, 2))) as Costo_materiale
+		INTO total_products_price,
+		total_products_cost
+	FROM rapporto_materiale
+	WHERE id_rapporto = report_id AND anno = report_year
+	GROUP BY id_rapporto, anno;
+
+	SET total_work_cost = IFNULL(total_work_cost, 0);
+	SET total_work_price = IFNULL(total_work_price, 0);
+	SET total_trip_cost = IFNULL(total_trip_cost, 0);
+	SET total_trip_price = IFNULL(total_trip_price, 0);
+	SET total_products_cost = IFNULL(total_products_cost, 0);
+	SET total_products_price = IFNULL(total_products_price, 0);
+	SET total_cost = total_work_cost + total_trip_cost + total_products_cost;
+	SET total_price = total_work_price + total_trip_price + total_products_price;
+
+	UPDATE rapporto_totali
+	SET costo_lavoro = total_work_cost,
+			prezzo_lavoro = total_work_price,
+			costo_viaggio = total_trip_cost,
+			prezzo_viaggio = total_trip_price,
+			costo_materiale = total_products_cost,
+			prezzo_materiale = total_products_price,
+			costo_totale = total_cost,
+			prezzo_totale = total_price
+	WHERE id_rapporto = report_id AND anno = report_year;
+
+END //
+DELIMITER ;
+
+
+

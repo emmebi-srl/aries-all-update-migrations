@@ -383,6 +383,15 @@ END;
 //
 DELIMITER ;
 
+DROP TRIGGER IF EXISTS trg_afterReportProductUpdate;
+delimiter //
+CREATE TRIGGER `trg_afterReportProductUpdate` AFTER UPDATE ON `rapporto_materiale` FOR EACH ROW 
+BEGIN
+	CALL sp_ariesReportTotalsRefresh(NEW.id_rapporto, NEW.anno);
+END;
+//
+DELIMITER ;
+
 DROP TRIGGER IF EXISTS ins_rap_art;
 DROP TRIGGER IF EXISTS trg_beforeReportProductInsert;
 delimiter //
@@ -422,6 +431,8 @@ BEGIN
 				new.quantità, new.id_materiale);
 		END IF;
 	END IF;
+
+	CALL sp_ariesReportTotalsRefresh(NEW.id_rapporto, NEW.anno);
 END
 //
 DELIMITER ;
@@ -444,6 +455,16 @@ BEGIN
 END
 //
 DELIMITER ;
+
+DROP TRIGGER IF EXISTS trg_afterReportProductDelete;
+delimiter //
+CREATE TRIGGER `trg_afterReportProductDelete` AFTER DELETE ON `rapporto_materiale` FOR EACH ROW
+BEGIN
+	CALL sp_ariesReportTotalsRefresh(OLD.id_rapporto, OLD.anno);
+END
+//
+DELIMITER ;
+
 
 
 -- ############################# CUSTOMERS ############################################################################## 
@@ -771,3 +792,145 @@ BEGIN
 END
 //
 DELIMITER ;
+
+
+-- ############################# REPORTS  ############################################################################## 
+DROP TRIGGER IF EXISTS trg_afterReportInsert; 
+delimiter //
+CREATE TRIGGER `trg_afterReportInsert` AFTER INSERT ON `rapporto` FOR EACH ROW 
+BEGIN	
+	INSERT INTO  rapporto_totali (id_rapporto, anno, costo_lavoro, prezzo_lavoro, costo_viaggio, prezzo_viaggio, costo_materiale, prezzo_materiale, costo_totale, prezzo_totale)
+	VALUES (NEW.id_rapporto, NEW.anno, 0, 0, 0, 0, 0, 0, 0, 0);
+END
+//
+delimiter ; 
+
+-- ############################# REPORT WORK  ############################################################################## 
+DROP TRIGGER IF EXISTS trg_afterReportWorkInsert; 
+delimiter //
+CREATE TRIGGER `trg_afterReportWorkInsert` AFTER INSERT ON `rapporto_tecnico_lavoro` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportTotalsRefresh(NEW.id_rapporto, NEW.anno);
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_afterReportWorkUpdate; 
+delimiter //
+CREATE TRIGGER `trg_afterReportWorkUpdate` AFTER UPDATE ON `rapporto_tecnico_lavoro` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportTotalsRefresh(NEW.id_rapporto, NEW.anno);
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_afterReportWorkDelete; 
+delimiter //
+CREATE TRIGGER `trg_afterReportWorkDelete` AFTER DELETE ON `rapporto_tecnico_lavoro` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportTotalsRefresh(OLD.id_rapporto, OLD.anno);
+END
+//
+delimiter ; 
+
+-- ############################# REPORT TECHNICIAN  ############################################################################## 
+DROP TRIGGER IF EXISTS trg_afterReportTechnicianInsert; 
+delimiter //
+CREATE TRIGGER `trg_afterReportTechnicianInsert` AFTER INSERT ON `rapporto_tecnico` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportTotalsRefresh(NEW.id_rapporto, NEW.anno);
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_afterReportTechnicianUpdate; 
+delimiter //
+CREATE TRIGGER `trg_afterReportTechnicianUpdate` AFTER UPDATE ON `rapporto_tecnico` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportTotalsRefresh(NEW.id_rapporto, NEW.anno);
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_afterReportTechnicianDelete; 
+delimiter //
+CREATE TRIGGER `trg_afterReportTechnicianDelete` AFTER DELETE ON `rapporto_tecnico` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportTotalsRefresh(OLD.id_rapporto, OLD.anno);
+END
+//
+delimiter ; 
+
+-- ############################# REPORT TOTALS  ############################################################################## 
+DROP TRIGGER IF EXISTS trg_afterReportTotalsInsert; 
+delimiter //
+CREATE TRIGGER `trg_afterReportTotalsInsert` AFTER INSERT ON `rapporto_totali` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportGroupTotalsRefreshByReport(NEW.id_rapporto, NEW.anno);
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_afterReportTotalsUpdate; 
+delimiter //
+CREATE TRIGGER `trg_afterReportTotalsUpdate` AFTER UPDATE ON `rapporto_totali` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportGroupTotalsRefreshByReport(NEW.id_rapporto, NEW.anno);
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_afterReportTotalsDelete; 
+delimiter //
+CREATE TRIGGER `trg_afterReportTotalsDelete` AFTER DELETE ON `rapporto_totali` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportGroupTotalsRefreshByReport(OLD.id_rapporto, OLD.anno);
+END
+//
+delimiter ; 
+
+-- ############################# REPORT GROUP REPORT LINK  ############################################################################## 
+DROP TRIGGER IF EXISTS trg_afterReportGroupReportLinkInsert; 
+delimiter //
+CREATE TRIGGER `trg_afterReportGroupReportLinkInsert` AFTER INSERT ON `resoconto_rapporto` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportGroupTotalsRefresh(NEW.id_resoconto, NEW.anno_reso);
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_afterReportGroupReportLinkUpdate; 
+delimiter //
+CREATE TRIGGER `trg_afterReportGroupReportLinkUpdate` AFTER UPDATE ON `resoconto_rapporto` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportGroupTotalsRefresh(NEW.id_resoconto, NEW.anno_reso);
+	
+	IF (OLD.id_resoconto <> NEW.id_resoconto OR OLD.anno_reso <> NEW.anno_reso) THEN
+		CALL sp_ariesReportGroupTotalsRefresh(OLD.id_resoconto, OLD.anno_reso);
+	END IF;
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_afterReportGroupReportLinkDelete; 
+delimiter //
+CREATE TRIGGER `trg_afterReportGroupReportLinkDelete` AFTER DELETE ON `resoconto_rapporto` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportGroupTotalsRefresh(OLD.id_resoconto, OLD.anno_reso);
+END
+//
+delimiter ; 
+
+
+
+-- ############################# REPORTS GROUPS ############################################################################## 
+DROP TRIGGER IF EXISTS trg_afterReportGroupInsert; 
+delimiter //
+CREATE TRIGGER `trg_afterReportGroupInsert` AFTER INSERT ON `resoconto` FOR EACH ROW 
+BEGIN	
+	INSERT INTO  resoconto_totali (id_resoconto, anno, costo_lavoro, prezzo_lavoro, costo_viaggio, prezzo_viaggio, costo_materiale, prezzo_materiale, costo_totale, prezzo_totale)
+	VALUES (NEW.id_resoconto, NEW.anno, 0, 0, 0, 0, 0, 0, 0, 0);
+END
+
+//
+delimiter ; 

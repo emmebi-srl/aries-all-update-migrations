@@ -1694,7 +1694,7 @@ BEGIN
 		revisione_preventivo.data as data,
 		tipo_preventivo.nome as Tipo,
 		stato_preventivo.Nome as Stato,
-		stato_preventivo.Nome as Stato_colore,
+		stato_preventivo.Colore as Stato_colore,
 		SUM(CAST(ROUND(prezzo * (100 - IF(preventivo_lotto.tipo_ricar = 1, 0, sconto)) / 100, 2) * (100 - IFNULL(NULLIF(scontoriga, ""), 0)) / 100 AS DECIMAL(11, 2)) * quantità) 
 		+ SUM(CAST((IF(montato = "0", 0, articolo_preventivo.tempo_installazione / 60 * prezzo_h * (100 - scontolav) / 100) * ((100 - IFNULL(scontoriga, 0)) / 100)) AS DECIMAL(11, 2)) * quantità) as prezzo
 	FROM preventivo
@@ -1716,3 +1716,30 @@ BEGIN
 
 END$$
 DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_printCustomerDashboardReportGroups; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printCustomerDashboardReportGroups`(
+	IN customer_id INT(11)
+)
+BEGIN
+	SELECT resoconto.id_resoconto,
+		resoconto.anno,
+		resoconto.data AS 'data_resoconto',
+		stato_resoconto.Nome AS 'stato',
+		stato_resoconto.colore AS 'stato_colore',
+		tipo_resoconto.nome AS 'tipo',
+		resoconto.descrizione,
+		resoconto_totali.prezzo_totale
+	FROM resoconto
+		INNER JOIN stato_resoconto ON stato_resoconto.Id_stato = resoconto.stato
+		INNER JOIN tipo_resoconto ON tipo_resoconto.id_tipo = resoconto.tipo_resoconto
+		INNER JOIN resoconto_totali ON resoconto.id_resoconto = resoconto_totali.id_resoconto AND resoconto.anno = resoconto_totali.anno
+	WHERE resoconto.id_cliente = customer_id
+	ORDER by anno DESC, id_resoconto DESC;
+
+END$$
+DELIMITER ;
+
+
