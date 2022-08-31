@@ -196,3 +196,11 @@ BEGIN
 END $$
 DELIMITER ;
 CALL tmp;
+
+ALTER TABLE `stato_fattura`
+	ADD COLUMN `Colore` VARCHAR(50) NOT NULL AFTER `Descrizione`;
+
+UPDATE stato_fattura SET Colore = 'clYellow' WHERE nome = 'IN ATTESA DI PAGAMENTO';
+UPDATE stato_fattura SET Colore = 'clLime' WHERE nome = 'PAGATA';
+UPDATE stato_fattura SET Colore = 'clBlue' WHERE nome = 'PREFATTURA';
+UPDATE stato_fattura SET Colore = 'clRed' WHERE nome = 'NON PAGATA';

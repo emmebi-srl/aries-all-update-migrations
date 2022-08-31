@@ -1743,3 +1743,116 @@ END$$
 DELIMITER ;
 
 
+
+DROP PROCEDURE IF EXISTS sp_printCustomerDashboardInvoices; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printCustomerDashboardInvoices`(
+	IN customer_id INT(11)
+)
+BEGIN
+	SELECT fattura.id_fattura,
+		fattura.anno,
+		fattura.`data` AS 'data_fattura',
+		stato_fattura.Nome AS 'stato',
+		stato_fattura.Colore AS 'stato_colore',
+		tipo_fattura.nome AS 'tipo',
+		condizione_pagamento.nome as 'condizione_pagamento',
+		SUBSTRING(fattura.nota_interna, 1, 40) AS nota_interna,
+		causale_fattura.Nome as 'causale_fattura',
+		fattura.importo_totale as prezzo_totale
+	FROM fattura
+		INNER JOIN stato_fattura ON stato_fattura.Id_stato = fattura.stato
+		INNER JOIN tipo_fattura ON tipo_fattura.id_tipo = fattura.tipo_fattura
+		INNER JOIN causale_fattura ON fattura.causale_fattura = causale_fattura.id_causale
+		INNER JOIN condizione_pagamento ON condizione_pagamento.Id_condizione = fattura.cond_pagamento
+	WHERE fattura.id_cliente = customer_id
+	ORDER by anno DESC, id_fattura DESC;
+END$$
+DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS sp_printCustomerDashboardDdts; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printCustomerDashboardDdts`(
+	IN customer_id INT(11),
+	IN system_id INT(11)
+)
+BEGIN
+	SELECT ddt.Id_ddt,
+		ddt.anno,
+		ddt.data_documento AS 'data',
+		stato_ddt.Nome AS 'stato',
+		stato_ddt.Colore AS 'stato_colore',
+		causale_trasporto.causale as 'causale',
+		IFNULL(impianto.Descrizione, '') as 'impianto',
+		CAST(SUM(CAST(ROUND(prezzo * (100 - sconto) / 100, 2) AS DECIMAL(11, 2)) * quantità) AS DECIMAL(11, 2)) as 'prezzo_totale',
+		CAST(SUM(CAST(ROUND(costo * (100 - sconto) / 100, 2) AS DECIMAL(11, 2)) * quantità) AS DECIMAL(11, 2)) as 'costo_totale'
+	FROM ddt
+		INNER JOIN stato_ddt ON stato_ddt.Id_stato = ddt.stato
+		INNER JOIN causale_trasporto ON ddt.Causale = causale_trasporto.Id_causale
+		LEFT JOIN impianto ON impianto.Id_impianto = ddt.impianto
+		INNER JOIN articoli_ddt ON articoli_ddt.anno = ddt.anno AND articoli_ddt.id_ddt = ddt.Id_ddt
+	WHERE ddt.id_cliente = customer_id AND IF(system_id > 0, ddt.impianto, system_id) = system_id
+	GROUP BY ddt.anno, ddt.Id_ddt
+	ORDER by anno DESC, id_ddt DESC;
+END$$
+DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS sp_printCustomerDashboardReports; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printCustomerDashboardReports`(
+	IN customer_id INT(11),
+	IN system_id INT(11)
+)
+BEGIN
+
+	SELECT rapporto.Id_rapporto,
+		rapporto.anno,
+		rapporto.Data_esecuzione AS 'data',
+		stato_rapporto.Nome AS 'stato',
+		stato_rapporto.Colore AS 'stato_colore',
+		tipo_intervento.Nome AS 'tipo_intervento',
+		SUBSTRING(rapporto.relazione, 1, 85) as 'relazione',
+		IFNULL(impianto.Descrizione, '') as 'impianto',
+		rapporto_totali.costo_totale,
+		rapporto_totali.prezzo_totale
+	FROM rapporto
+		INNER JOIN stato_rapporto ON stato_rapporto.Id_stato = rapporto.stato
+		INNER JOIN tipo_intervento ON tipo_intervento.Id_tipo = rapporto.Tipo_intervento
+		INNER JOIN impianto ON impianto.Id_impianto = rapporto.Id_Impianto
+		INNER JOIN rapporto_totali ON rapporto_totali.id_rapporto = rapporto.Id_rapporto and rapporto_totali.anno = rapporto.Anno
+	WHERE rapporto.id_cliente = customer_id AND IF(system_id > 0, rapporto.Id_Impianto, system_id) = system_id
+	GROUP BY rapporto.anno, rapporto.Id_rapporto
+	ORDER by anno DESC, id_rapporto DESC;
+
+END$$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_printCustomerDashboardTickets; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printCustomerDashboardTickets`(
+	IN customer_id INT(11),
+	IN system_id INT(11)
+)
+BEGIN
+	SELECT ticket.Id_ticket,
+		ticket.anno,
+		ticket.Data_ticket AS 'data',
+		stato_ticket.Nome AS 'stato',
+		stato_ticket.Colore AS 'stato_colore',
+		ticket.scadenza AS 'data_scadenza',
+		SUBSTRING(ticket.Descrizione, 1, 50) as 'descrizione',
+		IFNULL(impianto.Descrizione, '') as 'impianto'
+	FROM ticket
+		INNER JOIN stato_ticket ON stato_ticket.Id_stato = ticket.Stato_ticket
+		INNER JOIN causale_ticket ON causale_ticket.Id_causale = ticket.Causale
+		INNER JOIN impianto ON impianto.Id_impianto = ticket.Id_Impianto
+	WHERE ticket.id_cliente = customer_id AND IF(system_id > 0, ticket.Id_Impianto, system_id) = system_id
+	GROUP BY ticket.anno, ticket.Id_ticket
+	ORDER by anno DESC, id_ticket DESC;
+
+END$$
+DELIMITER
