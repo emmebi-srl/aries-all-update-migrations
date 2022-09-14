@@ -1056,6 +1056,7 @@ CREATE VIEW vw_systems_customers_details AS
 		CONCAT(impianto.id_impianto," ") AS "id",
 		impianto.id_impianto AS "id_impianto",
 		tipo_impianto.nome as "tipo_impianto",
+		stato_impianto.nome as "stato_impianto",
 		impianto.descrizione AS "descrizione",
 		impianto.data_funzione AS "data_funzione",
 		impianto.scadenza_garanzia AS "scadenza_garanzia",
@@ -1068,6 +1069,7 @@ CREATE VIEW vw_systems_customers_details AS
 		"NESSUNO" AS "id_mese"
    	FROM impianto
 	   	INNER JOIN tipo_impianto ON impianto.tipo_impianto = tipo_impianto.id_tipo
+	   	INNER JOIN stato_impianto ON impianto.stato = stato_impianto.id_stato
 		INNER JOIN clienti ON clienti.id_cliente=impianto.id_cliente
 		INNER JOIN stato_clienti ON clienti.stato_cliente=stato_clienti.id_stato
 		INNER JOIN tipo_cliente ON clienti.tipo_cliente=tipo_cliente.id_tipo
@@ -1097,6 +1099,7 @@ CREATE VIEW vw_systems_customers_details AS
 		"" AS "id",
 		NULL AS "id_impianto",
 		"" AS "tipo_impianto",
+		"" AS "stato_impianto",
 		"" AS "descrizione",
 		NULL AS "data_funzione",
 		NULL AS "scadenza_garanzia",
@@ -1323,6 +1326,7 @@ CREATE VIEW vw_systems_exports_to_contact AS
 		IF(numero_civico IS NULL OR indirizzo = "", indirizzo, CONCAT(indirizzo, ", ", numero_civico)) AS Indirizzo,
 		impianto.id_impianto AS "ID Impianto",
 		tipo_impianto.nome as "Tipo Impianto",
+		stato_impianto.nome as "Stato Impianto",
 		impianto.descrizione AS "Descrizione",
 		impianto.data_funzione AS "Data Funzione",
 		impianto.scadenza_garanzia AS "Scadenza Garanzia",
@@ -1342,6 +1346,7 @@ CREATE VIEW vw_systems_exports_to_contact AS
 		) AS "Data Ultimo Preventivo Aperto"
    	FROM impianto
 	   	INNER JOIN tipo_impianto ON impianto.tipo_impianto = tipo_impianto.id_tipo
+	   	INNER JOIN stato_impianto ON impianto.stato = stato_impianto.id_stato
 		INNER JOIN clienti ON clienti.id_cliente=impianto.id_cliente
 		INNER JOIN stato_clienti ON clienti.stato_cliente=stato_clienti.id_stato
 		INNER JOIN tipo_cliente ON clienti.tipo_cliente=tipo_cliente.id_tipo

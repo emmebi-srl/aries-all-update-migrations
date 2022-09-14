@@ -1855,4 +1855,56 @@ BEGIN
 	ORDER by anno DESC, id_ticket DESC;
 
 END$$
-DELIMITER
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_printCustomerDashboardSystemComponents; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printCustomerDashboardSystemComponents`(
+	IN customer_id INT(11),
+	IN system_id INT(11)
+)
+BEGIN
+	SELECT
+		impianto_componenti.Id_articolo,
+		articolo.Desc_brev AS descrizione,
+		impianto.Descrizione AS impianto,
+		impianto_componenti.Data_scadenza,
+		IF(impianto_componenti.data_scadenza IS NOT NULL AND impianto_componenti.data_scadenza < NOW(), 1, 0) AS scaduti,
+		COUNT(impianto_componenti.Id_articolo) as quantita 
+	FROM impianto_componenti
+		INNER JOIN impianto ON impianto_componenti.Id_impianto = impianto.Id_impianto
+		INNER JOIN articolo ON articolo.Codice_articolo = impianto_componenti.Id_articolo
+	WHERE (impianto_componenti.data_dismesso IS NULL OR impianto_componenti.data_dismesso > NOW())
+		AND (impianto_componenti.data_fine IS NULL OR impianto_componenti.data_fine > NOW())
+		AND impianto.id_cliente = customer_id
+		AND IF(system_id > 0, impianto.Id_Impianto, system_id) = system_id
+	GROUP BY impianto_componenti.id_impianto, id_articolo, data_scadenza
+	ORDER BY Data_scadenza IS NULL ASC, Data_scadenza ASC;	
+
+END$$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_printCustomerDashboardSystemSims; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printCustomerDashboardSystemSims`(
+	IN customer_id INT(11),
+	IN system_id INT(11)
+)
+BEGIN
+	SELECT
+		IF(data_scadenza IS NOT NULL AND data_scadenza < NOW(), 2, 1) AS stato,
+		tipo_ricarica.nome AS tipo_ricarica,
+		impianto_ricarica_tipo.intestatario,
+		impianto_ricarica_tipo.numero,
+		impianto_ricarica_tipo.importo,
+		impianto_ricarica_tipo.data_attivazione,
+		impianto_ricarica_tipo.data_rinnovo,
+		impianto_ricarica_tipo.data_scadenza
+	FROM impianto_ricarica_tipo
+		INNER JOIN tipo_ricarica ON tipo_ricarica.id_tipo = impianto_ricarica_tipo.tipo_ricarica
+		INNER JOIN impianto ON impianto.Id_impianto = impianto_ricarica_tipo.id_impianto
+	WHERE IF(system_id > 0, impianto.Id_Impianto, system_id) = system_id AND impianto.id_cliente = customer_id
+	ORDER BY data_scadenza IS NULL, data_scadenza ASC;
+
+END$$
+DELIMITER ;
