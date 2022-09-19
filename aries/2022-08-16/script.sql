@@ -204,3 +204,8 @@ UPDATE stato_fattura SET Colore = 'clYellow' WHERE nome = 'IN ATTESA DI PAGAMENT
 UPDATE stato_fattura SET Colore = 'clLime' WHERE nome = 'PAGATA';
 UPDATE stato_fattura SET Colore = 'clBlue' WHERE nome = 'PREFATTURA';
 UPDATE stato_fattura SET Colore = 'clRed' WHERE nome = 'NON PAGATA';
+
+
+UPDATE ordine_dettaglio
+SET id_sottocommessa = 1
+WHERE id_commessa IS NOT NULL AND id_sottocommessa IS NULL;

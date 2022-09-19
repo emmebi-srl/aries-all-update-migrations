@@ -1343,7 +1343,8 @@ CREATE VIEW vw_systems_exports_to_contact AS
 				INNER JOIN preventivo ON preventivo.id_preventivo = revisione_preventivo.id_preventivo
 					AND preventivo.anno = revisione_preventivo.anno AND preventivo.stato IN (3, 5, 6, 12, 13, 10, 11) 
 			WHERE id_cliente = clienti.id_cliente ORDER BY data DESC LIMIT 1
-		) AS "Data Ultimo Preventivo Aperto"
+		) AS "Data Ultimo Preventivo Aperto",
+		(SELECT data FROM fattura WHERE id_cliente = impianto.id_cliente ORDER BY data DESC LIMIT 1) AS "Data Ultima Fattura"
    	FROM impianto
 	   	INNER JOIN tipo_impianto ON impianto.tipo_impianto = tipo_impianto.id_tipo
 	   	INNER JOIN stato_impianto ON impianto.stato = stato_impianto.id_stato

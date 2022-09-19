@@ -21936,6 +21936,34 @@ END //
 DELIMITER ;
 
 
+DROP PROCEDURE IF EXISTS sp_ariesSubJobGetById;
+DELIMITER //
+CREATE PROCEDURE `sp_ariesSubJobGetById`(
+	IN job_id INT(11),
+	IN job_year INT(11),
+	IN sub_job_id INT(11)
+)
+BEGIN
+	SELECT
+		`id_sotto`,
+		`id_commessa`,
+		`anno`,
+		`destinazione`,
+		`descrizione`,
+		`scadenza`,
+		`inizio`,
+		`fine`,
+		`numero`,
+		`codice`,
+		`stato`,
+		`nome`
+	FROM commessa_sotto
+	WHERE id_commessa = job_id AND anno = job_year AND id_sotto = sub_job_id;
+
+END //
+DELIMITER ;
+
+
 DROP PROCEDURE IF EXISTS sp_ariesReportGroupTotalsRefreshByReport;
 DELIMITER //
 CREATE PROCEDURE `sp_ariesReportGroupTotalsRefreshByReport`(

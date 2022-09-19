@@ -1908,3 +1908,33 @@ BEGIN
 
 END$$
 DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS sp_printCustomerDashboardJobs; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printCustomerDashboardJobs`(
+	IN customer_id INT(11),
+	IN system_id INT(11)
+)
+BEGIN
+	SELECT commessa.id_commessa,
+		commessa.anno,
+		commessa_sotto.id_sotto AS 'id_sottocommessa',
+		IFNULL(commessa.data_inizio, inizio) AS 'data_inizio',
+		stato_commessa.colore AS 'Stato_colore',
+		commessa.descrizione AS 'descrizione',
+		commessa_sotto.nome AS 'sottocommessa'
+	FROM commessa
+		INNER JOIN stato_commessa ON stato_commessa.Id_stato = commessa.stato_commessa
+		INNER JOIN commessa_sotto ON commessa_sotto.id_commessa = commessa.id_commessa
+			AND commessa_sotto.anno = commessa.anno
+		INNER JOIN commessa_lotto ON commessa_lotto.id_commessa = commessa.id_commessa
+			AND commessa_lotto.anno = commessa.anno
+			AND commessa_lotto.id_sottocommessa = commessa_sotto.id_sotto
+	WHERE IF(system_id > 0, commessa_lotto.impianto, system_id) = system_id AND commessa.id_cliente = customer_id
+	GROUP BY commessa.id_commessa, commessa.anno, commessa_sotto.id_sotto
+	ORDER BY id_stato DESC, data_inizio ASC;
+
+END$$
+DELIMITER ;
