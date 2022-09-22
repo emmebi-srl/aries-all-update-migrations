@@ -22145,7 +22145,7 @@ BEGIN
 		nome,
 		descrizione,
 		bloccato
-	FROM stato_lienti
+	FROM stato_clienti
 	WHERE Id_stato = status_id; 
 	
 END//
