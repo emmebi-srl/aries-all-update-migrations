@@ -3107,7 +3107,6 @@ BEGIN
 END//
 DELIMITER ;
 
-
 -- Dump della struttura di procedura emmebi.sp_ariesCustomerGetByIds
 DROP PROCEDURE IF EXISTS sp_ariesCustomerGetByIds;
 DELIMITER //
@@ -22132,5 +22131,24 @@ BEGIN
 END //
 DELIMITER ;
 
+
+
+-- Dump della struttura di procedura emmebi.sp_ariesCustomerStatusGetById
+DROP PROCEDURE IF EXISTS sp_ariesCustomerStatusGetById;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesCustomerStatusGetById`(
+	status_id VARCHAR(10)
+)
+BEGIN
+
+	SELECT Id_stato,
+		nome,
+		descrizione,
+		bloccato
+	FROM stato_lienti
+	WHERE Id_stato = status_id; 
+	
+END//
+DELIMITER ;
 
 
