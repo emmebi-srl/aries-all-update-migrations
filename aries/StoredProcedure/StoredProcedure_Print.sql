@@ -1712,7 +1712,7 @@ BEGIN
 		INNER JOIN stato_preventivo ON preventivo.Stato = stato_preventivo.Id_stato
 	WHERE revisione_preventivo.id_cliente = customer_id
 	GROUP BY id_preventivo, anno
-	ORDER BY anno DESC, id_preventivo DESC;
+	ORDER BY FIELD(stato_preventivo.id_stato, 3, 5) DESC, anno DESC, id_preventivo DESC;
 
 END$$
 DELIMITER ;
@@ -1737,7 +1737,7 @@ BEGIN
 		INNER JOIN tipo_resoconto ON tipo_resoconto.id_tipo = resoconto.tipo_resoconto
 		INNER JOIN resoconto_totali ON resoconto.id_resoconto = resoconto_totali.id_resoconto AND resoconto.anno = resoconto_totali.anno
 	WHERE resoconto.id_cliente = customer_id
-	ORDER by anno DESC, id_resoconto DESC;
+	ORDER BY FIELD(stato_resoconto.id_stato, 7, 4, 1) DESC, anno DESC, id_resoconto DESC;
 
 END$$
 DELIMITER ;
@@ -1766,7 +1766,7 @@ BEGIN
 		INNER JOIN causale_fattura ON fattura.causale_fattura = causale_fattura.id_causale
 		INNER JOIN condizione_pagamento ON condizione_pagamento.Id_condizione = fattura.cond_pagamento
 	WHERE fattura.id_cliente = customer_id
-	ORDER by anno DESC, id_fattura DESC;
+	ORDER BY FIELD(stato_fattura.id_stato, 5, 1, 4) DESC, anno DESC, id_fattura DESC;
 END$$
 DELIMITER ;
 
@@ -1795,7 +1795,7 @@ BEGIN
 		INNER JOIN articoli_ddt ON articoli_ddt.anno = ddt.anno AND articoli_ddt.id_ddt = ddt.Id_ddt
 	WHERE ddt.id_cliente = customer_id AND IF(system_id > 0, ddt.impianto, system_id) = system_id
 	GROUP BY ddt.anno, ddt.Id_ddt
-	ORDER by anno DESC, id_ddt DESC;
+	ORDER BY FIELD(stato_ddt.id_stato, 2, 4, 1) DESC, anno DESC, id_ddt DESC;
 END$$
 DELIMITER ;
 
@@ -1826,7 +1826,7 @@ BEGIN
 		INNER JOIN rapporto_totali ON rapporto_totali.id_rapporto = rapporto.Id_rapporto and rapporto_totali.anno = rapporto.Anno
 	WHERE rapporto.id_cliente = customer_id AND IF(system_id > 0, rapporto.Id_Impianto, system_id) = system_id
 	GROUP BY rapporto.anno, rapporto.Id_rapporto
-	ORDER by anno DESC, id_rapporto DESC;
+	ORDER BY FIELD(stato_rapporto.id_stato, 7, 4, 1, 10) DESC, anno DESC, id_rapporto DESC;
 
 END$$
 DELIMITER ;
@@ -1852,7 +1852,7 @@ BEGIN
 		INNER JOIN impianto ON impianto.Id_impianto = ticket.Id_Impianto
 	WHERE ticket.id_cliente = customer_id AND IF(system_id > 0, ticket.Id_Impianto, system_id) = system_id
 	GROUP BY ticket.anno, ticket.Id_ticket
-	ORDER by anno DESC, id_ticket DESC;
+	ORDER BY FIELD(stato_ticket.id_stato, 1, 2) DESC, anno DESC, id_ticket DESC;
 
 END$$
 DELIMITER ;
@@ -1904,7 +1904,7 @@ BEGIN
 		INNER JOIN tipo_ricarica ON tipo_ricarica.id_tipo = impianto_ricarica_tipo.tipo_ricarica
 		INNER JOIN impianto ON impianto.Id_impianto = impianto_ricarica_tipo.id_impianto
 	WHERE IF(system_id > 0, impianto.Id_Impianto, system_id) = system_id AND impianto.id_cliente = customer_id
-	ORDER BY data_scadenza IS NULL, data_scadenza ASC;
+	ORDER BY data_scadenza IS NULL ASC, data_scadenza ASC;
 
 END$$
 DELIMITER ;
@@ -1934,7 +1934,7 @@ BEGIN
 			AND commessa_lotto.id_sottocommessa = commessa_sotto.id_sotto
 	WHERE IF(system_id > 0, commessa_lotto.impianto, system_id) = system_id AND commessa.id_cliente = customer_id
 	GROUP BY commessa.id_commessa, commessa.anno, commessa_sotto.id_sotto
-	ORDER BY id_stato DESC, data_inizio ASC;
+	ORDER BY FIELD(stato_commessa.id_stato, 1, 3, 4) DESC, id_stato DESC, data_inizio ASC;
 
 END$$
 DELIMITER ;
