@@ -15823,23 +15823,11 @@ CREATE  PROCEDURE `sp_getJobTotals`(
 BEGIN
 
 	SELECT 
-		CAST(SUM(jb.Tempo_installazione/60 * jb.Qta_preventivati) AS DECIMAL(11,2)),
-		SUM(CAST((jb.Tempo_installazione/60 * jb.Costo_ora ) AS DECIMAL(11,2))*jb.Qta_preventivati) +
-			SUM(CAST(jb.Costo AS DECIMAL(11, 2)) * jb.Qta_preventivati),
-		SUM(CAST((jb.Costo * jb.Qta_preventivati) AS DECIMAL(11,2))),
-		SUM(CAST((jb.Tempo_installazione/60 * jb.Prezzo_ora ) * ((100 - jb.Sconto) / 100) AS DECIMAL(11,2))*jb.Qta_preventivati)+
-			SUM(CAST(jb.prezzo   * (100 - sconto) / 100 AS DECIMAL(11, 2)) * jb.Qta_preventivati),
-		SUM(CAST((jb.Prezzo * jb.Qta_preventivati)* (100 - jb.Sconto) / 100 AS DECIMAL(11,2))),
 		SUM(CAST((jb.costo * jb.Qta_economia) AS DECIMAL(11,2))),
 		SUM(CAST((jb.costo * jb.Qta_utilizzata) AS DECIMAL(11,2))),
 		SUM(CAST((jb.prezzo * jb.Qta_economia)* (100 - jb.Sconto) / 100 AS DECIMAL(11,2))),
 		SUM(CAST((jb.prezzo * jb.Qta_utilizzata)* (100 - jb.Sconto) / 100 AS DECIMAL(11,2)))
 	INTO 
-		total_hours_quote,
-		total_cost_quote,
-		total_cost_quote_body_products,
-		total_price_quote,
-		total_price_quote_body_products,
 		total_cost_body_products_economy,
 		total_cost_body_products,
 		total_price_body_products_economy,
@@ -15851,6 +15839,28 @@ BEGIN
 		AND IF(sub_job_id > 0, jb.id_sottocommessa = sub_job_id, TRUE)
 		AND IF(id_lot > 0, jb.lotto = id_lot, TRUE);
 
+	
+	SELECT 
+		SUM(preventivo_totale_ore),
+		SUM(preventivo_costo_materiale) + SUM(preventivo_costo_lavoro),
+		SUM(preventivo_costo_materiale),
+		SUM(preventivo_costo_lavoro),
+		SUM(preventivo_prezzo_materiale) + SUM(preventivo_prezzo_lavoro),
+		SUM(preventivo_prezzo_materiale),
+		SUM(preventivo_prezzo_lavoro)
+	INTO 
+		total_hours_quote,
+		total_cost_quote,
+		total_cost_quote_body_products,
+		total_cost_quote_worked,
+		total_price_quote,
+		total_price_quote_body_products,
+		total_price_quote_worked
+	FROM commessa_preventivo cp
+	WHERE cp.id_commessa = id_job
+		AND cp.anno = year_job
+		AND IF(sub_job_id > 0, cp.id_sottocommessa = sub_job_id, TRUE)
+		AND IF(id_lot > 0, cp.lotto = id_lot, TRUE);
 
 	SELECT 
 		CAST(IF(SUM(twi.totale_ore_lavorate) IS NULL, 0 , SUM(twi.totale_ore_lavorate))AS DECIMAL(11,2)),
@@ -15976,8 +15986,6 @@ BEGIN
 				+ total_hours_worked
 				+ total_hours_worked_economy;
 				
-	SET total_price_quote_worked = total_price_quote-total_price_quote_body_products;
-	SET total_cost_quote_worked = total_cost_quote-total_cost_quote_body_products;
 END//
 DELIMITER ;
 
@@ -15985,7 +15993,7 @@ DELIMITER ;
 -- Dump della struttura di procedura emmebi.sp_getQuoteTotals
 DROP PROCEDURE IF EXISTS sp_getQuoteTotals;
 DELIMITER //
-CREATE  PROCEDURE `sp_getQuoteTotals`(IN `quote_id` INT, IN `quote_year` INT, IN `quote_revision_id` INT, OUT `total_price_material` DECIMAL(11,2), OUT `total_cost_material` DECIMAL(11,2), OUT `total_profit_material` DECIMAL(11, 2), OUT `total_price_work` DECIMAL(11, 2), OUT `total_cost_work` DECIMAL(11, 2), OUT `total_profit_work` DECIMAL(11, 2), OUT `total_hours` DECIMAL(11, 2), OUT `total_price` DECIMAL(11, 2), OUT `total_cost` DECIMAL(11, 2), OUT `total_profit` DECIMAL(11, 2), OUT `total_sale` DECIMAL(11, 2)
+CREATE  PROCEDURE `sp_getQuoteTotals`(IN `quote_id` INT, IN `quote_year` INT, IN `quote_revision_id` INT, IN `quote_lot_id` INT,  OUT `total_price_material` DECIMAL(11,2), OUT `total_cost_material` DECIMAL(11,2), OUT `total_profit_material` DECIMAL(11, 2), OUT `total_price_work` DECIMAL(11, 2), OUT `total_cost_work` DECIMAL(11, 2), OUT `total_profit_work` DECIMAL(11, 2), OUT `total_hours` DECIMAL(11, 2), OUT `total_price` DECIMAL(11, 2), OUT `total_cost` DECIMAL(11, 2), OUT `total_profit` DECIMAL(11, 2), OUT `total_sale` DECIMAL(11, 2)
 )
 BEGIN
 
@@ -15998,14 +16006,16 @@ BEGIN
 			AND articolo_preventivo.lotto = preventivo_lotto.posizione 
 	WHERE articolo_preventivo.id_preventivo = quote_id
 		AND articolo_preventivo.anno = quote_year
-		AND articolo_preventivo.id_revisione = quote_revision_id;
+		AND articolo_preventivo.id_revisione = quote_revision_id
+		AND IF (quote_lot_id IS NOT NULL AND quote_lot_id >= 0, quote_lot_id, articolo_preventivo.lotto) = articolo_preventivo.lotto;
 
 	SELECT SUM(costo * quantità)
 		INTO total_cost_material
 	FROM articolo_preventivo 
 	WHERE id_preventivo = quote_id
 		AND anno = quote_year
-		AND id_revisione = quote_revision_id;
+		AND id_revisione = quote_revision_id
+		AND IF (quote_lot_id IS NOT NULL AND quote_lot_id >= 0, quote_lot_id, articolo_preventivo.lotto) = articolo_preventivo.lotto;
 
 	SELECT SUM(CAST((IF(montato = "0", 0, ap.tempo_installazione / 60 * prezzo_h * (100 - scontolav) / 100) * ((100 - IFNULL(scontoriga, 0)) / 100)) AS DECIMAL(11, 2)) * quantità)
 		INTO total_price_work
@@ -16016,28 +16026,32 @@ BEGIN
 			AND ap.lotto = pl.posizione 
 	WHERE ap.id_preventivo = quote_id
 		AND ap.anno = quote_year
-		AND ap.id_revisione = quote_revision_id;
+		AND ap.id_revisione = quote_revision_id
+		AND IF (quote_lot_id IS NOT NULL AND quote_lot_id >= 0, quote_lot_id, ap.lotto) = ap.lotto;
 
 	SELECT SUM(IF(montato = "0", 0, quantità * (tempo_installazione / 60 * costo_h)))
 		INTO total_cost_work
 	FROM articolo_preventivo 
 	WHERE id_preventivo = quote_id
 		AND anno = quote_year
-		AND id_revisione = quote_revision_id;
+		AND id_revisione = quote_revision_id
+		AND IF (quote_lot_id IS NOT NULL AND quote_lot_id >= 0, quote_lot_id, articolo_preventivo.lotto) = articolo_preventivo.lotto;
 
 	SELECT SUM(IF(montato = "0", 0, quantità) * tempo_installazione / 60)
 		INTO total_hours
 	FROM articolo_preventivo 
 	WHERE id_preventivo = quote_id
 		AND anno = quote_year
-		AND id_revisione = quote_revision_id;
+		AND id_revisione = quote_revision_id
+		AND IF (quote_lot_id IS NOT NULL AND quote_lot_id >= 0, quote_lot_id, articolo_preventivo.lotto) = articolo_preventivo.lotto;
 
 	SELECT SUM(((ROUND(ROUND((prezzo-(sconto/100*prezzo)),2)*scontoriga/100,2)*quantità)+((IF(montato="0",0,quantità*((tempo_installazione/60*prezzo_h) - ((tempo_installazione/60*prezzo_h)*scontolav/100)))))*scontoriga/100))
 		INTO total_sale
 	FROM articolo_preventivo 
 	WHERE id_preventivo = quote_id
 		AND anno = quote_year
-		AND id_revisione = quote_revision_id;
+		AND id_revisione = quote_revision_id
+		AND IF (quote_lot_id IS NOT NULL AND quote_lot_id >= 0, quote_lot_id, articolo_preventivo.lotto) = articolo_preventivo.lotto;
 	
 	SET total_price_material = IFNULL(total_price_material, 0);
 	SET total_cost_material = IFNULL(total_cost_material, 0);
@@ -18258,11 +18272,11 @@ CREATE PROCEDURE sp_quoteAssociateToJob(
 	JobId INT, JobYear INT, OUT SubJobId INT
 )
 BEGIN
+	SELECT IFNULL(MAX(id_sotto), 0) + 1
+			INTO SubJobId
+	FROM commessa_sotto
+	WHERE id_commessa = JobId AND anno = JobYear;
 
-    SELECT IFNULL(MAX(id_sotto), 0) + 1
-        INTO SubJobId
-    FROM commessa_sotto
-    WHERE id_commessa = JobId AND anno = JobYear;
 		
 	INSERT INTO commessa_sotto(id_commessa, anno, id_sotto, stato, nome, destinazione, inizio) 
 	SELECT JobId, JobYear, SubJobId, 1, CONCAT("SOTTOCOMMESSA PREVENTIVO ", QuoteId, "/", QuoteYear), destinazione, CURRENT_DATE 
@@ -18286,6 +18300,14 @@ CREATE PROCEDURE sp_quoteAddToSubJob(
 	JobId INT, JobYear INT, SubJobId INT
 )
 BEGIN
+	DECLARE done INT DEFAULT 0;
+	DECLARE V_lot_id INT;
+	DECLARE V_curA CURSOR FOR SELECT posizione
+		FROM preventivo_lotto
+		WHERE id_preventivo = QuoteId 
+			AND anno = QuoteYear 
+			AND id_revisione = QuoteRevision;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
 	INSERT INTO commessa_lotto(id_commessa, anno, id_sottocommessa, stato, descrizione, data_inizio, id_lotto, impianto, csora, prora, sc) 
 	SELECT JobId, JobYear, SubJobId, 1, l.nome, CURRENT_DATE, posizione, id_impianto, ora_p, ora_c, scon 
@@ -18344,14 +18366,46 @@ BEGIN
 		AND id_articolo IS NULL
 	HAVING id_tab IS NOT NULL; -- for some reason we get one row with all null result, this having is a workaround to avoid it
 
-	INSERT INTO commessa_preventivo(id_commessa, anno, id_sottocommessa,
-		preventivo, anno_prev, rev, lotto, pidlotto) 
-	SELECT JobId, JobYear, SubJobId,
-		id_preventivo, anno, id_revisione, posizione, posizione AS "1" 
-	FROM preventivo_lotto pl
-	WHERE id_preventivo = QuoteId 
-		AND anno = QuoteYear 
-		AND id_revisione = QuoteRevision;
+	OPEN V_curA;
+	loopA: LOOP
+		FETCH V_curA INTO V_lot_id;
+		IF done = 1 THEN 
+			LEAVE loopA;
+		END IF;
+
+		CALL sp_getQuoteTotals(QuoteId, QuoteYear, QuoteRevision, v_lot_id, @total_price_material, @total_cost_material, @total_profit_material, @total_price_work, @total_cost_work, @total_profit_work, @total_hours, @total_price, @total_cost, @total_profit, @total_sale);
+
+		INSERT INTO commessa_preventivo(id_commessa, anno, id_sottocommessa,
+			preventivo, anno_prev, rev, lotto, pidlotto,
+			preventivo_prezzo_materiale,
+			preventivo_costo_materiale,
+			preventivo_prezzo_lavoro,
+			preventivo_costo_lavoro,
+			preventivo_totale_ore,
+			preventivo_sconto
+		) 
+		SELECT JobId,
+			JobYear,
+			SubJobId,
+			id_preventivo,
+			anno,
+			id_revisione,
+			posizione AS "lotto_commessa",
+			posizione AS "1otto_preventivo",
+			@total_price_material,
+			@total_cost_material,
+			@total_price_work,
+			@total_cost_work,
+			@total_hours,
+			@total_sale
+		FROM preventivo_lotto pl
+		WHERE id_preventivo = QuoteId 
+			AND anno = QuoteYear 
+			AND id_revisione = QuoteRevision
+			AND posizione = V_lot_id;
+
+	END LOOP;
+	CLOSE V_curA;
 
 	UPDATE preventivo SET 
 		stato = 7 
