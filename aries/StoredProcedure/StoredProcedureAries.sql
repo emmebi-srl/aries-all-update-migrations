@@ -22206,3 +22206,31 @@ END//
 DELIMITER ;
 
 
+
+-- Dump della struttura di procedura emmebi.sp_ariesServiceUserGetByAppName
+DROP PROCEDURE IF EXISTS sp_ariesServiceUserGetByAppName;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesServiceUserGetByAppName`(
+	record_app_name VARCHAR(60)
+)
+BEGIN
+
+	SELECT
+		`id`,
+		`nome`,
+		`app_name`,
+		`email`,
+		`firma`,
+		`smtp`,
+		`porta`,
+		`mssl`,
+		`email_username`,
+		`email_password`,
+		`display_name`
+	FROM utente_servizio
+	WHERE utente_servizio.app_name = record_app_name; 
+	
+END//
+DELIMITER ;
+
+
