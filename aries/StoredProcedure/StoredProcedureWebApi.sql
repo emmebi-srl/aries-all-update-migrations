@@ -1448,10 +1448,16 @@ DROP PROCEDURE IF EXISTS sp_apiEventEmployeeGet;
 CREATE PROCEDURE sp_apiEventEmployeeGet
 ()
 BEGIN   
-	SELECT Id, 
-		Id_evento,
-		id_operaio
-	FROM Evento_operaio; 	
+	SELECT Evento_operaio.Id, 
+		Evento_operaio.Id_evento,
+		Evento_operaio.id_operaio,
+		Evento.Data_esecuzione, 
+		Evento.Ora_inizio_esecuzione, 
+		Evento.Ora_fine_esecuzione
+	FROM Evento_operaio
+		INNER JOIN Evento 
+		ON Evento_operaio.Id_evento = Evento.Id;
+
 END //
 DELIMITER ;
 
@@ -1465,7 +1471,10 @@ BEGIN
         
 	SELECT Evento_operaio.Id, 
 		Evento_operaio.Id_evento,
-		Evento_operaio.id_operaio
+		Evento_operaio.id_operaio,
+		Evento.Data_esecuzione, 
+		Evento.Ora_inizio_esecuzione, 
+		Evento.Ora_fine_esecuzione
 	FROM Evento_operaio
 		INNER JOIN Evento 
 		ON Evento_operaio.Id_evento = Evento.Id
@@ -1482,7 +1491,10 @@ BEGIN
         
 	SELECT Evento_operaio.Id, 
 		Evento_operaio.Id_evento,
-		Evento_operaio.id_operaio
+		Evento_operaio.id_operaio,
+		Evento.Data_esecuzione, 
+		Evento.Ora_inizio_esecuzione, 
+		Evento.Ora_fine_esecuzione
 	FROM Evento_operaio
 		INNER JOIN Evento 
 		ON Evento_operaio.Id_evento = Evento.Id

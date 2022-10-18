@@ -1938,3 +1938,116 @@ BEGIN
 
 END$$
 DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS sp_printCustomerDashboardTotals;
+DELIMITER //
+CREATE PROCEDURE sp_printCustomerDashboardTotals (
+	customer_id INT, 
+	system_id INT,
+	OUT total_reports_price DECIMAL(11,2),
+	OUT total_reports_cost DECIMAL(11,2),
+	OUT total_report_groups_price DECIMAL(11,2),
+	OUT total_report_groups_cost DECIMAL(11,2),
+	OUT total_ddts_price DECIMAL(11,2),
+	OUT total_ddts_cost DECIMAL(11,2),
+	OUT total_invoices_price DECIMAL(11,2),
+	OUT total_invoices_cost DECIMAL(11,2)
+)
+BEGIN
+
+	SELECT 
+		SUM(resoconto_totali.prezzo_totale),
+		SUM(resoconto_totali.costo_totale)
+	INTO
+		total_report_groups_price,
+		total_report_groups_cost
+	FROM resoconto
+		INNER JOIN resoconto_totali ON resoconto.id_resoconto = resoconto_totali.id_resoconto AND resoconto.anno = resoconto_totali.anno
+	WHERE resoconto.id_cliente = customer_id AND stato in (1, 4, 7);
+	
+	
+	SELECT 
+		SUM(rapporto_totali.prezzo_totale),
+		SUM(rapporto_totali.costo_totale)
+	INTO
+		total_reports_price,
+		total_reports_cost
+	FROM rapporto
+		INNER JOIN rapporto_totali ON rapporto_totali.id_rapporto = rapporto.Id_rapporto and rapporto_totali.anno = rapporto.Anno
+	WHERE rapporto.id_cliente = customer_id
+		AND IF(system_id > 0, rapporto.Id_Impianto, system_id) = system_id
+		AND rapporto.Stato IN (7, 4, 1, 10);
+	
+	SELECT
+		CAST(SUM(CAST(ROUND(prezzo * (100 - sconto) / 100, 2) AS DECIMAL(11, 2)) * quantità) AS DECIMAL(11, 2)) as 'prezzo_totale',
+		CAST(SUM(CAST(ROUND(costo * (100 - sconto) / 100, 2) AS DECIMAL(11, 2)) * quantità) AS DECIMAL(11, 2)) as 'costo_totale'
+	INTO
+		total_ddts_price,
+		total_ddts_cost
+	FROM ddt
+		INNER JOIN articoli_ddt ON articoli_ddt.anno = ddt.anno AND articoli_ddt.id_ddt = ddt.Id_ddt
+	WHERE ddt.id_cliente = customer_id
+		AND IF(system_id > 0, ddt.impianto, system_id) = system_id
+		AND ddt.stato IN (2, 4, 1);
+
+
+	SELECT 
+		SUM(CAST(ROUND(fattura.importo_totale, 2) AS DECIMAL(11, 2))),
+		SUM(CAST(ROUND(fattura.costo_totale, 2) AS DECIMAL(11, 2)))
+	INTO
+		total_invoices_price,
+		total_invoices_cost
+	FROM fattura
+	WHERE fattura.id_cliente = customer_id
+		AND fattura.stato IN (5, 1, 4);
+
+	SET total_reports_price = IFNULL(total_reports_price, 0);
+	SET total_reports_cost = IFNULL(total_reports_cost, 0);
+	SET total_report_groups_price = IFNULL(total_report_groups_price, 0);
+	SET total_report_groups_cost = IFNULL(total_report_groups_cost, 0);
+	SET total_ddts_price = IFNULL(total_ddts_price, 0);
+	SET total_ddts_cost = IFNULL(total_ddts_cost, 0);
+	SET total_invoices_price = IFNULL(total_invoices_price, 0);
+	SET total_invoices_cost = IFNULL(total_invoices_cost, 0);
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_printSystemsComponents;
+DELIMITER //
+CREATE PROCEDURE sp_printSystemsComponents ()
+BEGIN
+	SELECT 
+		vw_systems_components_detail.id_impianto AS "ID Impianto",
+		impianto.id_cliente AS "ID Cliente",
+		clienti.Ragione_Sociale AS "Cliente",
+		Stato_clienti.Nome AS "Stato Cliente",
+		impianto.Descrizione AS "Impianto",
+		stato_impianto.Nome AS "Stato Impianto",
+		CONCAT(CONCAT(d2.indirizzo,' n.',d2.numero_civico, d2.altro),' - ',concat(IF(f2.nome IS NOT NULL AND f2.nome <> '', concat(f2.nome,' di '), ''), c2.nome,' (',c2.provincia,')')) AS 'Destinazione Impianto',
+		ordine AS "Ordine",
+		id_articolo AS "ID Articolo",
+		articolo.Desc_brev AS "Articolo",
+		articolo_stato.nome AS "Stato Articolo",
+		stato_scadenza AS "Stato Scadenza",
+		fine_garanzia AS "Fine Garanzia",
+		data_installazione AS "Data Installazione",
+		data_dismesso AS "Data Dismesso",
+		data_scadenza AS "Data Scadenza",
+		mail AS "Email",
+		telefono AS "Telefono",
+		altro_telefono AS "Cellulare"
+	FROM vw_systems_components_detail
+		INNER JOIN impianto ON vw_systems_components_detail.id_impianto = impianto.Id_impianto
+		INNER JOIN stato_impianto ON impianto.Stato = stato_impianto.Id_stato
+		INNER JOIN articolo ON articolo.Codice_articolo = id_articolo
+		INNER JOIN articolo_stato ON articolo.Stato_articolo = articolo_stato.Id_stato
+		INNER JOIN clienti ON impianto.Id_cliente = clienti.Id_cliente
+		INNER JOIN stato_clienti ON clienti.Stato_cliente = stato_clienti.Id_stato
+		LEFT JOIN destinazione_cliente AS d2 ON d2.id_cliente=clienti.id_cliente AND d2.id_destinazione=impianto.destinazione
+		INNER JOIN comune AS c2 ON c2.id_comune=d2.Comune
+		LEFT JOIN frazione AS f2 ON f2.id_frazione=d2.frazione
+		LEFT JOIN riferimento_clienti AS r1 ON r1.id_cliente=clienti.id_cliente AND id_riferimento='1';
+END //
+DELIMITER ;
