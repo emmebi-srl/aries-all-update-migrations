@@ -22234,3 +22234,71 @@ END//
 DELIMITER ;
 
 
+-- Dump della struttura di procedura emmebi.sp_aries
+DROP PROCEDURE IF EXISTS sp_ariesServiceUserGetByAppName;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesServiceUserGetByAppName`(
+	type_id VARCHAR(60)
+)
+BEGIN
+
+	SELECT
+		`id`,
+		`nome`,
+		`app_name`,
+		`email`,
+		`firma`,
+		`smtp`,
+		`porta`,
+		`mssl`,
+		`email_username`,
+		`email_password`,
+		`display_name`
+	FROM utente_servizio
+	WHERE utente_servizio.app_name = record_app_name; 
+	
+END//
+DELIMITER ;
+
+
+
+-- Dump della struttura di procedura emmebi.sp_ariesGetCustomerTypeById
+DROP PROCEDURE IF EXISTS sp_ariesGetCustomerTypeById;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesGetCustomerTypeById`(
+	type_id VARCHAR(60)
+)
+BEGIN
+
+	SELECT
+		`id_tipo`,
+		`nome`,
+		`descrizione`
+	FROM tipo_cliente
+	WHERE id_tipo = type_id; 
+	
+END//
+DELIMITER ;
+
+
+
+
+-- Dump della struttura di procedura emmebi.sp_ariesGetCustomerRelationTypeById
+DROP PROCEDURE IF EXISTS sp_ariesGetCustomerRelationTypeById;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesGetCustomerRelationTypeById`(
+	type_id VARCHAR(60)
+)
+BEGIN
+
+	SELECT
+		`id_tipo`,
+		`nome`,
+		`descrizione`
+	FROM tipo_rapclie
+	WHERE id_tipo = type_id; 
+	
+END//
+DELIMITER ;
+
+
