@@ -1,5 +1,26 @@
 truncate table resoconto_totali;
 truncate table rapporto_totali;
+-- ############################# REPORT TOTALS  ############################################################################## 
+DROP TRIGGER IF EXISTS trg_afterReportTotalsInsert; 
+
+DROP TRIGGER IF EXISTS trg_afterReportTotalsUpdate; 
+ 
+DROP TRIGGER IF EXISTS trg_afterReportTotalsDelete; 
+
+
+-- ############################# REPORT GROUP REPORT LINK  ############################################################################## 
+DROP TRIGGER IF EXISTS trg_afterReportGroupReportLinkInsert; 
+
+DROP TRIGGER IF EXISTS trg_afterReportGroupReportLinkUpdate; 
+ 
+
+DROP TRIGGER IF EXISTS trg_afterReportGroupReportLinkDelete; 
+
+
+
+-- ############################# REPORTS GROUPS ############################################################################## 
+DROP TRIGGER IF EXISTS trg_afterReportGroupInsert; 
+
 
 
 DROP PROCEDURE IF EXISTS tmp;
@@ -130,4 +151,65 @@ BEGIN
 END $$
 DELIMITER ;
 CALL tmp;
+
+
+
+
+delimiter //
+CREATE TRIGGER `trg_afterReportTotalsInsert` AFTER INSERT ON `rapporto_totali` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportGroupTotalsRefreshByReport(NEW.id_rapporto, NEW.anno);
+END
+//
+delimiter ; 
+delimiter //
+CREATE TRIGGER `trg_afterReportTotalsUpdate` AFTER UPDATE ON `rapporto_totali` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportGroupTotalsRefreshByReport(NEW.id_rapporto, NEW.anno);
+END
+//
+delimiter ;
+delimiter //
+CREATE TRIGGER `trg_afterReportTotalsDelete` AFTER DELETE ON `rapporto_totali` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportGroupTotalsRefreshByReport(OLD.id_rapporto, OLD.anno);
+END
+//
+delimiter ; 
+delimiter //
+CREATE TRIGGER `trg_afterReportGroupReportLinkInsert` AFTER INSERT ON `resoconto_rapporto` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportGroupTotalsRefresh(NEW.id_resoconto, NEW.anno_reso);
+END
+//
+delimiter ; 
+delimiter //
+CREATE TRIGGER `trg_afterReportGroupReportLinkUpdate` AFTER UPDATE ON `resoconto_rapporto` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportGroupTotalsRefresh(NEW.id_resoconto, NEW.anno_reso);
+	
+	IF (OLD.id_resoconto <> NEW.id_resoconto OR OLD.anno_reso <> NEW.anno_reso) THEN
+		CALL sp_ariesReportGroupTotalsRefresh(OLD.id_resoconto, OLD.anno_reso);
+	END IF;
+END
+//
+delimiter ;
+
+delimiter //
+CREATE TRIGGER `trg_afterReportGroupReportLinkDelete` AFTER DELETE ON `resoconto_rapporto` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportGroupTotalsRefresh(OLD.id_resoconto, OLD.anno_reso);
+END
+//
+delimiter ; 
+
+delimiter //
+CREATE TRIGGER `trg_afterReportGroupInsert` AFTER INSERT ON `resoconto` FOR EACH ROW 
+BEGIN	
+	INSERT INTO  resoconto_totali (id_resoconto, anno, costo_lavoro, prezzo_lavoro, costo_viaggio, prezzo_viaggio, costo_materiale, prezzo_materiale, costo_totale, prezzo_totale)
+	VALUES (NEW.id_resoconto, NEW.anno, 0, 0, 0, 0, 0, 0, 0, 0);
+END
+
+//
+delimiter ; 
 
