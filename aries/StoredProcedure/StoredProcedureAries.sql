@@ -21469,6 +21469,20 @@ BEGIN
 END $$
 DELIMITER ;
 
+
+DROP PROCEDURE IF EXISTS sp_ariesEnvVariablesUpdate;
+DELIMITER $$
+CREATE PROCEDURE sp_ariesEnvVariablesUpdate(
+ IN in_key VARCHAR(100),
+ IN in_value VARCHAR(100)
+)
+BEGIN
+	UPDATE environment_variables
+	SET var_value = in_value
+	WHERE var_key = in_key;
+END $$
+DELIMITER ;
+
 -- Dump della struttura di procedura sp_ariesInvoiceAttachsGetByInvoice
 DROP PROCEDURE IF EXISTS sp_ariesInvoiceAttachsGetByInvoice;
 DELIMITER //
