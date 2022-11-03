@@ -81,13 +81,15 @@ BEGIN
 
 
 		SELECT SUM(CAST(ROUND((km * IFNULL(costo_km, default_km_cost)) + autostrada + parcheggio + spesa_trasferta + altro + (Tempo_viaggio/ 60 * IFNULL(costo_h, default_hourly_cost)), 2) AS DECIMAL(11,2))) as costo_viaggio,
-			SUM(CAST(ROUND((km * IFNULL(costo_km, default_km_cost)) + autostrada + parcheggio + spesa_trasferta + altro + (Tempo_viaggio/ 60 *  IFNULL(prezzo, default_hourly_price)), 2) AS DECIMAL(11,2))) as prezzo_viaggio
-			INTO total_trip_price, total_trip_cost
+			SUM(CAST(ROUND((km * IFNULL(IFNULL(prezzo_strada, costo_km), default_km_cost)) + autostrada + parcheggio + spesa_trasferta + altro + (Tempo_viaggio/ 60 *  IFNULL(IFNULL(abbonamento.ora_normale, prezzo), default_hourly_price)), 2) AS DECIMAL(11,2))) as prezzo_viaggio
+			INTO total_trip_cost, total_trip_price
 		FROM rapporto_tecnico
 			INNER JOIN operaio ON operaio.Id_operaio = rapporto_tecnico.tecnico
 			LEFT JOIN tariffario ON operaio.Tariffario = tariffario.Id_tariffario
-		WHERE id_rapporto = report_id AND anno = report_year
-		GROUP BY id_rapporto, anno;
+			INNER JOIN rapporto ON rapporto.id_rapporto=rapporto_tecnico.id_rapporto AND rapporto.anno=rapporto_tecnico.anno
+			LEFT JOIN abbonamento ON id_abbonamento=abbonamento
+		WHERE rapporto_tecnico.id_rapporto = report_id AND rapporto_tecnico.anno = report_year
+		GROUP BY rapporto_tecnico.id_rapporto, rapporto_tecnico.anno;
 
 		SELECT SUM(CAST(ROUND(ROUND(IFNULL(prezzo, 0) * (100 - IFNULL(sconto, 0)) / 100, 2) * IFNULL(quantità, 0), 2)  AS DECIMAL(11, 2))) as Prezzo_materiale,
 			SUM(CAST(ROUND(ROUND(IFNULL(costo, 0) * (100 - IFNULL(sconto, 0)) / 100, 2) * IFNULL(quantità, 0), 2)  AS DECIMAL(11, 2))) as Costo_materiale
