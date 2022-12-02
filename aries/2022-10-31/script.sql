@@ -43,6 +43,8 @@ BEGIN
 	DECLARE total_products_cost DECIMAL(11,2);
 	DECLARE total_price DECIMAL(11,2);
 	DECLARE total_cost DECIMAL(11,2);
+	DECLARE right_of_call_cost DECIMAL(11,2);
+	DECLARE right_of_call_price DECIMAL(11,2);
 	DECLARE curA CURSOR FOR SELECT Id_rapporto, anno FROM rapporto;
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
@@ -59,7 +61,6 @@ BEGIN
 		IF done THEN
 			LEAVE loopA;
 		END IF;
-
 		
 		SET total_work_cost = 0;
 		SET total_work_price = 0;
@@ -69,6 +70,17 @@ BEGIN
 		SET total_products_price = 0;
 		SET total_cost = 0;
 		SET total_price = 0;
+		SET right_of_call_price = 0;
+		SET right_of_call_cost = 0;
+
+
+		SELECT CAST(IFNULL(abbonamento.diritto_chiamata, 0) AS DECIMAL(10, 2)),
+			CAST(ROUND(IFNULL(abbonamento.diritto_chiamata, 0)/ 2, 2) AS DECIMAL(10, 2))
+		INTO right_of_call_price,
+			right_of_call_cost
+		FROM rapporto
+			LEFT JOIN abbonamento ON id_abbonamento=abbonamento
+		WHERE rapporto.id_rapporto = report_id AND rapporto.anno = report_year AND dir_ric_fatturato = 1;
 
 		SELECT SUM(CAST(ROUND(IFNULL(ora_normale, 0) * (totale / 60), 2) AS DECIMAL(10, 2))) as 'prezzo_lavoro',
 			SUM(CAST(ROUND(IF(straordinario = 1, IFNULL(straordinario_c, default_hourly_cost_extra), IFNULL(costo_h, default_hourly_cost)) * (totale / 60), 2) AS DECIMAL(10, 2))) as 'costo_lavoro'
@@ -99,10 +111,12 @@ BEGIN
 		WHERE id_rapporto = report_id AND anno = report_year
 		GROUP BY id_rapporto, anno;
 
+
+
 		SET total_work_cost = IFNULL(total_work_cost, 0);
 		SET total_work_price = IFNULL(total_work_price, 0);
-		SET total_trip_cost = IFNULL(total_trip_cost, 0);
-		SET total_trip_price = IFNULL(total_trip_price, 0);
+		SET total_trip_cost = IFNULL(total_trip_cost, 0) + IFNULL(right_of_call_cost, 0);
+		SET total_trip_price = IFNULL(total_trip_price, 0) + IFNULL(right_of_call_price, 0);
 		SET total_products_cost = IFNULL(total_products_cost, 0);
 		SET total_products_price = IFNULL(total_products_price, 0);
 		SET total_cost = total_work_cost + total_trip_cost + total_products_cost;

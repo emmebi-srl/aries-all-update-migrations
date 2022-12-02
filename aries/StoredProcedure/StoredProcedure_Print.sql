@@ -2014,6 +2014,89 @@ BEGIN
 END //
 DELIMITER ;
 
+
+DROP PROCEDURE IF EXISTS sp_printCustomerDashboardCounters;
+DELIMITER //
+CREATE PROCEDURE sp_printCustomerDashboardCounters (
+	customer_id INT, 
+	system_id INT,
+	OUT quotes_counter INTEGER,
+	OUT reports_groups_counter INTEGER,
+	OUT reports_counter INTEGER,
+	OUT jobs_counter INTEGER,
+	OUT ddts_counter INTEGER,
+	OUT systems_counter INTEGER,
+	OUT invoices_counter INTEGER,
+	OUT system_sims_counter INTEGER,
+	OUT system_components_counter INTEGER,
+	OUT tickets_counter INTEGER
+)
+BEGIN
+	SELECT COUNT(*) INTO quotes_counter
+	FROM (
+		SELECT preventivo.id_preventivo
+		FROM preventivo 
+			INNER JOIN revisione_preventivo ON revisione_preventivo.Id_revisione = preventivo.revisione
+				AND preventivo.id_preventivo = revisione_Preventivo.id_preventivo
+				AND preventivo.anno = revisione_preventivo.Anno
+		WHERE revisione_preventivo.id_cliente = customer_id
+		GROUP BY preventivo.id_preventivo, preventivo.anno
+	) as quotes;
+
+	SELECT COUNT(Id_resoconto) INTO reports_groups_counter
+	FROM resoconto
+	WHERE resoconto.id_cliente = customer_id;
+
+	SELECT COUNT(Id_rapporto) INTO reports_counter
+	FROM rapporto
+	WHERE rapporto.id_cliente = customer_id AND IF(system_id > 0, rapporto.Id_Impianto, system_id) = system_id;
+
+	SELECT COUNT(*) INTO jobs_counter 
+	FROM (
+		SELECT commessa.Id_commessa
+		FROM commessa
+			INNER JOIN commessa_sotto ON commessa_sotto.id_commessa = commessa.id_commessa
+				AND commessa_sotto.anno = commessa.anno
+			INNER JOIN commessa_lotto ON commessa_lotto.id_commessa = commessa.id_commessa
+				AND commessa_lotto.anno = commessa.anno
+				AND commessa_lotto.id_sottocommessa = commessa_sotto.id_sotto
+		WHERE IF(system_id > 0, commessa_lotto.impianto, system_id) = system_id AND commessa.id_cliente = customer_id
+		GROUP BY commessa.id_commessa, commessa.anno, commessa_sotto.id_sotto
+	) as jobs;
+
+	SELECT COUNT(Id_ddt) INTO ddts_counter
+	FROM Ddt
+	WHERE ddt.id_cliente = customer_id AND IF(system_id > 0, ddt.impianto, system_id) = system_id;
+
+	SELECT COUNT(Id_impianto) INTO systems_counter
+	FROM impianto
+	WHERE IF(system_id > 0, impianto.Id_Impianto, system_id) = system_id AND impianto.id_cliente = customer_id;
+
+	SELECT COUNT(Id_fattura) INTO invoices_counter
+	FROM fattura
+	WHERE fattura.id_cliente = customer_id;
+	
+	SELECT COUNT(*) INTO system_components_counter
+	FROM impianto_componenti
+		INNER JOIN impianto ON impianto_componenti.Id_impianto = impianto.Id_impianto
+	WHERE (impianto_componenti.data_dismesso IS NULL OR impianto_componenti.data_dismesso > NOW())
+		AND (impianto_componenti.data_fine IS NULL OR impianto_componenti.data_fine > NOW())
+		AND impianto.id_cliente = customer_id
+		AND IF(system_id > 0, impianto.Id_Impianto, system_id) = system_id;
+
+	SELECT COUNT(*) INTO system_sims_counter
+	FROM impianto_ricarica_tipo
+		INNER JOIN impianto ON impianto.Id_impianto = impianto_ricarica_tipo.id_impianto
+	WHERE IF(system_id > 0, impianto.Id_Impianto, system_id) = system_id AND impianto.id_cliente = customer_id;
+
+
+	SELECT COUNT(id_ticket) INTO tickets_counter
+	FROM ticket
+	WHERE ticket.id_cliente = customer_id AND IF(system_id > 0, ticket.Id_Impianto, system_id) = system_id;
+
+END //
+DELIMITER ;
+
 DROP PROCEDURE IF EXISTS sp_printSystemsComponents;
 DELIMITER //
 CREATE PROCEDURE sp_printSystemsComponents ()
