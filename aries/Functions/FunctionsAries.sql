@@ -418,3 +418,85 @@ BEGIN
 	
 END // 
 DELIMITER ;
+
+
+DROP FUNCTION IF EXISTS  fnc_reportIsRightOfCallChargeable;
+DELIMITER // 
+CREATE FUNCTION fnc_reportIsRightOfCallChargeable(report_id INT(11), year INT(11)) RETURNS BIT(1)
+BEGIN
+	DECLARE is_right_of_call_chargeble BIT(1);
+	DECLARE included_roc INT(11);
+	DECLARE subscription_id INT(11);
+	DECLARE used_roc INT(11);
+    DECLARE system_id INT(11);
+    DECLARE report_has_right_of_call BIT(1);
+    DECLARE is_extra_ordinary BIT(1);
+
+    SELECT
+        id_impianto, dir_ric_fatturato = 2, diritto_chiamata = 1 AND dir_ric_fatturato <> 0, abbonamento
+    INTO system_id, is_extra_ordinary, report_has_right_of_call, subscription_id
+    FROM rapporto
+    WHERE id_rapporto = report_id AND anno = year;
+
+    IF subscription_id IS NOT NULL AND report_has_right_of_call THEN
+        SELECT IF(is_extra_ordinary, diritto_chiamata_straordinario_inclusa, diritto_chiamata_gratis) INTO included_roc
+        FROM abbonamento
+        WHERE id_abbonamento = subscription_id;
+
+        SELECT COUNT(*) INTO used_roc
+        FROM rapporto
+        WHERE anno = year
+            AND id_impianto = system_id
+            AND diritto_chiamata = 1
+            AND id_rapporto <> report_id
+            AND IF(is_extra_ordinary, 2, 1) = dir_ric_fatturato;
+
+        SET is_right_of_call_chargeble = IFNULL(included_roc, 0) < IFNULL(used_roc, 0);
+    END IF;
+
+    IF is_right_of_call_chargeble IS NULL THEN
+        SET is_right_of_call_chargeble = 0;
+    END IF;
+	
+	RETURN  is_right_of_call_chargeble;
+	
+END // 
+DELIMITER ;
+
+
+DROP FUNCTION IF EXISTS  fnc_systemIsRightOfCallChargeable;
+DELIMITER // 
+CREATE FUNCTION fnc_systemIsRightOfCallChargeable(system_id INT(11), year INT(11), is_extra_ordinary BIT(1)) RETURNS BIT(1)
+BEGIN
+	DECLARE is_right_of_call_chargeble BIT(1);
+	DECLARE included_roc INT(11);
+	DECLARE subscription_id INT(11);
+	DECLARE used_roc INT(11);
+	
+    SELECT id_abbonamenti INTO subscription_id
+    FROM impianto_abbonamenti
+    WHERE id_impianto = system_id AND anno = year;
+
+    IF subscription_id IS NOT NULL THEN
+        SELECT IF(is_extra_ordinary, diritto_chiamata_straordinario_inclusa, diritto_chiamata_gratis) INTO included_roc
+        FROM abbonamento
+        WHERE id_abbonamento = subscription_id;
+
+        SELECT COUNT(*) INTO used_roc
+        FROM rapporto
+        WHERE anno = year
+            AND id_impianto = system_id
+            AND diritto_chiamata = 1
+            AND IF(is_extra_ordinary, 2, 1) = dir_ric_chiamata;
+
+        SET is_right_of_call_chargeble = IFNULL(included_roc, 0) < IFNULL(used_roc, 0);
+    END IF;
+
+    IF is_right_of_call_chargeble IS NULL THEN
+        SET is_right_of_call_chargeble = 0;
+    END IF;
+	
+	RETURN  is_right_of_call_chargeble;
+	
+END // 
+DELIMITER ;

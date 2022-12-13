@@ -22142,6 +22142,7 @@ BEGIN
 	DECLARE default_hourly_cost DECIMAL(11, 2);
 	DECLARE default_hourly_cost_extra DECIMAL(11, 2);
 	DECLARE default_km_cost DECIMAL(11,2);
+	DECLARE right_of_call_chargeable BIT(1);
 	DECLARE right_of_call_cost DECIMAL(11,2);
 	DECLARE right_of_call_price DECIMAL(11,2);
 
@@ -22151,13 +22152,25 @@ BEGIN
 	ORDER BY normale DESC
 	LIMIT 1;
 
-	SELECT CAST(IFNULL(abbonamento.diritto_chiamata, 0) AS DECIMAL(10, 2)),
-		CAST(ROUND(IFNULL(abbonamento.diritto_chiamata, 0) / 2, 2) AS DECIMAL(10, 2))
-	INTO right_of_call_price,
-		right_of_call_cost
-	FROM rapporto
-		LEFT JOIN abbonamento ON id_abbonamento=abbonamento
-	WHERE rapporto.id_rapporto = report_id AND rapporto.anno = report_year AND dir_ric_fatturato = 1;
+	SELECT fnc_reportIsRightOfCallChargeable(report_id, report_year) INTO right_of_call_chargeable;
+
+	IF right_of_call_chargeable THEN
+		SELECT
+			CAST(
+				IFNULL(IF(rapporto.dir_ric_fatturato = 1, abbonamento.diritto_chiamata, abbonamento.diritto_chiamata_straordinario), 0)
+			AS DECIMAL(10, 2)),
+			CAST(
+				ROUND(IFNULL(IF(rapporto.dir_ric_fatturato = 1, abbonamento.diritto_chiamata, abbonamento.diritto_chiamata_straordinario), 0) / 2, 2)
+			AS DECIMAL(10, 2))
+		INTO right_of_call_price,
+			right_of_call_cost
+		FROM rapporto
+			LEFT JOIN abbonamento ON id_abbonamento=abbonamento
+		WHERE rapporto.id_rapporto = report_id AND rapporto.anno = report_year ;
+	ELSE
+		SET right_of_call_cost = 0;
+		SET right_of_call_price = 0;
+	END IF;
 
 	SELECT SUM(CAST(ROUND(IFNULL(ora_normale, 0) * (totale / 60), 2) AS DECIMAL(10, 2))) as 'prezzo_lavoro',
 		SUM(CAST(ROUND(IF(straordinario = 1, IFNULL(straordinario_c, default_hourly_cost_extra), IFNULL(costo_h, default_hourly_cost)) * (totale / 60), 2) AS DECIMAL(10, 2))) as 'costo_lavoro'
