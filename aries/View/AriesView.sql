@@ -1066,7 +1066,9 @@ CREATE VIEW vw_systems_customers_details AS
 		abbonamento.nome AS "abbonamento",
 		persone,
 		CAST(GROUP_CONCAT(DISTINCT substring(mese.nome,1,3) separator ", ")  AS CHAR(150) CHARACTER SET utf8) AS "Controlli",
-		"NESSUNO" AS "id_mese"
+		"NESSUNO" AS "id_mese",
+		IF(Checklist, "SI", "NO") AS Checklist,
+		stato_invio_abbonamento.nome as stato_invio_abbonamento
    	FROM impianto
 	   	INNER JOIN tipo_impianto ON impianto.tipo_impianto = tipo_impianto.id_tipo
 	   	INNER JOIN stato_impianto ON impianto.stato = stato_impianto.id_stato
@@ -1082,6 +1084,7 @@ CREATE VIEW vw_systems_customers_details AS
 		LEFT JOIN abbonamento ON abbonamento.id_abbonamento=impianto_uscita.id_abbonamento 
 		LEFT JOIN impianto_abbonamenti_mesi ON impianto.id_impianto=impianto_abbonamenti_mesi.impianto AND impianto_abbonamenti_mesi.anno=DATE_FORMAT(NOW(),'%Y')
       	LEFT JOIN mese ON mese.id_mese=impianto_abbonamenti_mesi.mese
+		INNER JOIN stato_invio_abbonamento ON stato_invio_doc = stato_invio_abbonamento.colore
    	GROUP BY impianto.id_impianto
 	UNION ALL
 	SELECT clienti.id_cliente,
@@ -1109,7 +1112,9 @@ CREATE VIEW vw_systems_customers_details AS
 		"" AS "abbonamento",
 		NULL AS "persone",
 		"" AS "Controlli",
-		"NESSUNO" AS "id_mese"
+		"NESSUNO" AS "id_mese",
+		"" AS Checklist,
+		"" as stato_invio_abbonamento
 	FROM clienti
 		INNER JOIN riferimento_clienti ON clienti.id_cliente=riferimento_clienti.id_cliente AND riferimento_clienti.id_riferimento=1
 		LEFT JOIN destinazione_cliente dc ON dc.id_cliente = clienti.id_cliente AND sede_principale = 1
