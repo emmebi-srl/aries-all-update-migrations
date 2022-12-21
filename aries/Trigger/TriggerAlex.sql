@@ -936,3 +936,36 @@ END
 delimiter ; 
 
 
+-- ############################# SYSTEM SUBSCRIPTIONS ##################################################################### 
+DROP TRIGGER IF EXISTS trg_afterSystemSubscriptionInsert; 
+delimiter //
+CREATE TRIGGER `trg_afterSystemSubscriptionInsert` AFTER INSERT ON `impianto_abbonamenti` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesSystemCurrentSubscriptionRefresh(NEW.id_impianto);
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_afterSystemSubscriptionUpdate; 
+delimiter //
+CREATE TRIGGER `trg_afterSystemSubscriptionUpdate` AFTER UPDATE ON `impianto_abbonamenti` FOR EACH ROW 
+BEGIN
+	IF (OLD.id_impianto <> NEW.id_impianto) THEN
+		CALL sp_ariesSystemCurrentSubscriptionRefresh(OLD.id_impianto);
+		CALL sp_ariesSystemCurrentSubscriptionRefresh(NEW.id_impianto);
+	ELSEIF (OLD.id_abbonamenti <> NEW.id_abbonamenti) THEN
+		CALL sp_ariesSystemCurrentSubscriptionRefresh(OLD.id_impianto);
+	END IF;
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_afterSystemSubscriptionDelete; 
+delimiter //
+CREATE TRIGGER `trg_afterSystemSubscriptionDelete` AFTER DELETE ON `impianto_abbonamenti` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesSystemCurrentSubscriptionRefresh(OLD.id_impianto);
+END
+//
+delimiter ; 
+

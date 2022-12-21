@@ -22312,3 +22312,35 @@ END//
 DELIMITER ;
 
 
+DROP PROCEDURE IF EXISTS sp_ariesSystemCurrentSubscriptionRefresh;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesSystemCurrentSubscriptionRefresh`(
+	system_id INT(11)
+)
+BEGIN
+
+	DECLARE default_subscription_id INT(11);
+	DECLARE last_system_subscription_id INT(11);
+
+	SELECT id_abbonamento
+	INTO default_subscription_id
+	FROM abbonamento
+	WHERE generale = 1
+	ORDER BY anno DESC
+	LIMIT 1;
+
+	SELECT id_abbonamenti
+	INTO last_system_subscription_id
+	FROM impianto_abbonamenti
+	WHERE id_impianto = system_id
+	ORDER BY anno DESC
+	LIMIT 1;
+
+	UPDATE impianto
+	SET abbonamento = IFNULL(last_system_subscription_id, default_subscription_id)
+	WHERE id_impianto = system_id;
+	
+END//
+DELIMITER ;
+
+

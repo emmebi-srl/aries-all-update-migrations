@@ -2134,3 +2134,32 @@ BEGIN
 		LEFT JOIN riferimento_clienti AS r1 ON r1.id_cliente=clienti.id_cliente AND id_riferimento='1';
 END //
 DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS sp_printCustomerDashboardSystems; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printCustomerDashboardSystems`(
+	IN `customer_id` INT(11)
+)
+BEGIN
+	SET customer_id = IFNULL(customer_id, -1);
+	
+	SELECT Id_impianto,
+		impianto.Id_cliente,
+		tipo_impianto.nome as Tipo_impianto,
+		stato_impianto.nome as Stato_impianto,
+		stato_impianto.colore as Stato_impianto_colore,
+		impianto.Descrizione,
+		CONCAT(dc.indirizzo,' n.',dc.numero_civico, dc.altro,' - ', com.nome,' (',com.provincia,')') AS 'Indirizzo'
+	FROM impianto
+		INNER JOIN tipo_impianto ON tipo_impianto = id_tipo
+		INNER JOIN stato_impianto ON Stato = id_stato
+		LEFT JOIN destinazione_cliente AS dc ON a.id_cliente=impianto.id_cliente	AND a.id_destinazione = impianto.destinazione
+		LEFT JOIN comune AS Com ON comune.id_comune=comune
+	WHERE customer_id = IF(customer_id = -1, -1, impianto.id_cliente) 
+	GROUP BY impianto.id_impianto  
+	ORDER BY impianto.descrizione;
+
+END $$
+DELIMITER ;
