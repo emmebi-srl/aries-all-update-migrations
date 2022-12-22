@@ -16285,16 +16285,21 @@ BEGIN
 		nota, tipo_resoconto, 
 		tipo_resoconto.nome AS "tipo", 
 		stato AS "Stato", 
-		anno, anno_fattura, 
+		resoconto.anno, anno_fattura, 
 		Inviato, 
 		nota_fine,
 		stm AS "Stampato",
 		colore,
-		fat_speseRap 
+		fat_speseRap,
+		resoconto_totali.costo_totale,
+		resoconto_totali.prezzo_totale
 	FROM resoconto 
 		INNER JOIN tipo_resoconto ON id_tipo = resoconto.tipo_resoconto 
 		INNER JOIN clienti ON resoconto.id_cliente=clienti.id_cliente 
 		INNER JOIN stato_resoconto ON stato_resoconto.id_stato = resoconto.stato
+		INNER JOIN resoconto_totali
+			ON resoconto_totali.id_resoconto = resoconto.id_resoconto 
+				AND resoconto_totali.anno = resoconto.anno
 		INNER JOIN tmp_resoconto_con_articoli 
 			ON tmp_resoconto_con_articoli.id_resoconto = resoconto.id_resoconto 
 				AND tmp_resoconto_con_articoli.anno_reso = resoconto.anno
