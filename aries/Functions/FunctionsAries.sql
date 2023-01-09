@@ -451,7 +451,7 @@ BEGIN
             AND id_rapporto <> report_id
             AND IF(is_extra_ordinary, 2, 1) = dir_ric_fatturato;
 
-        SET is_right_of_call_chargeble = IFNULL(included_roc, 0) < IFNULL(used_roc, 0);
+        SET is_right_of_call_chargeble = IFNULL(included_roc, 0) <= IFNULL(used_roc, 0);
     END IF;
 
     IF is_right_of_call_chargeble IS NULL THEN
