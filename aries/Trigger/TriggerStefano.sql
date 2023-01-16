@@ -333,7 +333,7 @@ BEGIN
 
     insert into rapporto_mobile
 
-    (stato, scan, id_rapporto, anno,     id_impianto, id_destinazione, id_cliente, richiesto, email_invio, tipo_intervento, Diritto_chiamata, dir_ric_fatturato, relazione,  Note_Generali, `data`, data_esecuzione, festivo, su_chiamata, eff_giorn, sost, ripar, `not`, c_not, abbon, garanz, man_ordi, fuorigaranz, fuoriabbon, man_straord, tipo_impianto, ragione_sociale, indirizzo, citta, luogo_lavoro, difetto, id_riferimento, mail_responsabile, appunti, tecnici, inviato, visionato, id_utente, numero, Nr_rapporto  )
+    (stato, scan, id_rapporto, anno,     id_impianto, id_destinazione, id_cliente, richiesto, email_invio, tipo_intervento, Diritto_chiamata, tipo_diritto_chiamata, relazione,  Note_Generali, `data`, data_esecuzione, festivo, su_chiamata, eff_giorn, sost, ripar, `not`, c_not, abbon, garanz, man_ordi, fuorigaranz, fuoriabbon, man_straord, tipo_impianto, ragione_sociale, indirizzo, citta, luogo_lavoro, difetto, id_riferimento, mail_responsabile, appunti, tecnici, inviato, visionato, id_utente, numero, Nr_rapporto  )
 
     select
 
@@ -1020,7 +1020,7 @@ BEGIN
 
 
 
-	INSERT INTO rapporto_mobile (id_rapporto, anno, diritto_chiamata, dir_ric_fatturato, festivo, su_chiamata, eff_giorn,sost, ripar, `not`, c_not, abbon, garanz, man_ordi, fuorigaranz, man_straord, tipo_impianto,ragione_sociale, indirizzo, citta, luogo_lavoro, difetto, inviato, visionato, fuoriabbon, id_tecnico)
+	INSERT INTO rapporto_mobile (id_rapporto, anno, diritto_chiamata, tipo_diritto_chiamata, festivo, su_chiamata, eff_giorn,sost, ripar, `not`, c_not, abbon, garanz, man_ordi, fuorigaranz, man_straord, tipo_impianto,ragione_sociale, indirizzo, citta, luogo_lavoro, difetto, inviato, visionato, fuoriabbon, id_tecnico)
 
 	SELECT id_rapporto ,
 
@@ -1079,7 +1079,7 @@ BEGIN
 
 	INSERT INTO rapporto_mobile 
 
-	(id_rapporto, anno, diritto_chiamata, dir_ric_fatturato, 
+	(id_rapporto, anno, diritto_chiamata, tipo_diritto_chiamata, 
 
 	festivo, su_chiamata, eff_giorn,sost, ripar, `not`, c_not, 
 
@@ -1298,7 +1298,7 @@ BEGIN
 
 		Diritto_chiamata = right_call, 
 
-		dir_ric_fatturato = 0, 
+		tipo_diritto_chiamata = 0, 
 
 		relazione = technical_report, 
 
@@ -1327,8 +1327,6 @@ BEGIN
 		Data_esecuzione = execution_date, 
 
 		costo = 0, 
-
-		materiale = 0, 
 
 		scan = 0, 
 
@@ -5315,7 +5313,7 @@ BEGIN
 
           Diritto_chiamata,       
 
-          dir_ric_fatturato,       
+          tipo_diritto_chiamata,       
 
           relazione,       
 

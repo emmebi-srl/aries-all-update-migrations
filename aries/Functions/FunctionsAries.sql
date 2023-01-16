@@ -433,7 +433,7 @@ BEGIN
     DECLARE is_extra_ordinary BIT(1);
 
     SELECT
-        id_impianto, dir_ric_fatturato = 2, diritto_chiamata = 1 AND dir_ric_fatturato <> 0, abbonamento
+        id_impianto, tipo_diritto_chiamata = 2, diritto_chiamata = 1 AND tipo_diritto_chiamata <> 0, abbonamento
     INTO system_id, is_extra_ordinary, report_has_right_of_call, subscription_id
     FROM rapporto
     WHERE id_rapporto = report_id AND anno = year;
@@ -449,7 +449,7 @@ BEGIN
             AND id_impianto = system_id
             AND diritto_chiamata = 1
             AND id_rapporto <> report_id
-            AND IF(is_extra_ordinary, 2, 1) = dir_ric_fatturato;
+            AND IF(is_extra_ordinary, 2, 1) = tipo_diritto_chiamata;
 
         SET is_right_of_call_chargeble = IFNULL(included_roc, 0) <= IFNULL(used_roc, 0);
     END IF;

@@ -45,7 +45,7 @@ BEGIN
     SET counter = counter + 1; 
    END WHILE;
 
-	INSERT INTO rapporto_mobile (id_rapporto, anno, diritto_chiamata, dir_ric_fatturato, festivo, su_chiamata, eff_giorn,sost, ripar, `not`, c_not, abbon, garanz, man_ordi, fuorigaranz, man_straord, tipo_impianto,ragione_sociale, indirizzo, citta, luogo_lavoro, difetto, inviato, visionato, fuoriabbon, id_tecnico,
+	INSERT INTO rapporto_mobile (id_rapporto, anno, diritto_chiamata, tipo_diritto_chiamata, festivo, su_chiamata, eff_giorn,sost, ripar, `not`, c_not, abbon, garanz, man_ordi, fuorigaranz, man_straord, tipo_impianto,ragione_sociale, indirizzo, citta, luogo_lavoro, difetto, inviato, visionato, fuoriabbon, id_tecnico,
 		numero_allegati)
 	SELECT id_rapporto ,
 			  anno, 
@@ -908,7 +908,7 @@ BEGIN
 		responsabile = responsible,
 		tipo_intervento = IFNULL(ref_interventionType, 2), 
 		Diritto_chiamata = right_call, 
-		dir_ric_fatturato = 0, 
+		tipo_diritto_chiamata = 0, 
 		relazione = technical_report, 
 		terminato = is_work_finished, 
 		funzionante = system_conditions, 
@@ -923,7 +923,6 @@ BEGIN
 		Nr_rapporto = report_number, 
 		Data_esecuzione = execution_date, 
 		costo = 0, 
-		materiale = 0, 
 		scan = 0, 
 		anno_fattura = NULL, 
 		controllo_periodico = NULL,
@@ -1147,7 +1146,7 @@ BEGIN
 	CALL sp_apiReportAttachmentDeleteByReport(id, `year`); 
 	
 	INSERT INTO rapporto_mobile 
-	(id_rapporto, anno, diritto_chiamata, dir_ric_fatturato, 
+	(id_rapporto, anno, diritto_chiamata, tipo_diritto_chiamata, 
 	festivo, su_chiamata, eff_giorn,sost, ripar, `not`, c_not, 
 	abbon, garanz, man_ordi, fuorigaranz, man_straord, 
 	tipo_impianto,ragione_sociale, indirizzo, citta, 
