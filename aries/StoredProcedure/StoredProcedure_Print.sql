@@ -2111,6 +2111,7 @@ BEGIN
 		CONCAT(CONCAT(d2.indirizzo,' n.',d2.numero_civico, d2.altro),' - ',concat(IF(f2.nome IS NOT NULL AND f2.nome <> '', concat(f2.nome,' di '), ''), c2.nome,' (',c2.provincia,')')) AS 'Destinazione Impianto',
 		ordine AS "Ordine",
 		id_articolo AS "ID Articolo",
+		articolo.codice_fornitore AS "Codice Fornitore",
 		articolo.Desc_brev AS "Articolo",
 		articolo_stato.nome AS "Stato Articolo",
 		stato_scadenza AS "Stato Scadenza",

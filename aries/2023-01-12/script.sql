@@ -16,3 +16,7 @@ ALTER TABLE `rapporto`
 
 ALTER TABLE `rapporto_mobile`
 	CHANGE COLUMN `dir_ric_fatturato` `tipo_diritto_chiamata` TINYINT(4) NOT NULL DEFAULT '0' AFTER `Diritto_chiamata`;
+
+	
+
+UPDATE rapporto SET tipo_diritto_chiamata = 0 WHERE diritto_chiamata = 0;
