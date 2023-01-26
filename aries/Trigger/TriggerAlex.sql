@@ -608,6 +608,7 @@ BEGIN
 		OR (NEW.`prezzo` <> OLD.`prezzo`)
 		OR (NEW.`tempo` <> OLD.`tempo`)
 		OR (NEW.`sconto` <> OLD.`sconto`)
+		OR (NEW.`portati` <> OLD.`portati`)
 	THEN
 		CALL sp_ariesJobProductHistoryCreate(NEW.id_commessa, NEW.anno, NEW.id_sottocommessa, NEW.id_lotto, NEW.id_tab);
 	END IF;
