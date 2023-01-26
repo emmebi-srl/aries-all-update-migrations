@@ -500,3 +500,28 @@ BEGIN
 	
 END // 
 DELIMITER ;
+
+
+
+DROP FUNCTION IF EXISTS  fnc_productInternalPriceId;
+DELIMITER // 
+CREATE FUNCTION fnc_productInternalPriceId() RETURNS INT(11)
+BEGIN
+	DECLARE val INT(11);
+	SET val = 2;
+	RETURN  val;
+	
+END // 
+DELIMITER ;
+
+
+DROP FUNCTION IF EXISTS  fnc_productInternalCostId;
+DELIMITER // 
+CREATE FUNCTION fnc_productInternalCostId() RETURNS INT(11)
+BEGIN
+	DECLARE val INT(11);
+	SET val = 1;
+	RETURN  val;
+	
+END // 
+DELIMITER ;

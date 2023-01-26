@@ -2106,14 +2106,21 @@ BEGIN
 		impianto.id_cliente AS "ID Cliente",
 		clienti.Ragione_Sociale AS "Cliente",
 		Stato_clienti.Nome AS "Stato Cliente",
+		tipo_rapclie.Nome AS "Rapporto Cliente",
 		impianto.Descrizione AS "Impianto",
+		Tipo_impianto.nome AS "Tipo Impianto",
 		stato_impianto.Nome AS "Stato Impianto",
+		abbonamento.Nome AS "Abbonamento",
+		impianto.Costo_Manutenzione AS "Costo Manutenzione",
 		CONCAT(CONCAT(d2.indirizzo,' n.',d2.numero_civico, d2.altro),' - ',concat(IF(f2.nome IS NOT NULL AND f2.nome <> '', concat(f2.nome,' di '), ''), c2.nome,' (',c2.provincia,')')) AS 'Destinazione Impianto',
+		d2.Km_sede AS "KM Destinazione Impianto",
 		ordine AS "Ordine",
-		id_articolo AS "ID Articolo",
+		vw_systems_components_detail.id_articolo AS "ID Articolo",
 		articolo.codice_fornitore AS "Codice Fornitore",
 		articolo.Desc_brev AS "Articolo",
 		articolo_stato.nome AS "Stato Articolo",
+		listino_costo.prezzo AS "Costo Interno",
+		listino_prezzo.prezzo AS "Prezzo Interno",
 		stato_scadenza AS "Stato Scadenza",
 		fine_garanzia AS "Fine Garanzia",
 		data_installazione AS "Data Installazione",
@@ -2125,17 +2132,21 @@ BEGIN
 	FROM vw_systems_components_detail
 		INNER JOIN impianto ON vw_systems_components_detail.id_impianto = impianto.Id_impianto
 		INNER JOIN stato_impianto ON impianto.Stato = stato_impianto.Id_stato
-		INNER JOIN articolo ON articolo.Codice_articolo = id_articolo
+		INNER JOIN tipo_impianto ON impianto.Tipo_impianto = tipo_impianto.Id_tipo
+		INNER JOIN abbonamento ON impianto.Abbonamento = abbonamento.Id_abbonamento
+		INNER JOIN articolo ON articolo.Codice_articolo = vw_systems_components_detail.id_articolo
 		INNER JOIN articolo_stato ON articolo.Stato_articolo = articolo_stato.Id_stato
+		INNER JOIN articolo_listino AS listino_prezzo ON listino_prezzo.id_articolo = vw_systems_components_detail.id_articolo AND listino_prezzo.id_listino = fnc_productInternalPriceId()
+		INNER JOIN articolo_listino AS listino_costo ON listino_costo.id_articolo = vw_systems_components_detail.id_articolo AND listino_costo.id_listino = fnc_productInternalCostId()
 		INNER JOIN clienti ON impianto.Id_cliente = clienti.Id_cliente
 		INNER JOIN stato_clienti ON clienti.Stato_cliente = stato_clienti.Id_stato
+		INNER JOIN tipo_rapclie ON tipo_rapclie.id_tipo = clienti.tipo_rapporto
 		LEFT JOIN destinazione_cliente AS d2 ON d2.id_cliente=clienti.id_cliente AND d2.id_destinazione=impianto.destinazione
 		INNER JOIN comune AS c2 ON c2.id_comune=d2.Comune
 		LEFT JOIN frazione AS f2 ON f2.id_frazione=d2.frazione
 		LEFT JOIN riferimento_clienti AS r1 ON r1.id_cliente=clienti.id_cliente AND id_riferimento='1';
 END //
 DELIMITER ;
-
 
 
 DROP PROCEDURE IF EXISTS sp_printCustomerDashboardSystems; 

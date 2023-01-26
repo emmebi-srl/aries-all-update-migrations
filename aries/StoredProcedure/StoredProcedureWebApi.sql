@@ -299,25 +299,34 @@ BEGIN
 END; //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS sp_apiCustomerDestinationGetBySystemId;
+DROP PROCEDURE IF EXISTS sp_apiCustomerDestinationGetBySystemIds;
 DELIMITER //
-CREATE PROCEDURE sp_apiCustomerDestinationGetBySystemId 
-(system_id INT)
+CREATE PROCEDURE sp_apiCustomerDestinationGetBySystemIds 
+(system_ids MEDIUMTEXT)
 BEGIN
-
-	DECLARE customer_id INT; 
-	DECLARE destination_id INT; 
-	
-	SELECT id_cliente, 
-	impianto.Destinazione
-	INTO customer_id, destination_id
-	FROM IMPIANTO 
-	WHERE impianto.Id_impianto = system_id; 
-	
-	CALL sp_apiCustomerDestinationGetById(customer_id, destination_id);
+	SELECT DISTINCT id_destinazione, 
+		destinazione_cliente.id_cliente,
+		IFNULL(destinazione_cliente.provincia, "") 'provincia',
+		IFNULL(comune.nome, "") 'comune',
+		IFNULL(frazione.nome, "") 'frazione',
+		IFNULL(indirizzo, "") 'indirizzo', 
+		IFNULL(numero_civico, 0) 'numero_civico', 
+		IFNULL(destinazione_cliente.altro, "") 'altro', 
+		comune.cap,
+		km_sede, 
+		tempo_strada,
+		longitudine,
+		latitudine
+	FROM impianto
+		INNER JOIN destinazione_cliente ON destinazione_cliente.id_cliente = impianto.id_cliente
+			AND destinazione_cliente.id_destinazione = impianto.destinazione
+		LEFT JOIN comune ON
+			destinazione_cliente.comune = id_comune
+		LEFT JOIN frazione ON
+			destinazione_cliente.Frazione = id_frazione
+	WHERE FIND_IN_SET(impianto.id_impianto, system_ids);
 END; //
 DELIMITER ;
-
 
 
 DROP PROCEDURE IF EXISTS sp_apiTechnicianGet;
@@ -423,10 +432,12 @@ BEGIN
 		IFNULL(`impianto`.`gsm`,'') AS `gsm`, 
 		IFNULL(`impianto`.`combinatore_telefonico`,'') AS `combinatore_telefonico`,
 		`impianto`.`orario_prog`                       AS `orario_prog`, 
-		checklist_model_impianto.id_checklist
+		checklist_model_impianto.id_checklist,
+		abbonamento.nome as "abbonamento"
 	FROM `impianto`
 		INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 		INNER JOIN stato_impianto ON id_stato = Stato
+		INNER JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
 		LEFT JOIN checklist_model_impianto ON impianto.id_impianto = checklist_model_impianto.id_impianto
 	WHERE ((`impianto`.`Stato`                       < 4) OR (`impianto`.`Stato`                       > 7))
 	GROUP BY `impianto`.`Id_impianto`;
@@ -467,10 +478,12 @@ BEGIN
 			 * COS(RADIANS(destinazione_cliente.latitudine))
 			 * COS(RADIANS(longitude - destinazione_cliente.longitudine))
 			 + SIN(RADIANS(latitude))
-			 * SIN(RADIANS(destinazione_cliente.latitudine)))) AS distanza
+			 * SIN(RADIANS(destinazione_cliente.latitudine)))) AS distanza,
+			abbonamento.nome as "abbonamento"
 		FROM impianto
 			INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 			INNER JOIN stato_impianto ON id_stato = Stato
+			INNER JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
 			INNER JOIN destinazione_cliente ON impianto.Id_cliente = destinazione_cliente.id_cliente AND impianto.Destinazione = destinazione_cliente.Id_destinazione
 		WHERE ((`impianto`.`Stato`                       < 4) OR (`impianto`.`Stato`                       > 7)) AND destinazione_cliente.latitudine IS NOT NULL AND destinazione_cliente.latitudine > 0
 	) AS result
@@ -502,11 +515,13 @@ BEGIN
 		IFNULL(`impianto`.`gsm`,'') AS `gsm`, 
 		IFNULL(`impianto`.`combinatore_telefonico`,'') AS `combinatore_telefonico`,
 		`impianto`.`orario_prog`                       AS `orario_prog`, 
-		checklist_model_impianto.id_checklist
+		checklist_model_impianto.id_checklist,
+		abbonamento.nome as "abbonamento"
 	FROM `impianto`
 		INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 		INNER JOIN stato_impianto ON id_stato = Stato
 		LEFT JOIN checklist_model_impianto ON impianto.id_impianto = checklist_model_impianto.id_impianto
+		INNER JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
 	WHERE FIND_IN_SET(`impianto`.`Id_impianto`, system_ids);
 END; //
 DELIMITER ;
@@ -516,25 +531,27 @@ DELIMITER //
 CREATE PROCEDURE sp_apiSystemGetById (id INT)
 BEGIN
 	SELECT `impianto`.`Id_impianto`                       AS `id_impianto`,
-	`impianto`.`Id_cliente`                       AS `id_cliente`,
-	IFNULL(`impianto`.`Abbonamento`,0) AS `id_abbonamento`, 
-	impianto.Destinazione AS Id_destinazione, 
-	IFNULL(`impianto`.`Data_Funzione`, CAST('0000-00-00 00:00:00' AS DATETIME)) AS `data_funzione`, 
-	IFNULL(`impianto`.`scadenza_garanzia`, CAST('0000-00-00 00:00:00' AS DATETIME)) AS `Scadenza_Garanzia`,
-	`impianto`.`Tipo_impianto` AS `tipo_impianto`,
-	`tipo_impianto`.`Nome` AS `tipo_impianto_descrizione`,
-	`impianto`.`Stato` AS `stato`,
-	`stato_impianto`.`Nome` AS `stato_descrizione`,
-	`impianto`.`Descrizione`                       AS `descrizione`, 
-	IFNULL(`impianto`.`centrale`,'') AS `centrale`, 
-	IFNULL(`impianto`.`gsm`,'') AS `gsm`, 
-	IFNULL(`impianto`.`combinatore_telefonico`,'') AS `combinatore_telefonico`,
-	`impianto`.`orario_prog`                       AS `orario_prog`, 
-		checklist_model_impianto.id_checklist
+		`impianto`.`Id_cliente`                       AS `id_cliente`,
+		IFNULL(`impianto`.`Abbonamento`,0) AS `id_abbonamento`, 
+		impianto.Destinazione AS Id_destinazione, 
+		IFNULL(`impianto`.`Data_Funzione`, CAST('0000-00-00 00:00:00' AS DATETIME)) AS `data_funzione`, 
+		IFNULL(`impianto`.`scadenza_garanzia`, CAST('0000-00-00 00:00:00' AS DATETIME)) AS `Scadenza_Garanzia`,
+		`impianto`.`Tipo_impianto` AS `tipo_impianto`,
+		`tipo_impianto`.`Nome` AS `tipo_impianto_descrizione`,
+		`impianto`.`Stato` AS `stato`,
+		`stato_impianto`.`Nome` AS `stato_descrizione`,
+		`impianto`.`Descrizione`                       AS `descrizione`, 
+		IFNULL(`impianto`.`centrale`,'') AS `centrale`, 
+		IFNULL(`impianto`.`gsm`,'') AS `gsm`, 
+		IFNULL(`impianto`.`combinatore_telefonico`,'') AS `combinatore_telefonico`,
+		`impianto`.`orario_prog`                       AS `orario_prog`, 
+			checklist_model_impianto.id_checklist,
+		abbonamento.nome as "abbonamento"
 	FROM `impianto`
 		INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 		INNER JOIN stato_impianto ON id_stato = Stato
 		LEFT JOIN checklist_model_impianto ON impianto.id_impianto = checklist_model_impianto.id_impianto
+		INNER JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
 	WHERE impianto.id_impianto = id;
 END; //
 DELIMITER ;
@@ -701,9 +718,13 @@ BEGIN
 		barcode,
 		unità_misura unita_misura, 
 		marca.nome as 'marca', 
-		marca.id_marca
+		marca.id_marca,
+		listino_prezzo.prezzo as "prezzo_interno",
+		listino_costo.prezzo as "costo_interno"
 	 FROM articolo 
-		LEFT JOIN marca ON marca.id_marca = articolo.marca;
+		LEFT JOIN marca ON marca.id_marca = articolo.marca
+		INNER JOIN articolo_listino AS listino_prezzo ON listino_prezzo.id_articolo = articolo.codice_articolo AND listino_prezzo.id_listino = fnc_productInternalPriceId()
+		INNER JOIN articolo_listino AS listino_costo ON listino_costo.id_articolo = articolo.codice_articolo AND listino_costo.id_listino = fnc_productInternalCostId();
 END; //
 DELIMITER ;
 
@@ -726,10 +747,14 @@ BEGIN
 		barcode,
 		unità_misura unita_misura, 
 		marca.nome as 'marca', 
-		marca.id_marca
+		marca.id_marca,
+		listino_prezzo.prezzo as "prezzo_interno",
+		listino_costo.prezzo as "costo_interno"
 	 FROM articolo 
 		LEFT JOIN marca ON marca.id_marca = articolo.marca
 		LEFT JOIN articolo_codice ON articolo.codice_articolo = articolo_codice.id_articolo
+		INNER JOIN articolo_listino AS listino_prezzo ON listino_prezzo.id_articolo = articolo.codice_articolo AND listino_prezzo.id_listino = fnc_productInternalPriceId()
+		INNER JOIN articolo_listino AS listino_costo ON listino_costo.id_articolo = articolo.codice_articolo AND listino_costo.id_listino = fnc_productInternalCostId()
 	 WHERE (product_code IS NOT NULL AND codice_articolo LIKE CONCAT("%", product_code, "%"))
 		OR (supplier_product_code IS NOT NULL AND Codice_fornitore LIKE CONCAT("%", supplier_product_code, "%"))
 		OR (description IS NOT NULL AND Desc_brev LIKE CONCAT("%", description, "%"))
@@ -756,10 +781,14 @@ BEGIN
 		barcode,
 		unità_misura unita_misura, 
 		marca.nome as 'marca', 
-		marca.id_marca
+		marca.id_marca,
+		listino_prezzo.prezzo as "prezzo_interno",
+		listino_costo.prezzo as "costo_interno"
 	 FROM articolo 
 		LEFT JOIN marca ON marca.id_marca = articolo.marca
 		LEFT JOIN articolo_codice ON articolo.codice_articolo = articolo_codice.id_articolo
+		INNER JOIN articolo_listino AS listino_prezzo ON listino_prezzo.id_articolo = articolo.codice_articolo AND listino_prezzo.id_listino = fnc_productInternalPriceId()
+		INNER JOIN articolo_listino AS listino_costo ON listino_costo.id_articolo = articolo.codice_articolo AND listino_costo.id_listino = fnc_productInternalCostId()
 	 WHERE FIND_IN_SET(`articolo`.`codice_articolo`, product_codes);
 END; //
 DELIMITER ;
@@ -823,7 +852,7 @@ DELIMITER //
 DROP PROCEDURE IF EXISTS sp_apiReportMobileInterventionInsert; 
 CREATE PROCEDURE sp_apiReportMobileInterventionInsert  (
 	id INT, 
-	`year`                       INT,
+	`year` INT,
 	system_id INT,  
 	customer_id INT,  
 	requesting_intervention VARCHAR(30),
@@ -3433,17 +3462,21 @@ DELIMITER //
 CREATE PROCEDURE sp_apiServiceAlertExecutionInsert (
 	`service_id`                       INT(11),
 	`exec_date`                       DATETIME,
-	`filename`                       VARCHAR(50)
+	`filename`                       VARCHAR(50),
+	`error` MEDIUMTEXT
 )
 BEGIN
 	INSERT INTO servizio_alert_esecuzione 
 	SET Id_servizio = service_id, 
 		data_esecuzione = exec_date,
-		Filename = filename;
+		Filename = filename,
+		Errore = error;
 		
-	UPDATE servizio_alert_configurazione 
-	SET Data_ultima_esecuzione = NOW()
-	WHERE Id = service_id;
+	IF (error IS NULL OR error = '') THEN
+		UPDATE servizio_alert_configurazione 
+		SET Data_ultima_esecuzione = NOW()
+		WHERE Id = service_id;
+	END IF;
 
 END; //
 DELIMITER ;
