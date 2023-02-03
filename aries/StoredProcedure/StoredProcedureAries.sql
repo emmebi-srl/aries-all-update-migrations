@@ -19302,6 +19302,12 @@ CREATE PROCEDURE sp_ariesDepotsReportProductInsert(
 BEGIN
 	DECLARE operation_id BIGINT(11);
 	DECLARE causal_id INT(11);
+	DECLARE report_execution_date DATE;
+
+	SELECT data_esecuzione
+	INTO report_execution_date
+	FROM rapporto
+	WHERE rapporto_id = report_id AND anno = report_year;
 
 	SELECT id_causale
 	INTO causal_id
@@ -19313,7 +19319,7 @@ BEGIN
 		quantity * -1,
 		product_code,
 		depot_id,
-		CURRENT_DATE,
+		report_execution_date,
 		2,
 		causal_id,
 		operation_id
@@ -19533,19 +19539,28 @@ CREATE PROCEDURE sp_ariesDepotsScaleByReport(
 BEGIN
 	DECLARE done INT DEFAULT 0;
 	DECLARE V_id_tab INT;
-	DECLARE V_curA CURSOR FOR SELECT Id_tab
+	DECLARE V_id_materiale INT;
+	DECLARE allow_insert BIT(1);
+	DECLARE V_curA CURSOR FOR SELECT Id_tab, id_materiale
 		FROM rapporto_materiale
 		WHERE id_rapporto = report_id AND anno = report_year;
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 	
 	OPEN V_curA;
 	loopA: LOOP
-		FETCH V_curA INTO V_id_tab;
+		FETCH V_curA INTO V_id_tab, V_id_materiale;
 		IF done = 1 THEN 
 			LEAVE loopA;
 		END IF;
-		
-		CALL sp_ariesDepotsScaleByReportProduct(report_id, report_year, V_id_tab);
+
+		IF V_id_materiale IS NOT NULL THEN
+			SELECT  fnc_productAllowDepotsScale(V_id_materiale)
+				INTO allow_insert;
+
+			IF allow_insert THEN
+				CALL sp_ariesDepotsScaleByReportProduct(report_id, report_year, V_id_tab);
+			END IF;
+		END IF;
 	END LOOP;
 	CLOSE V_curA;
 END $$

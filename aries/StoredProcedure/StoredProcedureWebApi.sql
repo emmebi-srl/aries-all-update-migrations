@@ -4414,12 +4414,14 @@ BEGIN
 		`impianto`.`combinatore_telefonico` AS `combinatore_telefonico`,
 		`impianto`.`orario_prog` AS `orario_prog`,
 		clienti.ragione_sociale AS `ragione_sociale`,
-		checklist_model_impianto.id_checklist
+		checklist_model_impianto.id_checklist,
+		abbonamento.nome as abbonamento
 	FROM `impianto`
 		LEFT JOIN checklist_model_impianto ON impianto.id_impianto = checklist_model_impianto.id_impianto
 		INNER JOIN clienti ON impianto.id_cliente = clienti.id_cliente
 		INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 		INNER JOIN stato_impianto ON id_stato = Stato
+		INNER JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
 	WHERE ((`impianto`.`Stato` < 4) OR (`impianto`.`Stato` > 7))
 		AND  (
 			(description IS NOT NULL AND impianto.descrizione LIKE CONCAT("%", description, "%"))
