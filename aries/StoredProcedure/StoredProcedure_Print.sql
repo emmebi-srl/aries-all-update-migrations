@@ -2175,3 +2175,40 @@ BEGIN
 
 END $$
 DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_printDepotOperations; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printDepotOperations`(
+	IN date_from DATE,
+	IN date_to DATE,
+	IN product_code VARCHAR(50)
+)
+BEGIN
+	SELECT
+		Id_operazione AS "ID Operazione",
+		mo.`Data` AS "Data Operazione",
+		mos.nome AS 'Sorgente',
+		mo.Articolo AS "Codice Interno",
+		articolo.Codice_fornitore AS "Codice Fornitore",
+		articolo.Desc_brev AS "Descrizione",
+		marca.Nome as 'Marca',
+		categoria_merciologica.Nome as 'Categoria Merceologica',
+		IFNULL(listino_prezzo.Prezzo, 0) AS Prezzo,
+		IFNULL(listino_costo.Prezzo, 0) AS Costo,
+		mo.`quantità` AS "Quantità Movimentata",
+		tm.nome AS "Magazzino",
+		m.giacenza AS "Giacenza Magazzino Oggi"
+	FROM magazzino_operazione mo
+		INNER JOIN tipo_magazzino tm ON tm.Id_tipo = mo.id_magazzino
+		INNER JOIN magazzino_operazione_sorgente mos ON mo.sorgente = mos.id
+		INNER JOIN articolo ON articolo.Codice_articolo = mo.Articolo
+		INNER JOIN magazzino m ON m.tipo_magazzino = mo.id_magazzino AND m.Id_articolo = mo.Articolo
+		LEFT JOIN marca ON articolo.Marca = marca.Id_marca
+		LEFT JOIN categoria_merciologica ON categoria_merciologica.Id_categoria = articolo.categoria
+		LEFT JOIN articolo_listino AS listino_prezzo ON listino_prezzo.Id_articolo = articolo.Codice_articolo AND listino_prezzo.id_listino = fnc_productInternalPriceId()
+		LEFT JOIN articolo_listino AS listino_costo ON listino_costo.Id_articolo = articolo.Codice_articolo AND listino_costo.id_listino = fnc_productInternalCostId()
+	WHERE mo.Articolo = IFNULL(product_code, mo.Articolo) AND mo.`Data` <= IFNULL(date_to, mo.`Data`) AND mo.`Data` >= IFNULL(date_from, mo.`Data`)
+	ORDER BY mo.`Data` DESC, id_operazione DESC;	
+END $$
+DELIMITER ;

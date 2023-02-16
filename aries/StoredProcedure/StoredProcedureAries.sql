@@ -22356,3 +22356,20 @@ END//
 DELIMITER ;
 
 
+DROP PROCEDURE IF EXISTS sp_ariesUserRolesGetyUserId;
+DELIMITER //
+CREATE PROCEDURE sp_ariesUserRolesGetyUserId (
+	IN user_id INT(11)
+)
+BEGIN
+	SELECT 
+		utente_roles.id, 
+		utente_utente_roles.id_utente,
+		nome, 
+		descrizione,
+		app_name
+	FROM utente_roles
+		INNER JOIN utente_utente_roles ON utente_utente_roles.id_utente_roles = utente_roles.id
+	WHERE id_utente = user_id;
+END; //
+DELIMITER ;
