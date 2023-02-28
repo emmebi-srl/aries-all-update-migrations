@@ -159,10 +159,10 @@ CREATE PROCEDURE `sp_searchDepotsTotals`(
 BEGIN 
 	SELECT tipo_magazzino.*,
 		IFNULL(SUM(giacenza), 0) AS totale_articoli,
-		IFNULL(SUM(prezzo*giacenza), 0) AS totale
+		IFNULL(SUM(IFNULL(prezzo, 0)*giacenza), 0) AS totale
 	FROM tipo_magazzino
 		LEFT JOIN magazzino ON id_tipo=tipo_Magazzino
-		INNER JOIN articolo_listino ON id_listino=1 AND magazzino.id_articolo=articolo_listino.id_articolo
+		LEFT JOIN articolo_listino ON id_listino=fnc_productInternalCostId() AND magazzino.id_articolo=articolo_listino.id_articolo
 	WHERE IF(allow_disabled, TRUE, tipo_Magazzino.disabilitato = 0)
 	GROUP BY id_tipo
 	HAVING IF(allow_zero_stock, TRUE, totale_articoli <> 0)
