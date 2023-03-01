@@ -2197,6 +2197,9 @@ BEGIN
 		articolo_stato.Nome AS "Stato Articolo",
 		marca.Nome as 'Marca',
 		categoria_merciologica.Nome as 'Categoria Merceologica',
+		sottocategoria.Nome as 'Sottocategoria Merceologica',
+		articolo.tempo_installazione as 'Tempo Installazione (Minuti)',
+		articolo.scadenza as 'Scadenza (Mesi)',
 		IFNULL(listino_prezzo.Prezzo, 0) AS Prezzo,
 		IFNULL(listino_costo.Prezzo, 0) AS Costo,
 		mo.`quantità` AS "Quantità Movimentata",
@@ -2210,6 +2213,7 @@ BEGIN
 		INNER JOIN magazzino m ON m.tipo_magazzino = mo.id_magazzino AND m.Id_articolo = mo.Articolo
 		LEFT JOIN marca ON articolo.Marca = marca.Id_marca
 		LEFT JOIN categoria_merciologica ON categoria_merciologica.Id_categoria = articolo.categoria
+		LEFT JOIN sottocategoria ON sottocategoria.Id_sottocategoria = articolo.sottocategoria AND sottocategoria.Id_categoria = articolo.categoria
 		LEFT JOIN articolo_listino AS listino_prezzo ON listino_prezzo.Id_articolo = articolo.Codice_articolo AND listino_prezzo.id_listino = fnc_productInternalPriceId()
 		LEFT JOIN articolo_listino AS listino_costo ON listino_costo.Id_articolo = articolo.Codice_articolo AND listino_costo.id_listino = fnc_productInternalCostId()
 	WHERE mo.Articolo = IFNULL(product_code, mo.Articolo) AND mo.`Data` <= IFNULL(date_to, mo.`Data`) AND mo.`Data` >= IFNULL(date_from, mo.`Data`)
