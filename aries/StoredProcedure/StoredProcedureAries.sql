@@ -11813,6 +11813,7 @@ BEGIN
 		firma2,
 		firma3, 
 		Id_tipo_sorgente, 
+		Id_tipo_rapporto,
 		filename_firma_cliente,
 		filename_firma_tecnico, 
 		usa_firma_su_ddt, 
@@ -11872,6 +11873,7 @@ BEGIN
 		firma2,
 		firma3, 
 		Id_tipo_sorgente, 
+		Id_tipo_rapporto,
 		filename_firma_cliente,
 		filename_firma_tecnico, 
 		usa_firma_su_ddt, 
@@ -11933,6 +11935,7 @@ BEGIN
 		firma2,
 		firma3, 
 		Id_tipo_sorgente, 
+		Id_tipo_rapporto,
 		filename_firma_cliente,
 		filename_firma_tecnico, 
 		usa_firma_su_ddt, 
@@ -11994,6 +11997,7 @@ BEGIN
 		firma2,
 		firma3, 
 		Id_tipo_sorgente, 
+		Id_tipo_rapporto,
 		filename_firma_cliente,
 		filename_firma_tecnico, 
 		usa_firma_su_ddt, 
@@ -12053,6 +12057,7 @@ BEGIN
 		firma2,
 		firma3, 
 		Id_tipo_sorgente, 
+		Id_tipo_rapporto,
 		filename_firma_cliente,
 		filename_firma_tecnico, 
 		usa_firma_su_ddt, 
@@ -12112,7 +12117,8 @@ BEGIN
 		firma1,
 		firma2,
 		firma3, 
-		Id_tipo_sorgente, 
+		Id_tipo_sorgente,
+		Id_tipo_rapporto, 
 		filename_firma_cliente,
 		filename_firma_tecnico,
 		usa_firma_su_ddt, 
@@ -12173,6 +12179,7 @@ BEGIN
 		firma2,
 		firma3, 
 		Id_tipo_sorgente, 
+		Id_tipo_rapporto,
 		filename_firma_cliente,
 		filename_firma_tecnico,
 		usa_firma_su_ddt, 
@@ -12237,7 +12244,8 @@ BEGIN
 		filename_firma_tecnico,
 		usa_firma_su_ddt, 
 		filename_firma_per_ddt,
-		numero_allegati
+		numero_allegati,
+		Id_tipo_rapporto
 	FROM rapporto
 	WHERE Id_impianto = system_id
 	ORDER BY anno desc, data_esecuzione desc, Id_rapporto desc;
@@ -12293,6 +12301,7 @@ BEGIN
 		firma2,
 		firma3, 
 		Id_tipo_sorgente, 
+		Id_tipo_rapporto,
 		filename_firma_cliente,
 		filename_firma_tecnico,
 		usa_firma_su_ddt, 
@@ -18098,6 +18107,7 @@ BEGIN
 		firma2,
 		firma3, 
 		Id_tipo_sorgente, 
+		Id_tipo_rapporto,
 		filename_firma_cliente,
 		filename_firma_tecnico, 
 		usa_firma_su_ddt, 
@@ -18161,6 +18171,7 @@ BEGIN
 		firma2,
 		firma3, 
 		Id_tipo_sorgente, 
+		Id_tipo_rapporto,
 		filename_firma_cliente,
 		filename_firma_tecnico, 
 		usa_firma_su_ddt, 
@@ -19310,7 +19321,7 @@ BEGIN
 	SELECT data_esecuzione
 	INTO report_execution_date
 	FROM rapporto
-	WHERE rapporto_id = report_id AND anno = report_year;
+	WHERE id_rapporto = report_id AND anno = report_year;
 
 	SELECT id_causale
 	INTO causal_id

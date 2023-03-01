@@ -1818,11 +1818,13 @@ BEGIN
 		SUBSTRING(rapporto.relazione, 1, 85) as 'relazione',
 		IFNULL(impianto.Descrizione, '') as 'impianto',
 		rapporto_totali.costo_totale,
-		rapporto_totali.prezzo_totale
+		rapporto_totali.prezzo_totale,
+		tr.nome as 'tipo_rapporto'
 	FROM rapporto
 		INNER JOIN stato_rapporto ON stato_rapporto.Id_stato = rapporto.stato
 		INNER JOIN tipo_intervento ON tipo_intervento.Id_tipo = rapporto.Tipo_intervento
 		INNER JOIN impianto ON impianto.Id_impianto = rapporto.Id_Impianto
+		LEFT JOIN tipo_rapporto tr ON rapporto.id_tipo_rapporto = tr.id
 		INNER JOIN rapporto_totali ON rapporto_totali.id_rapporto = rapporto.Id_rapporto and rapporto_totali.anno = rapporto.Anno
 	WHERE rapporto.id_cliente = customer_id AND IF(system_id > 0, rapporto.Id_Impianto, system_id) = system_id
 	GROUP BY rapporto.anno, rapporto.Id_rapporto
@@ -2133,7 +2135,7 @@ BEGIN
 		INNER JOIN impianto ON vw_systems_components_detail.id_impianto = impianto.Id_impianto
 		INNER JOIN stato_impianto ON impianto.Stato = stato_impianto.Id_stato
 		INNER JOIN tipo_impianto ON impianto.Tipo_impianto = tipo_impianto.Id_tipo
-		INNER JOIN abbonamento ON impianto.Abbonamento = abbonamento.Id_abbonamento
+		LEFT JOIN abbonamento ON impianto.Abbonamento = abbonamento.Id_abbonamento
 		INNER JOIN articolo ON articolo.Codice_articolo = vw_systems_components_detail.id_articolo
 		INNER JOIN articolo_stato ON articolo.Stato_articolo = articolo_stato.Id_stato
 		INNER JOIN articolo_listino AS listino_prezzo ON listino_prezzo.id_articolo = vw_systems_components_detail.id_articolo AND listino_prezzo.id_listino = fnc_productInternalPriceId()
@@ -2192,6 +2194,7 @@ BEGIN
 		mo.Articolo AS "Codice Interno",
 		articolo.Codice_fornitore AS "Codice Fornitore",
 		articolo.Desc_brev AS "Descrizione",
+		articolo_stato.Nome AS "Stato Articolo",
 		marca.Nome as 'Marca',
 		categoria_merciologica.Nome as 'Categoria Merceologica',
 		IFNULL(listino_prezzo.Prezzo, 0) AS Prezzo,
@@ -2203,6 +2206,7 @@ BEGIN
 		INNER JOIN tipo_magazzino tm ON tm.Id_tipo = mo.id_magazzino
 		INNER JOIN magazzino_operazione_sorgente mos ON mo.sorgente = mos.id
 		INNER JOIN articolo ON articolo.Codice_articolo = mo.Articolo
+		INNER JOIN articolo_stato ON articolo.Stato_articolo = articolo_stato.Id_stato
 		INNER JOIN magazzino m ON m.tipo_magazzino = mo.id_magazzino AND m.Id_articolo = mo.Articolo
 		LEFT JOIN marca ON articolo.Marca = marca.Id_marca
 		LEFT JOIN categoria_merciologica ON categoria_merciologica.Id_categoria = articolo.categoria

@@ -437,7 +437,7 @@ BEGIN
 	FROM `impianto`
 		INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 		INNER JOIN stato_impianto ON id_stato = Stato
-		INNER JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
+		LEFT JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
 		LEFT JOIN checklist_model_impianto ON impianto.id_impianto = checklist_model_impianto.id_impianto
 	WHERE ((`impianto`.`Stato`                       < 4) OR (`impianto`.`Stato`                       > 7))
 	GROUP BY `impianto`.`Id_impianto`;
@@ -483,7 +483,7 @@ BEGIN
 		FROM impianto
 			INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 			INNER JOIN stato_impianto ON id_stato = Stato
-			INNER JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
+			LEFT JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
 			INNER JOIN destinazione_cliente ON impianto.Id_cliente = destinazione_cliente.id_cliente AND impianto.Destinazione = destinazione_cliente.Id_destinazione
 		WHERE ((`impianto`.`Stato`                       < 4) OR (`impianto`.`Stato`                       > 7)) AND destinazione_cliente.latitudine IS NOT NULL AND destinazione_cliente.latitudine > 0
 	) AS result
@@ -521,7 +521,7 @@ BEGIN
 		INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 		INNER JOIN stato_impianto ON id_stato = Stato
 		LEFT JOIN checklist_model_impianto ON impianto.id_impianto = checklist_model_impianto.id_impianto
-		INNER JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
+		LEFT JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
 	WHERE FIND_IN_SET(`impianto`.`Id_impianto`, system_ids);
 END; //
 DELIMITER ;
@@ -551,7 +551,7 @@ BEGIN
 		INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 		INNER JOIN stato_impianto ON id_stato = Stato
 		LEFT JOIN checklist_model_impianto ON impianto.id_impianto = checklist_model_impianto.id_impianto
-		INNER JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
+		LEFT JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
 	WHERE impianto.id_impianto = id;
 END; //
 DELIMITER ;
@@ -3349,15 +3349,13 @@ CREATE PROCEDURE sp_apiSystemSImTopUpGetToNotify (
 )
 BEGIN
 
-	DECLARE start_date DATE; 
 	DECLARE end_date DATE; 
 	
 	DECLARE months_number SMALLINT;
 	SELECT IFNULL(Numero_mesi, 1) INTO months_number 
 	FROM servizio_alert_configurazione 
 	WHERE Id = 2;
-
-	SET start_date = CAST(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 MONTH),'%Y-%m-01') AS DATE);
+	
 	SET end_date = LAST_DAY(DATE_ADD(NOW(), INTERVAL months_number MONTH));
 
 	SELECT impianto_ricarica_tipo.id,
@@ -4134,7 +4132,7 @@ BEGIN
 		costo_totale,
 		id_documento_ricezione
 	FROM Fattura
-	WHERE CURDATE() > DATE_ADD(Fattura.data, INTERVAL 5 DAY) AND Inviato = 0 AND (Anno > 2019 OR Anno = 0)
+	WHERE CURDATE() > DATE_ADD(Fattura.data, INTERVAL 5 DAY) AND Inviato = 0 AND (Anno > 2019 OR Anno = 0) 
 	ORDER BY DATA ASC;
 END//
 DELIMITER ;
@@ -4421,7 +4419,7 @@ BEGIN
 		INNER JOIN clienti ON impianto.id_cliente = clienti.id_cliente
 		INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 		INNER JOIN stato_impianto ON id_stato = Stato
-		INNER JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
+		LEFT JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
 	WHERE ((`impianto`.`Stato` < 4) OR (`impianto`.`Stato` > 7))
 		AND  (
 			(description IS NOT NULL AND impianto.descrizione LIKE CONCAT("%", description, "%"))

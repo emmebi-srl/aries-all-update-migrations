@@ -459,7 +459,8 @@ BEGIN
 		mail_responsabile, 
 		invia_a_tecnico,
 		da_reperibilita_telefonica,
-		id_tecnico
+		id_tecnico,
+		tipo_rapporto
 	)
 	SELECT
 		rapporto_mobile_collaudo.id_rapporto, -- id_rapporto = id,
@@ -526,7 +527,8 @@ BEGIN
 		"", -- mail_responsabile = email_responsible, 
 		0, -- invia_a_tecnico = send_to_technician,
 		0, -- da_reperibilita_telefonica = is_telephone_avaibility,
-		rapporto_mobile_collaudo.Operaio_inserimento -- id_tecnico = technician_sender_id
+		rapporto_mobile_collaudo.Operaio_inserimento, -- id_tecnico = technician_sender_id
+		3 -- report_type 
 	FROM rapporto_mobile_collaudo
 	WHERE Id_rapporto = ReportId AND anno = ReportYear; 
 
