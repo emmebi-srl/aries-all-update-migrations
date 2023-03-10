@@ -9964,47 +9964,48 @@ DROP PROCEDURE IF EXISTS sp_ariesProductGet;
 DELIMITER //
 CREATE  PROCEDURE `sp_ariesProductGet`( 
 )
-BEGIN
-        
-
-SELECT
-	Codice_articolo, 
-	IFNULL(Desc_Brev, "") AS Desc_brev,
-	IFNULL(Codice_fornitore, "") AS Codice_fornitore, 
-	IFNULL(Marca, "") AS MArca, 
-	Peso, 
-	IFNULL(Altre_Caratteristiche, "") AS Altre_Caratteristiche,
-	IFNULL(Scadenza, 0) AS scadenza, 
-	IFNULL(Fornitore_priv, 0) AS Fornitore_priv, 
-	Tempo_installazione, 
-	IFNULL(Categoria, 0) AS Categoria, 
-	IFNULL(SottoCategoria, 0) AS Sottocategoria, 
-	IFNULL(Sottocategoria2, 0) AS Sottocategoria2, 
-	IFNULL(Barcode, "") AS Barcode, 
-	Quantita_massima, 
-	Quantita_minima, 
-	NUmero_confezione, 
-	IFNULL(Unità_misura,  "") AS Unità_misura, 
-	IFNULL(ult_vendita, 0) AS ult_vendita, 
-	IFNULL(garanzia, 0) AS Garanzia, 
-	IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
-	Stato_articolo, 
-	Data_inserimento, 
-	uso_consumo,
-	IFNULL(umidità, 0) as umidità, 
-	IFNULL(min, 0) as min, 
-	IFNULL(max, 0) AS max,
-	IFNULL(l, 0) AS l, 
-	IFNULL(h, 0) AS h, 
-	IFNULL(p, 0) AS p,
-	modifica, 
-	kw, 
-	litri, 
-	kwp, 
-	IFNULL(Color, "") AS Color, 
-	moltiplicatore, 
-	Is_Kit
-FROM articolo; 
+BEGIN    
+	SELECT
+		Codice_articolo, 
+		IFNULL(Desc_Brev, "") AS Desc_brev,
+		IFNULL(Codice_fornitore, "") AS Codice_fornitore, 
+		IFNULL(Marca, "") AS MArca, 
+		Peso, 
+		IFNULL(Altre_Caratteristiche, "") AS Altre_Caratteristiche,
+		IFNULL(Scadenza, 0) AS scadenza, 
+		IFNULL(Fornitore_priv, 0) AS Fornitore_priv, 
+		Tempo_installazione, 
+		IFNULL(Categoria, 0) AS Categoria, 
+		IFNULL(SottoCategoria, 0) AS Sottocategoria, 
+		IFNULL(Sottocategoria2, 0) AS Sottocategoria2, 
+		IFNULL(Barcode, "") AS Barcode, 
+		Quantita_massima, 
+		Quantita_minima, 
+		NUmero_confezione, 
+		IFNULL(Unità_misura,  "") AS Unità_misura, 
+		IFNULL(ult_vendita, 0) AS ult_vendita, 
+		IFNULL(garanzia, 0) AS Garanzia, 
+		IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
+		Stato_articolo, 
+		Data_inserimento, 
+		uso_consumo,
+		IFNULL(umidità, 0) as umidità, 
+		IFNULL(min, 0) as min, 
+		IFNULL(max, 0) AS max,
+		IFNULL(l, 0) AS l, 
+		IFNULL(h, 0) AS h, 
+		IFNULL(p, 0) AS p,
+		modifica, 
+		kw, 
+		litri, 
+		kwp, 
+		IFNULL(Color, "") AS Color, 
+		moltiplicatore, 
+		Is_Kit,
+		articolo.scaffaliera_magazzino,
+		articolo.ripiano_magazzino,
+		articolo.descrizione_posizione_magazzino
+	FROM articolo; 
 			
 END//
 DELIMITER ;
@@ -10014,50 +10015,52 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS sp_ariesProductGetByBrand;
 DELIMITER //
 CREATE  PROCEDURE `sp_ariesProductGetByBrand`( 
-brand VARCHAR(5)
+	brand VARCHAR(5)
 )
 BEGIN
-        
-
-SELECT
-	Codice_articolo, 
-	IFNULL(Desc_Brev, "") AS Desc_brev,
-	IFNULL(Codice_fornitore, "") AS Codice_fornitore, 
-	IFNULL(Marca, "") AS MArca, 
-	Peso, 
-	IFNULL(Altre_Caratteristiche, "") AS Altre_Caratteristiche,
-	IFNULL(Scadenza, 0) AS scadenza, 
-	IFNULL(Fornitore_priv, 0) AS Fornitore_priv, 
-	Tempo_installazione, 
-	IFNULL(Categoria, 0) AS Categoria, 
-	IFNULL(SottoCategoria, 0) AS Sottocategoria, 
-	IFNULL(Sottocategoria2, 0) AS Sottocategoria2, 
-	IFNULL(Barcode, "") AS Barcode, 
-	Quantita_massima, 
-	Quantita_minima, 
-	NUmero_confezione, 
-	IFNULL(Unità_misura,  "") AS Unità_misura, 
-	IFNULL(ult_vendita, 0) AS ult_vendita, 
-	IFNULL(garanzia, 0) AS Garanzia, 
-	IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
-	Stato_articolo, 
-	Data_inserimento, 
-	uso_consumo,
-	IFNULL(umidità, 0) as umidità, 
-	IFNULL(min, 0) as min, 
-	IFNULL(max, 0) AS max,
-	IFNULL(l, 0) AS l, 
-	IFNULL(h, 0) AS h, 
-	IFNULL(p, 0) AS p,
-	modifica, 
-	kw, 
-	litri, 
-	kwp, 
-	IFNULL(Color, "") AS Color, 
-	moltiplicatore, 
-	Is_Kit
-FROM articolo
-WHERE marca  = brand; 
+  
+	SELECT
+		Codice_articolo, 
+		IFNULL(Desc_Brev, "") AS Desc_brev,
+		IFNULL(Codice_fornitore, "") AS Codice_fornitore, 
+		IFNULL(Marca, "") AS MArca, 
+		Peso, 
+		IFNULL(Altre_Caratteristiche, "") AS Altre_Caratteristiche,
+		IFNULL(Scadenza, 0) AS scadenza, 
+		IFNULL(Fornitore_priv, 0) AS Fornitore_priv, 
+		Tempo_installazione, 
+		IFNULL(Categoria, 0) AS Categoria, 
+		IFNULL(SottoCategoria, 0) AS Sottocategoria, 
+		IFNULL(Sottocategoria2, 0) AS Sottocategoria2, 
+		IFNULL(Barcode, "") AS Barcode, 
+		Quantita_massima, 
+		Quantita_minima, 
+		NUmero_confezione, 
+		IFNULL(Unità_misura,  "") AS Unità_misura, 
+		IFNULL(ult_vendita, 0) AS ult_vendita, 
+		IFNULL(garanzia, 0) AS Garanzia, 
+		IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
+		Stato_articolo, 
+		Data_inserimento, 
+		uso_consumo,
+		IFNULL(umidità, 0) as umidità, 
+		IFNULL(min, 0) as min, 
+		IFNULL(max, 0) AS max,
+		IFNULL(l, 0) AS l, 
+		IFNULL(h, 0) AS h, 
+		IFNULL(p, 0) AS p,
+		modifica, 
+		kw, 
+		litri, 
+		kwp, 
+		IFNULL(Color, "") AS Color, 
+		moltiplicatore, 
+		Is_Kit,
+		articolo.scaffaliera_magazzino,
+		articolo.ripiano_magazzino,
+		articolo.descrizione_posizione_magazzino
+	FROM articolo
+	WHERE marca  = brand; 
 			
 END//
 DELIMITER ;
@@ -10072,46 +10075,49 @@ category_id INT
 BEGIN
         
 
-SELECT
-	Codice_articolo, 
-	IFNULL(Desc_Brev, "") AS Desc_brev,
-	IFNULL(Codice_fornitore, "") AS Codice_fornitore, 
-	IFNULL(Marca, "") AS MArca, 
-	Peso, 
-	IFNULL(Altre_Caratteristiche, "") AS Altre_Caratteristiche,
-	IFNULL(Scadenza, 0) AS scadenza, 
-	IFNULL(Fornitore_priv, 0) AS Fornitore_priv, 
-	Tempo_installazione, 
-	IFNULL(Categoria, 0) AS Categoria, 
-	IFNULL(SottoCategoria, 0) AS Sottocategoria, 
-	IFNULL(Sottocategoria2, 0) AS Sottocategoria2, 
-	IFNULL(Barcode, "") AS Barcode, 
-	Quantita_massima, 
-	Quantita_minima, 
-	NUmero_confezione, 
-	IFNULL(Unità_misura,  "") AS Unità_misura, 
-	IFNULL(ult_vendita, 0) AS ult_vendita, 
-	IFNULL(garanzia, 0) AS Garanzia, 
-	IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
-	Stato_articolo, 
-	Data_inserimento, 
-	uso_consumo,
-	IFNULL(umidità, 0) as umidità, 
-	IFNULL(min, 0) as min, 
-	IFNULL(max, 0) AS max,
-	IFNULL(l, 0) AS l, 
-	IFNULL(h, 0) AS h, 
-	IFNULL(p, 0) AS p,
-	modifica, 
-	kw, 
-	litri, 
-	kwp, 
-	IFNULL(Color, "") AS Color, 
-	moltiplicatore, 
-	Is_Kit
-FROM articolo
-WHERE Caregoria  = category_id; 
-			
+	SELECT
+		Codice_articolo, 
+		IFNULL(Desc_Brev, "") AS Desc_brev,
+		IFNULL(Codice_fornitore, "") AS Codice_fornitore, 
+		IFNULL(Marca, "") AS MArca, 
+		Peso, 
+		IFNULL(Altre_Caratteristiche, "") AS Altre_Caratteristiche,
+		IFNULL(Scadenza, 0) AS scadenza, 
+		IFNULL(Fornitore_priv, 0) AS Fornitore_priv, 
+		Tempo_installazione, 
+		IFNULL(Categoria, 0) AS Categoria, 
+		IFNULL(SottoCategoria, 0) AS Sottocategoria, 
+		IFNULL(Sottocategoria2, 0) AS Sottocategoria2, 
+		IFNULL(Barcode, "") AS Barcode, 
+		Quantita_massima, 
+		Quantita_minima, 
+		NUmero_confezione, 
+		IFNULL(Unità_misura,  "") AS Unità_misura, 
+		IFNULL(ult_vendita, 0) AS ult_vendita, 
+		IFNULL(garanzia, 0) AS Garanzia, 
+		IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
+		Stato_articolo, 
+		Data_inserimento, 
+		uso_consumo,
+		IFNULL(umidità, 0) as umidità, 
+		IFNULL(min, 0) as min, 
+		IFNULL(max, 0) AS max,
+		IFNULL(l, 0) AS l, 
+		IFNULL(h, 0) AS h, 
+		IFNULL(p, 0) AS p,
+		modifica, 
+		kw, 
+		litri, 
+		kwp, 
+		IFNULL(Color, "") AS Color, 
+		moltiplicatore, 
+		Is_Kit,
+		articolo.scaffaliera_magazzino,
+		articolo.ripiano_magazzino,
+		articolo.descrizione_posizione_magazzino
+	FROM articolo
+	WHERE Caregoria  = category_id; 
+				
 END//
 DELIMITER ;
 
@@ -10123,48 +10129,50 @@ CREATE  PROCEDURE `sp_ariesProductGetById`(
 product_code VARCHAR(11)
 )
 BEGIN
-        
-
-SELECT
-	Codice_articolo, 
-	IFNULL(Desc_Brev, "") AS Desc_brev,
-	IFNULL(Codice_fornitore, "") AS Codice_fornitore, 
-	IFNULL(Marca, "") AS MArca, 
-	Peso, 
-	IFNULL(Altre_Caratteristiche, "") AS Altre_Caratteristiche,
-	IFNULL(Scadenza, 0) AS scadenza, 
-	IFNULL(Fornitore_priv, 0) AS Fornitore_priv, 
-	Tempo_installazione, 
-	IFNULL(Categoria, 0) AS Categoria, 
-	IFNULL(SottoCategoria, 0) AS Sottocategoria, 
-	IFNULL(Sottocategoria2, 0) AS Sottocategoria2, 
-	IFNULL(Barcode, "") AS Barcode, 
-	Quantita_massima, 
-	Quantita_minima, 
-	NUmero_confezione, 
-	IFNULL(Unità_misura,  "") AS Unità_misura, 
-	IFNULL(ult_vendita, 0) AS ult_vendita, 
-	IFNULL(garanzia, 0) AS Garanzia, 
-	IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
-	Stato_articolo, 
-	Data_inserimento, 
-	uso_consumo,
-	IFNULL(umidità, 0) as umidità, 
-	IFNULL(min, 0) as min, 
-	IFNULL(max, 0) AS max,
-	IFNULL(l, 0) AS l, 
-	IFNULL(h, 0) AS h, 
-	IFNULL(p, 0) AS p,
-	modifica, 
-	kw, 
-	litri, 
-	kwp, 
-	IFNULL(Color, "") AS Color, 
-	moltiplicatore, 
-	Is_Kit
-FROM articolo
-WHERE Codice_articolo = product_code; 
-			
+    
+	SELECT
+		Codice_articolo, 
+		IFNULL(Desc_Brev, "") AS Desc_brev,
+		IFNULL(Codice_fornitore, "") AS Codice_fornitore, 
+		IFNULL(Marca, "") AS MArca, 
+		Peso, 
+		IFNULL(Altre_Caratteristiche, "") AS Altre_Caratteristiche,
+		IFNULL(Scadenza, 0) AS scadenza, 
+		IFNULL(Fornitore_priv, 0) AS Fornitore_priv, 
+		Tempo_installazione, 
+		IFNULL(Categoria, 0) AS Categoria, 
+		IFNULL(SottoCategoria, 0) AS Sottocategoria, 
+		IFNULL(Sottocategoria2, 0) AS Sottocategoria2, 
+		IFNULL(Barcode, "") AS Barcode, 
+		Quantita_massima, 
+		Quantita_minima, 
+		NUmero_confezione, 
+		IFNULL(Unità_misura,  "") AS Unità_misura, 
+		IFNULL(ult_vendita, 0) AS ult_vendita, 
+		IFNULL(garanzia, 0) AS Garanzia, 
+		IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
+		Stato_articolo, 
+		Data_inserimento, 
+		uso_consumo,
+		IFNULL(umidità, 0) as umidità, 
+		IFNULL(min, 0) as min, 
+		IFNULL(max, 0) AS max,
+		IFNULL(l, 0) AS l, 
+		IFNULL(h, 0) AS h, 
+		IFNULL(p, 0) AS p,
+		modifica, 
+		kw, 
+		litri, 
+		kwp, 
+		IFNULL(Color, "") AS Color, 
+		moltiplicatore, 
+		Is_Kit,
+		articolo.scaffaliera_magazzino,
+		articolo.ripiano_magazzino,
+		articolo.descrizione_posizione_magazzino
+	FROM articolo
+	WHERE Codice_articolo = product_code; 
+				
 END//
 DELIMITER ;
 
@@ -10253,46 +10261,49 @@ product_code VARCHAR(11)
 BEGIN
         
 
-SELECT
-	Codice_articolo, 
-	IFNULL(Desc_Brev, "") AS Desc_brev,
-	IFNULL(Codice_fornitore, "") AS Codice_fornitore, 
-	IFNULL(Marca, "") AS MArca, 
-	Peso, 
-	IFNULL(Altre_Caratteristiche, "") AS Altre_Caratteristiche,
-	IFNULL(Scadenza, 0) AS scadenza, 
-	IFNULL(Fornitore_priv, 0) AS Fornitore_priv, 
-	Tempo_installazione, 
-	IFNULL(Categoria, 0) AS Categoria, 
-	IFNULL(SottoCategoria, 0) AS Sottocategoria, 
-	IFNULL(Sottocategoria2, 0) AS Sottocategoria2, 
-	IFNULL(Barcode, "") AS Barcode, 
-	Quantita_massima, 
-	Quantita_minima, 
-	NUmero_confezione, 
-	IFNULL(Unità_misura,  "") AS Unità_misura, 
-	IFNULL(ult_vendita, 0) AS ult_vendita, 
-	IFNULL(garanzia, 0) AS Garanzia, 
-	IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
-	Stato_articolo, 
-	Data_inserimento, 
-	uso_consumo,
-	IFNULL(umidità, 0) as umidità, 
-	IFNULL(min, 0) as min, 
-	IFNULL(max, 0) AS max,
-	IFNULL(l, 0) AS l, 
-	IFNULL(h, 0) AS h, 
-	IFNULL(p, 0) AS p,
-	modifica, 
-	kw, 
-	litri, 
-	kwp, 
-	IFNULL(Color, "") AS Color, 
-	moltiplicatore, 
-	Is_Kit
-FROM articolo
-WHERE Codice_articolo LIKE CONCAT("%", product_code, "%"); 
-			
+	SELECT
+		Codice_articolo, 
+		IFNULL(Desc_Brev, "") AS Desc_brev,
+		IFNULL(Codice_fornitore, "") AS Codice_fornitore, 
+		IFNULL(Marca, "") AS MArca, 
+		Peso, 
+		IFNULL(Altre_Caratteristiche, "") AS Altre_Caratteristiche,
+		IFNULL(Scadenza, 0) AS scadenza, 
+		IFNULL(Fornitore_priv, 0) AS Fornitore_priv, 
+		Tempo_installazione, 
+		IFNULL(Categoria, 0) AS Categoria, 
+		IFNULL(SottoCategoria, 0) AS Sottocategoria, 
+		IFNULL(Sottocategoria2, 0) AS Sottocategoria2, 
+		IFNULL(Barcode, "") AS Barcode, 
+		Quantita_massima, 
+		Quantita_minima, 
+		NUmero_confezione, 
+		IFNULL(Unità_misura,  "") AS Unità_misura, 
+		IFNULL(ult_vendita, 0) AS ult_vendita, 
+		IFNULL(garanzia, 0) AS Garanzia, 
+		IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
+		Stato_articolo, 
+		Data_inserimento, 
+		uso_consumo,
+		IFNULL(umidità, 0) as umidità, 
+		IFNULL(min, 0) as min, 
+		IFNULL(max, 0) AS max,
+		IFNULL(l, 0) AS l, 
+		IFNULL(h, 0) AS h, 
+		IFNULL(p, 0) AS p,
+		modifica, 
+		kw, 
+		litri, 
+		kwp, 
+		IFNULL(Color, "") AS Color, 
+		moltiplicatore, 
+		Is_Kit,
+		articolo.scaffaliera_magazzino,
+		articolo.ripiano_magazzino,
+		articolo.descrizione_posizione_magazzino
+	FROM articolo
+	WHERE Codice_articolo LIKE CONCAT("%", product_code, "%"); 
+				
 END//
 DELIMITER ;
 
@@ -10306,46 +10317,49 @@ product_code VARCHAR(11)
 BEGIN
         
 
-SELECT
-	Codice_articolo, 
-	IFNULL(Desc_Brev, "") AS Desc_brev,
-	IFNULL(Codice_fornitore, "") AS Codice_fornitore, 
-	IFNULL(Marca, "") AS MArca, 
-	Peso, 
-	IFNULL(Altre_Caratteristiche, "") AS Altre_Caratteristiche,
-	IFNULL(Scadenza, 0) AS scadenza, 
-	IFNULL(Fornitore_priv, 0) AS Fornitore_priv, 
-	Tempo_installazione, 
-	IFNULL(Categoria, 0) AS Categoria, 
-	IFNULL(SottoCategoria, 0) AS Sottocategoria, 
-	IFNULL(Sottocategoria2, 0) AS Sottocategoria2, 
-	IFNULL(Barcode, "") AS Barcode, 
-	Quantita_massima, 
-	Quantita_minima, 
-	NUmero_confezione, 
-	IFNULL(Unità_misura,  "") AS Unità_misura, 
-	IFNULL(ult_vendita, 0) AS ult_vendita, 
-	IFNULL(garanzia, 0) AS Garanzia, 
-	IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
-	Stato_articolo, 
-	Data_inserimento, 
-	uso_consumo,
-	IFNULL(umidità, 0) as umidità, 
-	IFNULL(min, 0) as min, 
-	IFNULL(max, 0) AS max,
-	IFNULL(l, 0) AS l, 
-	IFNULL(h, 0) AS h, 
-	IFNULL(p, 0) AS p,
-	modifica, 
-	kw, 
-	litri, 
-	kwp, 
-	IFNULL(Color, "") AS Color, 
-	moltiplicatore, 
-	Is_Kit
-FROM articolo
-WHERE Codice_articolo LIKE CONCAT("%", product_code, "%"); 
-			
+	SELECT
+		Codice_articolo, 
+		IFNULL(Desc_Brev, "") AS Desc_brev,
+		IFNULL(Codice_fornitore, "") AS Codice_fornitore, 
+		IFNULL(Marca, "") AS MArca, 
+		Peso, 
+		IFNULL(Altre_Caratteristiche, "") AS Altre_Caratteristiche,
+		IFNULL(Scadenza, 0) AS scadenza, 
+		IFNULL(Fornitore_priv, 0) AS Fornitore_priv, 
+		Tempo_installazione, 
+		IFNULL(Categoria, 0) AS Categoria, 
+		IFNULL(SottoCategoria, 0) AS Sottocategoria, 
+		IFNULL(Sottocategoria2, 0) AS Sottocategoria2, 
+		IFNULL(Barcode, "") AS Barcode, 
+		Quantita_massima, 
+		Quantita_minima, 
+		NUmero_confezione, 
+		IFNULL(Unità_misura,  "") AS Unità_misura, 
+		IFNULL(ult_vendita, 0) AS ult_vendita, 
+		IFNULL(garanzia, 0) AS Garanzia, 
+		IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
+		Stato_articolo, 
+		Data_inserimento, 
+		uso_consumo,
+		IFNULL(umidità, 0) as umidità, 
+		IFNULL(min, 0) as min, 
+		IFNULL(max, 0) AS max,
+		IFNULL(l, 0) AS l, 
+		IFNULL(h, 0) AS h, 
+		IFNULL(p, 0) AS p,
+		modifica, 
+		kw, 
+		litri, 
+		kwp, 
+		IFNULL(Color, "") AS Color, 
+		moltiplicatore, 
+		Is_Kit,
+		articolo.scaffaliera_magazzino,
+		articolo.ripiano_magazzino,
+		articolo.descrizione_posizione_magazzino
+	FROM articolo
+	WHERE Codice_articolo LIKE CONCAT("%", product_code, "%"); 
+				
 END//
 DELIMITER ;
 
@@ -10395,7 +10409,10 @@ BEGIN
 		kwp, 
 		IFNULL(Color, "") AS Color, 
 		moltiplicatore, 
-		Is_Kit
+		Is_Kit,
+		articolo.scaffaliera_magazzino,
+		articolo.ripiano_magazzino,
+		articolo.descrizione_posizione_magazzino
 	FROM articolo
 		LEFT JOIN articolo_nota ON articolo.Codice_articolo = articolo_nota.Id_articolo
 		LEFT JOIN articolo_codice ON articolo.codice_articolo = articolo_codice.id_articolo

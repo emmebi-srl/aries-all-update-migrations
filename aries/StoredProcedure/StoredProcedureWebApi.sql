@@ -720,7 +720,10 @@ BEGIN
 		marca.nome as 'marca', 
 		marca.id_marca,
 		listino_prezzo.prezzo as "prezzo_interno",
-		listino_costo.prezzo as "costo_interno"
+		listino_costo.prezzo as "costo_interno",
+		articolo.scaffaliera_magazzino,
+		articolo.ripiano_magazzino,
+		articolo.descrizione_posizione_magazzino
 	 FROM articolo 
 		LEFT JOIN marca ON marca.id_marca = articolo.marca
 		INNER JOIN articolo_listino AS listino_prezzo ON listino_prezzo.id_articolo = articolo.codice_articolo AND listino_prezzo.id_listino = fnc_productInternalPriceId()
@@ -749,7 +752,10 @@ BEGIN
 		marca.nome as 'marca', 
 		marca.id_marca,
 		listino_prezzo.prezzo as "prezzo_interno",
-		listino_costo.prezzo as "costo_interno"
+		listino_costo.prezzo as "costo_interno",
+		articolo.scaffaliera_magazzino,
+		articolo.ripiano_magazzino,
+		articolo.descrizione_posizione_magazzino
 	 FROM articolo 
 		LEFT JOIN marca ON marca.id_marca = articolo.marca
 		LEFT JOIN articolo_codice ON articolo.codice_articolo = articolo_codice.id_articolo
@@ -783,7 +789,10 @@ BEGIN
 		marca.nome as 'marca', 
 		marca.id_marca,
 		listino_prezzo.prezzo as "prezzo_interno",
-		listino_costo.prezzo as "costo_interno"
+		listino_costo.prezzo as "costo_interno",
+		articolo.scaffaliera_magazzino,
+		articolo.ripiano_magazzino,
+		articolo.descrizione_posizione_magazzino
 	 FROM articolo 
 		LEFT JOIN marca ON marca.id_marca = articolo.marca
 		LEFT JOIN articolo_codice ON articolo.codice_articolo = articolo_codice.id_articolo
