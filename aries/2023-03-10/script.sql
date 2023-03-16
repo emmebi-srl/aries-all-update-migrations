@@ -7,3 +7,4 @@ ALTER TABLE `articolo_operazione`
 ALTER TABLE `riferimento_kit_articoli`
 	ADD CONSTRAINT `FK_referimento_kit_articoli_kit` FOREIGN KEY (`id_kit`) REFERENCES `articolo` (`Codice_articolo`) ON UPDATE CASCADE ON DELETE CASCADE,
 	ADD CONSTRAINT `FK_referimento_kit_articoli_componente` FOREIGN KEY (`id_articolo`) REFERENCES `articolo` (`Codice_articolo`) ON UPDATE CASCADE ON DELETE RESTRICT;
+
