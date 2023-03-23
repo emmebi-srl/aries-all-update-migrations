@@ -90,20 +90,33 @@ BEGIN
 		commessa_lotto.anno,
 		commessa_lotto.id_sottocommessa,
 		commessa_lotto.id_lotto,
-		commessa_lotto.descrizione,
+		commessa_lotto.Descrizione,
+		commessa_lotto.impianto as id_impianto,
+		impianto.Descrizione as impianto,
+		CONCAT(destinazione_cliente.Indirizzo, ", ", destinazione_cliente.numero_civico, " - ", 
+			comune.cap," ", 
+			IF(Frazione.nome IS NULL, "", Concat(Frazione.nome , " di ")), 
+			IFNULL(comune.Nome, "")) AS indirizzo_impianto, 
 		IFNULL(SUM(Qta_preventivati*(Tempo_Installazione/60)), 0) AS "Da_fare",
 		IFNULL(SUM(Qta_preventivati*(Tempo_Installazione/60)*(prezzo_ora-prezzo_ora/100*sconto)), 0) AS "prezzo_lav_tot",
 		IFNULL(SUM(Qta_preventivati*(prezzo - prezzo/100*sconto)),0) AS "prezzo_mat_tot",
 		IFNULL(SUM(Qta_preventivati*(Tempo_Installazione/60)*costo_ora), 0) AS "costo_lav_tot",
-		IFNULL(SUM(Qta_preventivati*costo), 0) AS "costo_mat_tot" 
+		IFNULL(SUM(Qta_preventivati*costo), 0) AS "costo_mat_tot",
+		COUNT(a.id_commessa) = 0 AS lotto_vuoto
 	FROM
 		commessa_lotto 
-	LEFT JOIN
-		vw_jobbody AS a 
-			ON a.id_commessa=commessa_lotto.id_commessa 
-			AND a.anno=commessa_lotto.anno 
-			AND a.id_sottocommessa = commessa_lotto.id_sottocommessa
-			AND a.lotto=commessa_lotto.id_lotto  
+		LEFT JOIN
+			vw_jobbody AS a 
+				ON a.id_commessa=commessa_lotto.id_commessa 
+				AND a.anno=commessa_lotto.anno 
+				AND a.id_sottocommessa = commessa_lotto.id_sottocommessa
+				AND a.lotto=commessa_lotto.id_lotto  
+		LEFT JOIN impianto ON impianto.id_impianto = commessa_lotto.impianto
+		LEFT JOIN destinazione_cliente ON destinazione_cliente.id_cliente = impianto.id_cliente and destinazione = id_destinazione
+		LEFT JOIN Comune ON
+			destinazione_cliente.Comune = comune.Id_comune
+		LEFT JOIN frazione ON
+			destinazione_cliente.Frazione = frazione.Id_frazione 
 	WHERE
 		commessa_lotto.id_commessa = job_id
 		AND commessa_lotto.anno = job_year
