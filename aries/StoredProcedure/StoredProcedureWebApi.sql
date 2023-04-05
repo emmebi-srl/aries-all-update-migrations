@@ -4383,7 +4383,6 @@ BEGIN
 		`percorso_default_aggiornamento`,
 		`giorni_avviso_rapporto`,
 		`regime_fiscale`,
-		`fattura_pa_api_key`,
 		aries_web_host,
 		`Data_fine`,
 		`Data_ins`,

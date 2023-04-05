@@ -1977,8 +1977,7 @@ BEGIN
 	IFNULL(percorso_default_aggiornamento, "") as "percorso_default_aggiornamento",
 	IFNULL(giorni_avviso_rapporto, 0) as "giorni_avviso_rapporto",
 	IFNULL(regime_fiscale, "") as "regime_fiscale",
-	IFNULL(Data_fine, CAST("1970-01-01 00:00:00" AS DATETIME) ) AS Data_fine, 
-	fattura_pa_api_key,
+	IFNULL(Data_fine, CAST("1970-01-01 00:00:00" AS DATETIME) ) AS Data_fine,
 	aries_web_host,
 	Data_ins, 
 	Data_mod, 
@@ -2057,8 +2056,7 @@ BEGIN
 	IFNULL(percorso_default_aggiornamento, "") as "percorso_default_aggiornamento",
 	IFNULL(giorni_avviso_rapporto, 0) as "giorni_avviso_rapporto",
 	IFNULL(regime_fiscale, "") as "regime_fiscale",
-	IFNULL(Data_fine, CAST("1970-01-01 00:00:00" AS DATETIME) ) AS Data_fine, 
-	fattura_pa_api_key,
+	IFNULL(Data_fine, CAST("1970-01-01 00:00:00" AS DATETIME) ) AS Data_fine,
 	aries_web_host,
 	Data_ins, 
 	Data_mod, 
@@ -2136,8 +2134,7 @@ BEGIN
 	IFNULL(percorso_default_aggiornamento, "") as "percorso_default_aggiornamento",
 	IFNULL(giorni_avviso_rapporto, 0) as "giorni_avviso_rapporto",
 	IFNULL(regime_fiscale, "") as "regime_fiscale",
-	IFNULL(Data_fine, CAST("1970-01-01 00:00:00" AS DATETIME) ) AS Data_fine, 
-	fattura_pa_api_key,
+	IFNULL(Data_fine, CAST("1970-01-01 00:00:00" AS DATETIME) ) AS Data_fine,
 	aries_web_host,
 	Data_ins, 
 	Data_mod, 
@@ -22111,9 +22108,15 @@ BEGIN
 	DECLARE total_products_cost DECIMAL(11,2);
 	DECLARE total_price DECIMAL(11,2);
 	DECLARE total_cost DECIMAL(11,2);
+	DECLARE total_maintenance_price DECIMAL(11,2);
+	DECLARE right_of_call_cost DECIMAL(11,2);
+	DECLARE right_of_call_price DECIMAL(11,2);
 
 	
 	SELECT
+		SUM(prezzo_manutenzione),
+		SUM(costo_diritto_chiamata),
+		SUM(prezzo_diritto_chiamata),
 		SUM(costo_lavoro),
 		SUM(prezzo_lavoro),
 		SUM(costo_viaggio),
@@ -22123,6 +22126,9 @@ BEGIN
 		SUM(costo_totale),
 		SUM(prezzo_totale)
 	INTO
+		total_maintenance_price,
+		right_of_call_cost,
+		right_of_call_price,
 		total_work_cost,
 		total_work_price,
 		total_trip_cost,
@@ -22137,6 +22143,9 @@ BEGIN
 
 
 
+	SET total_maintenance_price = IFNULL(total_maintenance_price, 0);
+	SET right_of_call_cost = IFNULL(right_of_call_cost, 0);
+	SET right_of_call_price = IFNULL(right_of_call_price, 0);
 	SET total_work_cost = IFNULL(total_work_cost, 0);
 	SET total_work_price = IFNULL(total_work_price, 0);
 	SET total_trip_cost = IFNULL(total_trip_cost, 0);
@@ -22148,6 +22157,9 @@ BEGIN
 
 	UPDATE resoconto_totali
 	SET 
+		prezzo_manutenzione = total_maintenance_price,
+		costo_diritto_chiamata = right_of_call_cost,
+		prezzo_diritto_chiamata = right_of_call_price,
 		costo_lavoro = total_work_cost,
 		prezzo_lavoro = total_work_price,
 		costo_viaggio = total_trip_cost,
@@ -22170,6 +22182,7 @@ CREATE PROCEDURE `sp_ariesReportTotalsRefresh`(
 	IN report_year INT(11)
 )
 BEGIN
+	DECLARE total_maintenance_price DECIMAL(11,2);
 	DECLARE total_trip_price DECIMAL(11,2);
 	DECLARE total_trip_cost DECIMAL(11,2);
 	DECLARE total_work_price DECIMAL(11,2);
@@ -22212,6 +22225,12 @@ BEGIN
 		SET right_of_call_price = 0;
 	END IF;
 
+	SELECT controllo_periodico
+	INTO total_maintenance_price
+	FROM rapporto
+	WHERE id_rapporto = report_id AND anno = report_year;
+	
+
 	SELECT SUM(CAST(ROUND(IFNULL(ora_normale, 0) * (totale / 60), 2) AS DECIMAL(10, 2))) as 'prezzo_lavoro',
 		SUM(CAST(ROUND(IF(straordinario = 1, IFNULL(straordinario_c, default_hourly_cost_extra), IFNULL(costo_h, default_hourly_cost)) * (totale / 60), 2) AS DECIMAL(10, 2))) as 'costo_lavoro'
 		INTO total_work_price, total_work_cost
@@ -22234,7 +22253,7 @@ BEGIN
 	GROUP BY rapporto_tecnico.id_rapporto, rapporto_tecnico.anno;
 
 	SELECT SUM(CAST(ROUND(ROUND(IFNULL(prezzo, 0) * (100 - IFNULL(sconto, 0)) / 100, 2) * IFNULL(quantità, 0), 2)  AS DECIMAL(11, 2))) as Prezzo_materiale,
-		SUM(CAST(ROUND(ROUND(IFNULL(costo, 0) * (100 - IFNULL(sconto, 0)) / 100, 2) * IFNULL(quantità, 0), 2)  AS DECIMAL(11, 2))) as Costo_materiale
+		SUM(CAST(ROUND(ROUND(IFNULL(costo, 0), 2) * IFNULL(quantità, 0), 2)  AS DECIMAL(11, 2))) as Costo_materiale
 		INTO total_products_price,
 		total_products_cost
 	FROM rapporto_materiale
@@ -22243,15 +22262,22 @@ BEGIN
 
 	SET total_work_cost = IFNULL(total_work_cost, 0);
 	SET total_work_price = IFNULL(total_work_price, 0);
-	SET total_trip_cost = IFNULL(total_trip_cost, 0) + IFNULL(right_of_call_cost, 0);
-	SET total_trip_price = IFNULL(total_trip_price, 0) + IFNULL(right_of_call_price, 0);
+	SET total_trip_cost = IFNULL(total_trip_cost, 0);
+	SET total_trip_price = IFNULL(total_trip_price, 0);
 	SET total_products_cost = IFNULL(total_products_cost, 0);
 	SET total_products_price = IFNULL(total_products_price, 0);
-	SET total_cost = total_work_cost + total_trip_cost + total_products_cost;
-	SET total_price = total_work_price + total_trip_price + total_products_price;
+	SET right_of_call_cost = IFNULL(right_of_call_cost, 0);
+	SET right_of_call_price = IFNULL(right_of_call_price, 0);
+	SET total_maintenance_price = IFNULL(total_maintenance_price, 0);
+	SET total_cost = total_work_cost + total_trip_cost + total_products_cost + right_of_call_cost;
+	SET total_price = total_work_price + total_trip_price + total_products_price + right_of_call_price + total_maintenance_price;
 
 	UPDATE rapporto_totali
-	SET costo_lavoro = total_work_cost,
+	SET 
+			prezzo_manutenzione = total_maintenance_price,
+			prezzo_diritto_chiamata = right_of_call_price,
+			costo_diritto_chiamata = right_of_call_cost,
+			costo_lavoro = total_work_cost,
 			prezzo_lavoro = total_work_price,
 			costo_viaggio = total_trip_cost,
 			prezzo_viaggio = total_trip_price,

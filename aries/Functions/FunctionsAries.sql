@@ -487,7 +487,7 @@ BEGIN
         WHERE anno = year
             AND id_impianto = system_id
             AND diritto_chiamata = 1
-            AND IF(is_extra_ordinary, 2, 1) = dir_ric_chiamata;
+            AND IF(is_extra_ordinary, 2, 1) = tipo_diritto_chiamata;
 
         SET is_right_of_call_chargeble = IFNULL(included_roc, 0) < IFNULL(used_roc, 0);
     END IF;
