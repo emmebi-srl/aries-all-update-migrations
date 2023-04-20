@@ -1602,7 +1602,8 @@ CREATE PROCEDURE `sp_printJobRequirementsBody`(
 	IN sub_job_id INT(11)
 )
 BEGIN
-
+	DROP TABLE IF EXISTS tmp_print_job_requirements;
+	CREATE TEMPORARY TABLE tmp_print_job_requirements
 	SELECT *
 	FROM (
 		SELECT IF(is_kit=1,2,0) AS "is_kit",
@@ -1689,6 +1690,10 @@ BEGIN
 			AND IF(sub_job_id > 0, commessa_lotto.id_sottocommessa = sub_job_id, True)
 	) AS temp_job_print_requirements
 	ORDER BY id_sottocommessa, id_lotto, id_tab;
+
+	ALTER TABLE tmp_print_job_requirements ADD id INT PRIMARY KEY AUTO_INCREMENT;
+
+	SELECT * FROM tmp_print_job_requirements;
 
 END$$
 DELIMITER ;

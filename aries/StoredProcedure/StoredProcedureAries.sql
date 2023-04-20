@@ -15325,7 +15325,7 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS sp_ddtAssociate;
 DELIMITER //
 CREATE  PROCEDURE `sp_ddtAssociate`(
-	ddtId INT, ddtYear INT, docId INT, docYear INT, docType VARCHAR(20), jobLotId INT,
+	ddtId INT, ddtYear INT, docId INT, docYear INT, docType VARCHAR(20),
 	OUT ddtAssociateResult INT
 )
 BEGIN
@@ -15337,10 +15337,6 @@ BEGIN
 		SET docId = NULL;
 		SET docYear = NULL;
 	END IF;
-	IF jobLotId <= 0 THEN
-		SET jobLotId = NULL;
-	END IF;
-
 	IF docType = 'INVOICE' THEN
 		UPDATE ddt SET
 			fattura = docId,
@@ -15379,7 +15375,7 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS sp_ddtDissociate;
 DELIMITER //
 CREATE  PROCEDURE `sp_ddtDissociate`(
-	ddtId INT, ddtYear INT, docId INT, docYear INT, docType VARCHAR(20), jobLotId INT,
+	ddtId INT, ddtYear INT, docId INT, docYear INT, docType VARCHAR(20),
 	OUT ddtDissociateResult INT
 )
 BEGIN
@@ -15974,6 +15970,7 @@ BEGIN
 	SET total_price_body_products_economy = IFNULL(total_price_body_products_economy, 0); 
 	SET total_price_worked_economy = IFNULL(total_price_worked_economy, 0); 
 	SET total_price = IFNULL(total_price, 0);	
+	SET total_price_quote_worked = IFNULL(total_price_quote_worked, 0);
 		
 		
 	SET total_cost = total_cost_body_products_economy
