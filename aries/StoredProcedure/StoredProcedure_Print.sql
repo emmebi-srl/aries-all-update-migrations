@@ -2238,3 +2238,66 @@ BEGIN
 	ORDER BY mo.`Data` DESC, id_operazione DESC;	
 END $$
 DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS sp_ariesSystemsExpirationsExport;
+DELIMITER //
+CREATE PROCEDURE sp_ariesSystemsExpirationsExport (
+	IN start_date DATE,
+	IN end_date DATE,
+	IN system_id INT,
+	IN customer_id INT,
+	IN entity_type VARCHAR(100)
+)
+BEGIN
+	SELECT 
+		ses.id_riferimento AS "ID riferimento",
+		tipo_entita AS "Tipo entita",
+		tipo_scadenza AS "Tipo scadenza",
+		ses.id_cliente AS "ID Cliente",
+		clienti.ragione_sociale AS "Cliente",
+		Stato_clienti.Nome AS "Stato Cliente",
+		tipo_rapclie.Nome AS "Rapporto Cliente",
+		ses.id_impianto AS "ID impianto",
+		Tipo_impianto.nome AS "Tipo Impianto",
+		stato_impianto.Nome AS "Stato Impianto",
+		abbonamento.Nome AS "Abbonamento",
+		impianto.Costo_Manutenzione AS "Costo Manutenzione",
+		ses.descrizione AS "Descrizione Impianto",
+		data_scadenza AS "Data scadenza",
+		richiedi_invio_promemoria AS "Richiedi invio promemoria",
+		data_promemoria AS "Data promemoria",
+		data_ultimo_promemoria AS "Data ultimo promemora",
+		quantita AS "Quantita",
+		CONCAT(CONCAT(dc.indirizzo,' n.',dc.numero_civico, dc.altro),' - ',concat(IF(f.nome IS NOT NULL AND f.nome <> '', concat(f.nome,' di '), ''), c.nome,' (',c.provincia,')')) AS 'Indirizzo',
+		dc.Km_sede AS "KM Viaggio",
+		dc.Tempo_strada AS "Tempo viaggio",
+		IFNULL(riferimento_principale.mail, '') AS "Email Cliente",
+		IFNULL(riferimento_principale.altro_telefono, "") AS "Telefono Cliente",
+		rc.id_riferimento AS "ID contatto Promemoria",
+		IFNULL(rc.mail, '') AS "Email Promemoria",
+		IFNULL(rc.altro_telefono, "") AS "Telefono Promemoria"
+	FROM vw_systems_expirations_summary AS ses
+		INNER JOIN impianto ON ses.id_impianto = impianto.Id_impianto
+		INNER JOIN clienti ON ses.Id_cliente = clienti.Id_cliente
+		INNER JOIN stato_impianto ON impianto.Stato = stato_impianto.Id_stato
+		INNER JOIN tipo_impianto ON impianto.Tipo_impianto = tipo_impianto.Id_tipo
+		LEFT JOIN abbonamento ON impianto.Abbonamento = abbonamento.Id_abbonamento
+		INNER JOIN stato_clienti ON clienti.Stato_cliente = stato_clienti.Id_stato
+		INNER JOIN destinazione_cliente AS dc ON dc.id_cliente = ses.id_cliente
+			AND impianto.destinazione = dc.Id_destinazione
+		INNER JOIN tipo_rapclie ON tipo_rapclie.id_tipo = clienti.tipo_rapporto
+		INNER JOIN comune AS c ON c.id_comune=dc.Comune
+		LEFT JOIN frazione AS f ON f.id_frazione=dc.frazione
+		LEFT JOIN riferimento_clienti AS rc ON rc.id_cliente=ses.id_cliente AND rc.Promemoria_cliente=1
+		LEFT JOIN riferimento_clienti AS riferimento_principale ON riferimento_principale.id_cliente=ses.id_cliente AND riferimento_principale.id_riferimento = 1
+	WHERE
+		ses.data_scadenza >= iFNULL(start_date, CAST('1970-01-01' AS DATE)) 
+		AND ses.data_scadenza <= iFNULL(end_date, CAST('2100-01-01' AS DATE)) 
+		AND ses.id_impianto = iFNULL(system_id, ses.id_impianto) 
+		AND ses.id_cliente = iFNULL(customer_id, ses.id_cliente)
+		AND ses.tipo_entita = iFNULL(entity_type, CAST(ses.tipo_entita AS CHAR(100)))
+	ORDER BY data_scadenza DESC;
+END; //
+DELIMITER ;

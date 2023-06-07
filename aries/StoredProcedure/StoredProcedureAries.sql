@@ -2357,7 +2357,8 @@ BEGIN
 		sito_passwd, 
 		mail_pec, 
 		`mod`, 
-		IFNULL(idut, 0) "idut"
+		IFNULL(idut, 0) "idut",
+		Promemoria_cliente
 	FROM riferimento_clienti;
 	
 END//
@@ -2393,7 +2394,8 @@ BEGIN
 		sito_passwd, 
 		mail_pec, 
 		`mod`, 
-		IFNULL(idut, 0) "idut"
+		IFNULL(idut, 0) "idut",
+		Promemoria_cliente
 	FROM riferimento_clienti
 	WHERE Id_cliente = customer_id;
 	
@@ -2431,7 +2433,8 @@ BEGIN
 		sito_passwd, 
 		mail_pec, 
 		`mod`, 
-		IFNULL(idut, 0) "idut"
+		IFNULL(idut, 0) "idut",
+		Promemoria_cliente
 	FROM riferimento_clienti
 	WHERE Id_cliente = customer_id AND Id_riferimento = contacts_id;
 	
@@ -2469,7 +2472,8 @@ BEGIN
 		sito_passwd, 
 		mail_pec, 
 		`mod`, 
-		IFNULL(idut, 0) "idut"
+		IFNULL(idut, 0) "idut",
+		Promemoria_cliente
 	FROM riferimento_clienti
 	WHERE FIND_IN_SET(Id_cliente, customer_ids) > 0;
 END//
@@ -2507,7 +2511,8 @@ BEGIN
 		sito_passwd, 
 		mail_pec, 
 		`mod`, 
-		IFNULL(idut, 0) "idut"
+		IFNULL(idut, 0) "idut",
+		Promemoria_cliente
 	FROM mail_gruppo_cliente
 		INNER JOIN riferimento_clienti ON mail_gruppo_cliente.id_cliente = riferimento_clienti.id_cliente
 			AND mail_gruppo_cliente.Id_riferimento = riferimento_clienti.Id_riferimento
@@ -11130,7 +11135,19 @@ BEGIN
 			impianto 
 		FROM  preventivo_impianto 
 		WHERE revisione = last_review_id AND id_preventivo = quote_id  AND anno = quote_year; 
-	
+
+		
+
+		INSERT INTO preventivo_lotto_pdf (
+			Id_preventivo, id_revisione, anno, posizione_lotto, posizione, filepath, filename, utente_mod
+		)
+		SELECT
+			Id_preventivo, new_review_id, anno, posizione_lotto, posizione, filepath, filename, @USER_ID
+		FROM preventivo_lotto_pdf 
+		WHERE Id_preventivo = quote_id 
+			AND Anno = quote_year
+			AND id_revisione = last_review_id;
+		
 		UPDATE Preventivo 
 		SET stato = 5 
 		WHERE id_preventivo = quote_id AND anno = quote_year;
@@ -17804,7 +17821,19 @@ BEGIN
 	WHERE Id_preventivo = quote_id 
 		AND Anno = quote_year
 		AND id_revisione = last_review_id;
-	
+
+
+	INSERT INTO preventivo_lotto_pdf (
+		Id_preventivo, id_revisione, anno, posizione_lotto, posizione, filepath, filename, utente_mod
+	)
+	SELECT
+		new_id, 0, curr_year, posizione_lotto, posizione, filepath, filename, @USER_ID
+	FROM preventivo_lotto_pdf 
+	WHERE Id_preventivo = quote_id 
+		AND Anno = quote_year
+		AND id_revisione = last_review_id;
+
+
 	IF `_rollback` THEN
 	  ROLLBACK;
 	  SET Result = 0; 
@@ -22422,5 +22451,176 @@ BEGIN
 	FROM utente_roles
 		INNER JOIN utente_utente_roles ON utente_utente_roles.id_utente_roles = utente_roles.id
 	WHERE id_utente = user_id;
+END; //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesSystemsExpirationsCounter;
+DELIMITER //
+CREATE PROCEDURE sp_ariesSystemsExpirationsCounter (
+	IN start_date DATE,
+	IN end_date DATE,
+	IN system_id INT,
+	IN customer_id INT,
+	IN entity_type VARCHAR(100),
+	IN reminder_status VARCHAR(20) -- sent, to_be_sent, to_handle
+)
+BEGIN
+	SELECT COUNT(*)
+	FROM vw_systems_expirations_summary
+	WHERE
+		data_scadenza >= iFNULL(start_date, '1970-01-01') 
+		AND data_scadenza <= iFNULL(end_date, '2100-01-01') 
+		AND id_impianto = iFNULL(system_id, id_impianto) 
+		AND id_cliente = iFNULL(customer_id, id_cliente)
+		AND tipo_entita = iFNULL(entity_type, tipo_entita)
+		AND IF(reminder_status = 'to_handle', 1, richiedi_invio_promemoria) = richiedi_invio_promemoria
+		AND IF(reminder_status = 'to_be_sent', data_promemoria > CURRENT_DATE, True)
+		AND IF(reminder_status = 'sent', data_promemoria <= CURRENT_DATE, True);
+END; //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesSystemsExpirationsSearch;
+DELIMITER //
+CREATE PROCEDURE sp_ariesSystemsExpirationsSearch (
+	IN start_date DATE,
+	IN end_date DATE,
+	IN system_id INT,
+	IN customer_id INT,
+	IN entity_type VARCHAR(100),
+	IN reminder_status VARCHAR(20) -- sent, to_be_sent, handled, to_handle
+)
+BEGIN
+	SELECT 
+		ses.id_riferimento,
+		tipo_entita,
+		tipo_scadenza,
+		ses.id_impianto,
+		ses.id_cliente,
+		Stato_clienti.Nome AS "stato_cliente",
+		Tipo_impianto.nome AS "tipo_impianto",
+		stato_impianto.Nome AS "stato_impianto",
+		ses.descrizione,
+		data_scadenza,
+		richiedi_invio_promemoria,
+		data_promemoria,
+		data_ultimo_promemoria,
+		quantita,
+		CONCAT(CONCAT(dc.indirizzo,' n.',dc.numero_civico, dc.altro),' - ',concat(IF(f.nome IS NOT NULL AND f.nome <> '', concat(f.nome,' di '), ''), c.nome,' (',c.provincia,')')) AS 'Indirizzo',
+		dc.Km_sede AS "km_viaggio",
+		dc.Tempo_strada AS tempo_viaggio,
+		rc.id_riferimento AS id_riferimento_promemoria,
+		CONCAT(rc.nome, ' - ', rc.mail, '/', rc.altro_telefono) AS riferimento_promemoria
+	FROM vw_systems_expirations_summary AS ses
+		INNER JOIN impianto ON ses.id_impianto = impianto.Id_impianto
+		INNER JOIN clienti ON ses.Id_cliente = clienti.Id_cliente
+		INNER JOIN stato_impianto ON impianto.Stato = stato_impianto.Id_stato
+		INNER JOIN tipo_impianto ON impianto.Tipo_impianto = tipo_impianto.Id_tipo
+		INNER JOIN stato_clienti ON clienti.Stato_cliente = stato_clienti.Id_stato
+		INNER JOIN destinazione_cliente AS dc ON dc.id_cliente = ses.id_cliente
+			AND impianto.destinazione = dc.Id_destinazione
+		INNER JOIN comune AS c ON c.id_comune=dc.Comune
+		LEFT JOIN frazione AS f ON f.id_frazione=dc.frazione
+		LEFT JOIN riferimento_clienti AS rc ON rc.id_cliente=ses.id_cliente AND Promemoria_cliente=1
+	WHERE
+		ses.data_scadenza >= iFNULL(start_date, CAST('1970-01-01' AS DATE)) 
+		AND ses.data_scadenza <= iFNULL(end_date, CAST('2100-01-01' AS DATE)) 
+		AND ses.id_impianto = iFNULL(system_id, ses.id_impianto) 
+		AND ses.id_cliente = iFNULL(customer_id, ses.id_cliente)
+		AND ses.tipo_entita = iFNULL(entity_type, CAST(ses.tipo_entita AS CHAR(100)))
+		AND IF(reminder_status = 'to_handle', richiedi_invio_promemoria = false, True)
+		AND IF(reminder_status = 'to_be_sent', data_promemoria > CURRENT_DATE, True)
+		AND IF(reminder_status = 'sent', data_promemoria <= CURRENT_DATE, True)
+		AND IF(reminder_status = 'handled', data_promemoria IS NOT NULL, True)
+	ORDER BY data_scadenza DESC;
+END; //
+DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS sp_ariesSystemsExpirationsEntityTypes;
+DELIMITER //
+CREATE PROCEDURE sp_ariesSystemsExpirationsEntityTypes ()
+BEGIN
+	SELECT 
+		tipo_entita,
+		tipo_scadenza AS descrizione
+	FROM vw_systems_expirations_summary AS ses
+	GROUP BY tipo_entita
+	ORDER BY tipo_scadenza DESC;
+END; //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesSystemsExpirationsSetReminderInfo;
+DELIMITER //
+CREATE PROCEDURE sp_ariesSystemsExpirationsSetReminderInfo (
+	IN reference_id INT,
+	IN entity_type VARCHAR(100),
+	IN system_id INT,
+	IN require_reminder_to_be_sent BIT,
+	IN reminder_send_date DATETIME,
+	IN contact_id INT
+)
+BEGIN
+	DECLARE product_code VARCHAR(100);
+	DECLARE expiration_date DATE;
+
+	UPDATE riferimento_clienti
+	SET promemoria_cliente = 1
+	WHERE id = contact_id;
+
+	if entity_type = 'ticket' THEN
+		
+		UPDATE Ticket
+		SET richiedi_invio_promemoria = require_reminder_to_be_sent,
+			data_promemoria = CAST(reminder_send_date AS DATE)
+		WHERE id_ticket = reference_id;
+
+	ELSEIF entity_type = 'system_sim_expiration' THEN
+		
+		UPDATE impianto_ricarica_tipo
+		SET richiedi_invio_promemoria = require_reminder_to_be_sent,
+			data_promemoria = reminder_send_date
+		WHERE id = reference_id;
+
+	ELSEIF entity_type = 'system_sim_renew' THEN
+			
+		UPDATE impianto_ricarica_tipo
+		SET richiedi_invio_promemoria = require_reminder_to_be_sent,
+			data_promemoria = reminder_send_date
+		WHERE id = reference_id;
+
+	ELSEIF entity_type = 'system_maintenance_month' THEN
+			
+		UPDATE impianto_abbonamenti_mesi
+		SET richiedi_invio_promemoria = require_reminder_to_be_sent,
+			data_promemoria = reminder_send_date
+		WHERE id = reference_id;
+
+	ELSEIF entity_type = 'system_warranty' THEN
+			
+		UPDATE impianto
+		SET richiedi_invio_promemoria_garanzia = require_reminder_to_be_sent,
+			data_promemoria_garanzia = reminder_send_date
+		WHERE id_impianto = reference_id;
+
+	ELSEIF entity_type = 'systems_components' THEN	
+		
+		SELECT Id_articolo, Data_scadenza
+			INTO product_code, expiration_date
+		FROM impianto_componenti
+		WHERE id_impianto = system_id
+			AND id_impianto_componenti = reference_id;
+
+		UPDATE impianto_componenti
+		SET richiedi_invio_promemoria = require_reminder_to_be_sent,
+			data_promemoria = reminder_send_date
+		WHERE id_impianto = system_id
+			AND Id_articolo = product_code
+			AND Data_scadenza = expiration_date;
+
+	END IF;
+
+
 END; //
 DELIMITER ;

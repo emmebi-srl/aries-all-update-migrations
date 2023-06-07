@@ -1365,4 +1365,115 @@ CREATE VIEW vw_systems_exports_to_contact AS
 		LEFT JOIN abbonamento ON abbonamento.id_abbonamento=impianto_uscita.id_abbonamento 
 		LEFT JOIN impianto_abbonamenti_mesi ON impianto.id_impianto=impianto_abbonamenti_mesi.impianto AND impianto_abbonamenti_mesi.anno=DATE_FORMAT(NOW(),'%Y')
       	LEFT JOIN mese ON mese.id_mese=impianto_abbonamenti_mesi.mese
-   	GROUP BY impianto.id_impianto
+   	GROUP BY impianto.id_impianto;
+
+	
+DROP VIEW IF EXISTS vw_systems_expirations_summary;
+CREATE VIEW vw_systems_expirations_summary AS
+	SELECT 
+		ticket.id_ticket AS id_riferimento,
+		"ticket" AS "tipo_entita",
+		"Ticket" AS tipo_scadenza,
+		ticket.Id_impianto AS id_impianto,
+		ticket.Id_cliente AS id_cliente,
+		ticket.Descrizione AS descrizione,
+		scadenza AS data_scadenza,
+		ticket.richiedi_invio_promemoria,
+		ticket.data_promemoria,
+		ticket.data_ultimo_promemoria,
+		NULL AS quantita
+	FROM ticket
+	WHERE scadenza IS NOT NULL AND Stato_ticket IN (1, 2)
+	
+	UNION ALL
+	SELECT
+		impianto_componenti.id_impianto_componenti AS id_riferimento,
+		"systems_components" AS "tipo_entita",
+		"Componente Impianto" AS tipo_scadenza,
+		impianto_componenti.id_impianto AS id_impianto,
+		impianto.Id_cliente AS id_cliente,
+		articolo.Desc_brev AS descrizione,
+		data_scadenza AS data_scadenza,
+		impianto_componenti.richiedi_invio_promemoria,
+		impianto_componenti.data_promemoria,
+		impianto_componenti.data_ultimo_promemoria,
+		COUNT(*) AS quantità
+	FROM impianto_componenti
+		INNER JOIN articolo ON impianto_componenti.Id_articolo = articolo.Codice_articolo
+		INNER JOIN impianto ON impianto.Id_impianto = impianto_componenti.id_impianto
+	WHERE data_scadenza IS NOT NULL AND data_dismesso IS NULL
+	GROUP BY impianto_componenti.id_impianto, impianto_componenti.Id_articolo, impianto_componenti.data_scadenza
+		
+	
+	UNION ALL
+	SELECT
+		impianto.Id_impianto AS id_riferimento,
+		"system_warranty" AS "tipo_entita",
+		"Garanzia Impianto" AS tipo_scadenza,
+		impianto.id_impianto AS id_impianto,
+		impianto.Id_cliente AS id_cliente,
+		impianto.descrizione AS descrizione,
+		impianto.scadenza_garanzia AS data_scadenza,
+		impianto.richiedi_invio_promemoria_garanzia,
+		impianto.data_promemoria_garanzia,
+		impianto.data_ultimo_promemoria_garanzia,
+		NULL AS quantità
+	FROM impianto
+	WHERE scadenza_garanzia IS NOT NULL
+		AND scadenza_garanzia >= DATE_ADD(CURRENT_DATE, INTERVAL -2 MONTH) 
+	
+	UNION ALL
+	SELECT
+		impianto_abbonamenti_mesi.Id AS id_riferimento,
+		"system_maintenance_month" AS "tipo_entita",
+		"Controllo Periodico" AS tipo_scadenza,
+		impianto_abbonamenti_mesi.impianto AS id_impianto,
+		impianto.Id_cliente AS id_cliente,
+		CONCAT('Controllo Periodico ', impianto_abbonamenti_mesi.mese, '/', impianto_abbonamenti_mesi.anno) AS descrizione,
+		IFNULL(da_eseguire, DATE_ADD(MAKEDATE(impianto_abbonamenti_mesi.anno, 1), INTERVAL (impianto_abbonamenti_mesi.mese)-1 MONTH)) AS data_scadenza,
+		impianto_abbonamenti_mesi.richiedi_invio_promemoria,
+		impianto_abbonamenti_mesi.data_promemoria,
+		impianto_abbonamenti_mesi.data_ultimo_promemoria,
+		NULL AS quantità
+	FROM impianto_abbonamenti_mesi
+		INNER JOIN impianto ON impianto.Id_impianto = impianto_abbonamenti_mesi.impianto
+	WHERE eseguito_il IS NULL
+		
+	
+	UNION ALL
+	SELECT
+		impianto_ricarica_tipo.Id AS id_riferimento,
+		"system_sim_renew" AS "tipo_entita",
+		"Rinnovo SIM" AS tipo_scadenza,
+		impianto_ricarica_tipo.id_impianto AS id_impianto,
+		impianto.Id_cliente AS id_cliente,
+		CONCAT('Rinnovo SIM ', impianto_ricarica_tipo.numero, ' importo ', impianto_ricarica_tipo.importo) AS descrizione,
+		data_rinnovo AS data_scadenza,
+		impianto_ricarica_tipo.richiedi_invio_promemoria,
+		impianto_ricarica_tipo.data_promemoria,
+		impianto_ricarica_tipo.data_ultimo_promemoria,
+		NULL AS quantità
+	FROM impianto_ricarica_tipo
+		INNER JOIN impianto ON impianto.Id_impianto = impianto_ricarica_tipo.id_impianto
+	WHERE data_rinnovo IS NOT NULL AND (data_scadenza IS NULL OR data_rinnovo < data_scadenza)
+		AND data_rinnovo >= DATE_ADD(CURRENT_DATE, INTERVAL -6 MONTH) 
+	
+	
+	UNION ALL
+	SELECT
+		impianto_ricarica_tipo.Id AS id_riferimento,
+		"system_sim_expiration" AS "tipo_entita",
+		"Scadenza SIM" AS tipo_scadenza,
+		impianto_ricarica_tipo.id_impianto AS id_impianto,
+		impianto.Id_cliente AS id_cliente,
+		CONCAT('Scadenza SIM ', impianto_ricarica_tipo.numero, ' importo ', impianto_ricarica_tipo.importo) AS descrizione,
+		data_scadenza AS data_scadenza,
+		impianto_ricarica_tipo.richiedi_invio_promemoria,
+		impianto_ricarica_tipo.data_promemoria,
+		impianto_ricarica_tipo.data_ultimo_promemoria,
+		NULL AS quantità
+	FROM impianto_ricarica_tipo
+		INNER JOIN impianto ON impianto.Id_impianto = impianto_ricarica_tipo.id_impianto
+	WHERE data_scadenza IS NOT NULL AND (data_rinnovo  IS NULL OR data_scadenza > data_rinnovo)
+		AND data_scadenza >= DATE_ADD(CURRENT_DATE, INTERVAL -6 MONTH);
+		
