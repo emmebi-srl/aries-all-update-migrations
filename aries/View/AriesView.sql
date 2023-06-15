@@ -78,15 +78,15 @@ ORDER BY da_eseguire;
 DROP VIEW IF EXISTS vw_systemPeriodicMonitoringReminderGridMainElementTypeOne;
 CREATE VIEW vw_systemPeriodicMonitoringReminderGridMainElementTypeOne
  AS
-SELECT 	0 As Id,
+SELECT 	CAST(CONCAT(DATE_FORMAT(CURRENT_DATE, '%y'), LPAD(impianto_mesi.Id_mese, 2, 0), impianto_mesi.id_impianto) AS UNSIGNED) As Id,
 		 	impianto_mesi.Id_mese AS "id_mese",
-			0 AS "anno",
+			YEAR(CURRENT_DATE) AS "anno",
 			impianto_mesi.id_impianto, 
 			impianto.descrizione "descrizione_impianto", 
 			clienti.Id_cliente, 
 			ragione_sociale,
 			0 AS "svolto",
-			NULL "da_eseguire",
+			NULL AS "da_eseguire",
 			Tipo_impianto.nome "Tipo_impianto",
 			0 "tempo_manutenzione"		
 FROM impianto_mesi
@@ -385,23 +385,6 @@ CREATE VIEW `vw_reportgroupproducts` AS select `resoconto_rapporto`.`id_resocont
 DROP VIEW IF EXISTS vw_systemperiodicmonitoringremindergridmain;
 CREATE VIEW `vw_systemperiodicmonitoringremindergridmain` AS select `impianto_abbonamenti_mesi`.`id` AS `Id`,`impianto_abbonamenti_mesi`.`mese` AS `id_mese`,`impianto_abbonamenti_mesi`.`anno` AS `anno`,`impianto`.`Id_impianto` AS `id_impianto`,`impianto`.`Descrizione` AS `descrizione_impianto`,`clienti`.`Id_cliente` AS `Id_cliente`,`clienti`.`Ragione_Sociale` AS `ragione_sociale`,if(isnull(`impianto_abbonamenti_mesi`.`Eseguito_il`),0,1) AS `svolto`,ifnull(`impianto_abbonamenti_mesi`.`Eseguito_il`,`impianto_abbonamenti_mesi`.`da_eseguire`) AS `da_eseguire`,`tipo_impianto`.`nome` AS `Tipo_impianto`,ifnull((`impianto`.`Tempo_manutenzione` / 60),0) AS `tempo_manutenzione` from (((`impianto_abbonamenti_mesi` join `impianto` on((`impianto_abbonamenti_mesi`.`impianto` = `impianto`.`Id_impianto`))) join `clienti` on((`impianto`.`Id_cliente` = `clienti`.`Id_cliente`))) join `tipo_impianto` on((`impianto`.`Tipo_impianto` = `tipo_impianto`.`id_tipo`))) order by ifnull(`impianto_abbonamenti_mesi`.`Eseguito_il`,`impianto_abbonamenti_mesi`.`da_eseguire`);
 
--- 
--- Table structure for table vw_systemperiodicmonitoringremindergridmainelementtypeone
--- 
-
-DROP VIEW IF EXISTS vw_systemperiodicmonitoringremindergridmainelementtypeone;
-CREATE VIEW `vw_systemperiodicmonitoringremindergridmainelementtypeone` AS select 0 AS `Id`,`impianto_mesi`.`Id_mese` AS `id_mese`,0 AS `anno`,`impianto_mesi`.`Id_impianto` AS `id_impianto`,`impianto`.`Descrizione` AS `descrizione_impianto`,`clienti`.`Id_cliente` AS `Id_cliente`,`clienti`.`Ragione_Sociale` AS `ragione_sociale`,0 AS `svolto`,NULL AS `da_eseguire`,`tipo_impianto`.`nome` AS `Tipo_impianto`,0 AS `tempo_manutenzione` from (((`impianto_mesi` join `impianto` on((`impianto_mesi`.`Id_impianto` = `impianto`.`Id_impianto`))) join `clienti` on((`impianto`.`Id_cliente` = `clienti`.`Id_cliente`))) join `tipo_impianto` on((`impianto`.`Tipo_impianto` = `tipo_impianto`.`id_tipo`))) where (`impianto`.`Stato` = 0) order by `impianto_mesi`.`Id_mese`,`clienti`.`Ragione_Sociale`;
-
--- 
--- Table structure for table vw_systemperiodicmonitoringremindergridmainelementtypezero
--- 
-
-DROP VIEW IF EXISTS vw_systemperiodicmonitoringremindergridmainelementtypezero;
-CREATE  VIEW `vw_systemperiodicmonitoringremindergridmainelementtypezero` AS select `impianto_abbonamenti_mesi`.`id` AS `Id`,`impianto_abbonamenti_mesi`.`mese` AS `id_mese`,`impianto_abbonamenti_mesi`.`anno` AS `anno`,`impianto`.`Id_impianto` AS `id_impianto`,`impianto`.`Descrizione` AS `descrizione_impianto`,`clienti`.`Id_cliente` AS `Id_cliente`,`clienti`.`Ragione_Sociale` AS `ragione_sociale`,if(isnull(`impianto_abbonamenti_mesi`.`Eseguito_il`),0,1) AS `svolto`,ifnull(`impianto_abbonamenti_mesi`.`Eseguito_il`,`impianto_abbonamenti_mesi`.`da_eseguire`) AS `da_eseguire`,`tipo_impianto`.`nome` AS `Tipo_impianto`,ifnull((`impianto`.`Tempo_manutenzione` / 60),0) AS `tempo_manutenzione` from (((`impianto_abbonamenti_mesi` join `impianto` on((`impianto_abbonamenti_mesi`.`impianto` = `impianto`.`Id_impianto`))) join `clienti` on((`impianto`.`Id_cliente` = `clienti`.`Id_cliente`))) join `tipo_impianto` on((`impianto`.`Tipo_impianto` = `tipo_impianto`.`id_tipo`))) order by ifnull(`impianto_abbonamenti_mesi`.`Eseguito_il`,`impianto_abbonamenti_mesi`.`da_eseguire`);
-
-
-		
-		
 		
 -- 
 -- Table structure for table vw_jobbody
