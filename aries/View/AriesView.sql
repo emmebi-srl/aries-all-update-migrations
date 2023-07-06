@@ -228,6 +228,25 @@ CREATE VIEW `vw_productssearch` AS
 	GROUP BY `subvw_productsunionsearch`.`codice_articolo`,`subvw_productsunionsearch`.`codice_fornitore`;
 
 
+DROP VIEW IF EXISTS vw_notessearch;
+CREATE VIEW `vw_notessearch` AS
+	SELECT
+		nota.id_nota,
+		nota.nome,
+		nota.note AS descrizione,
+		IFNULL(prezz, 0) AS prezzo,
+		IFNULL(cost, 0) AS costo,
+		temp AS tempo,
+		nota_stato AS id_stato_nota,
+		IF(nota_stato = 1, 'Attivo', 'Non Attivo') AS stato_nota,
+		tipo_nota.id_tipo AS id_tipo_nota,
+		tipo_nota.nome AS tipo_nota
+	FROM nota
+		LEFT JOIN note_tipo ON nota.id_nota = note_tipo.id_nota
+		LEFT JOIN tipo_nota ON tipo_nota.id_tipo = note_tipo.id_tipo;
+
+
+
 -- 
 -- Table structure for table vw_dashboardgridsystemperiodicmonitoring
 -- 

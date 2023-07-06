@@ -3283,7 +3283,48 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Dump della struttura di procedura emmebi.sp_ariesCustomerGetOrderByCompanyName
+DROP PROCEDURE IF EXISTS sp_ariesCustomerGetByCompanyName;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesCustomerGetByCompanyName`(
+	company_name VARCHAR(150)
+)
+BEGIN
 
+	SELECT clienti.Id_cliente,
+		`Ragione_Sociale` ,
+		IFNULL(`Ragione_sociale2`, '') Ragione_Sociale2,
+		IFNULL(`Partita_iva` , '') Partita_iva,
+		IFNULL(`Codice_Fiscale`, '') Codice_fiscale,
+		IFNULL(`Cortese_attenzione`, '') 'Cortese_attenzione',
+		STR_TO_DATE( IFNULL(`Data_inserimento`, '1970-01-01 00:00:00'), '%Y-%m-%d') data_inserimento,
+		IFNULL(`Stato_cliente`,'') Stato_cliente,
+		IFNULL(`Tipo_Cliente`, 0) 'Tipo_cliente',
+		IFNULL(`stato_economico`, 0) 'stato_economico',
+		IFNULL(`condizione_pagamento`, 0 ) 'condizione_pagamento',
+		IFNULL(`Sito_internet` , '') Sito_internet,
+		IFNULL(`password`, '') 'password',
+		IFNULL(`Utente_sito`, '') Utente_sito,
+		IFNULL(`iva` ,0) 'iva',
+		`modi`,
+		`rc` ,
+		`posta` ,
+		IFNULL(`ex` , 0) ex,
+		IFNULL(`tipo_rapporto`  , 0) tipo_rapporto,
+		IFNULL(`id_utente` , 0) id_utente,
+		IFNULL(`id_agente` , 0) id_agente,
+		IFNULL(`id_abbona` , 0) id_abbona,
+		IFNULL(`id_attività` , 0) id_attività,
+		IFNULL(`pec`, '') pec ,
+		IFNULL(`codice_univoco`, '') codice_univoco,
+		e_codice_destinatario,
+		`data_ultima_modifica`
+	FROM Clienti
+	WHERE (ragione_sociale = company_name) OR (ragione_sociale2 = company_name)
+	ORDER BY clienti.Stato_cliente LIKE 'clLime' DESC; 
+	
+END//
+DELIMITER ;
 
 -- Dump della struttura di procedura emmebi.sp_ariesCustomerGroupEmailSent
 DROP PROCEDURE IF EXISTS sp_ariesCustomerGroupEmailSent;
