@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS `evento_agente_param`;
