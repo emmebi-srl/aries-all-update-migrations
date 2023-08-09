@@ -4467,4 +4467,43 @@ END//
 DELIMITER ;
 
 
-
+DROP PROCEDURE IF EXISTS sp_apiReportGroupGet;
+DELIMITER //
+CREATE  PROCEDURE `sp_apiReportGroupGet`()
+BEGIN
+	SELECT 
+		resoconto.`id_resoconto`,
+		resoconto.`anno`,
+		`data`,
+		resoconto.`Descrizione`,
+		`Numero_ordine`,
+		`Id_cliente`,
+		stato_resoconto.Id_stato AS id_stato_resoconto,
+		stato_resoconto.nome AS stato_resoconto,
+		`Nota`,
+		`fattura`,
+		`anno_fattura`,
+		`id_utente`,
+		tipo_resoconto.id_tipo AS id_tipo_resoconto,
+		tipo_resoconto.nome AS tipo_resoconto,
+		IFNULL(inviato, 0) AS inviato,
+		`nota_fine`,
+		IFNULL(stm, 0) as stm,
+		`fat_SpeseRap`,
+		`prezzo_manutenzione`,
+		`costo_diritto_chiamata`,
+		`prezzo_diritto_chiamata`,
+		`costo_lavoro`,
+		`prezzo_lavoro`,
+		`costo_viaggio`,
+		`prezzo_viaggio`,
+		`costo_materiale`,
+		`prezzo_materiale`,
+		`costo_totale`,
+		`prezzo_totale`
+	FROM resoconto
+		INNER JOIN resoconto_totali ON resoconto.id_resoconto = resoconto_totali.id_resoconto AND resoconto.anno = resoconto_totali.anno
+		INNER JOIN stato_resoconto ON resoconto.stato = stato_resoconto.id_stato
+		INNER JOIN tipo_resoconto ON resoconto.tipo_resoconto = tipo_resoconto.id_tipo;
+END//
+DELIMITER ;
