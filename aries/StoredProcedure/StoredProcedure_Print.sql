@@ -2301,3 +2301,122 @@ BEGIN
 	ORDER BY data_scadenza DESC;
 END; //
 DELIMITER ;
+
+
+
+
+DROP PROCEDURE IF EXISTS sp_ariesReportGroupListExport;
+DELIMITER //
+CREATE PROCEDURE sp_ariesReportGroupListExport (
+	IN start_date DATE,
+	IN end_date DATE,
+	IN customer_id INT
+)
+BEGIN
+	SELECT
+		resoconto.id_resoconto AS 'ID',
+		resoconto.anno AS 'Anno',
+		data AS 'Data',
+		clienti.Ragione_Sociale AS 'Cliente',
+		tipo_rapclie.nome as 'Tipo Rapporto',
+		tipo_resoconto.nome AS 'Tipo',
+		stato_resoconto.nome AS 'Stato',
+		resoconto.descrizione AS 'Descrizione',
+		resoconto_totali.costo_totale AS 'Costo',
+		resoconto_totali.prezzo_totale AS 'Prezzo',
+		CONCAT(CONCAT(dc.indirizzo,' n.',dc.numero_civico, dc.altro),' - ',concat(IF(f.nome IS NOT NULL AND f.nome <> '', concat(f.nome,' di '), ''), c.nome,' (',c.provincia,')')) AS 'Indirizzo',
+		dc.Km_sede AS "KM Viaggio",
+		dc.Tempo_strada AS "Tempo viaggio",
+		IFNULL(riferimento_principale.mail, '') AS "Email Cliente",
+		IFNULL(riferimento_principale.altro_telefono, "") AS "Telefono Cliente"
+	FROM resoconto
+		INNER JOIN resoconto_totali ON resoconto.id_resoconto = resoconto_totali.id_resoconto AND resoconto.anno = resoconto_totali.anno
+		INNER JOIN clienti ON clienti.id_cliente = resoconto.id_cliente
+		INNER JOIN tipo_resoconto ON resoconto.tipo_resoconto = tipo_resoconto.id_tipo
+		INNER JOIN stato_resoconto ON resoconto.stato = stato_resoconto.Id_stato
+		INNER JOIN stato_clienti ON clienti.Stato_cliente = stato_clienti.Id_stato
+		INNER JOIN destinazione_cliente AS dc ON dc.id_cliente = resoconto.id_cliente
+			AND sede_principale = 1
+		INNER JOIN tipo_rapclie ON tipo_rapclie.id_tipo = clienti.tipo_rapporto
+		INNER JOIN comune AS c ON c.id_comune=dc.Comune
+		LEFT JOIN frazione AS f ON f.id_frazione=dc.frazione
+		LEFT JOIN riferimento_clienti AS rc ON rc.id_cliente=resoconto.id_cliente AND rc.Promemoria_cliente=1
+		LEFT JOIN riferimento_clienti AS riferimento_principale ON riferimento_principale.id_cliente=resoconto.id_cliente AND riferimento_principale.id_riferimento = 1
+	WHERE
+		resoconto.data >= iFNULL(start_date, CAST('1970-01-01' AS DATE)) 
+		AND resoconto.data <= iFNULL(end_date, CAST('2100-01-01' AS DATE))
+		AND resoconto.id_cliente = iFNULL(customer_id, resoconto.id_cliente)
+	ORDER BY data DESC;
+END; //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesQuoteListExport;
+DELIMITER //
+CREATE PROCEDURE sp_ariesQuoteListExport (
+	IN start_date DATE,
+	IN end_date DATE,
+	IN customer_id INT
+)
+BEGIN
+	SELECT
+		preventivo.id_preventivo AS 'ID',
+		preventivo.anno AS 'Anno',
+		preventivo.revisione AS 'Revisione',
+		preventivo.data_creazione AS 'Data',
+		clienti.Ragione_Sociale AS 'Cliente',
+		tipo_rapclie.nome as 'Tipo Rapporto',
+		tipo_preventivo.nome AS 'Tipo',
+		stato_preventivo.nome AS 'Stato',
+		tipo_intprev.nome AS 'Tipo Intervento',
+		preventivo.note AS 'Descrizione',
+		IF(stampato, 'SI', 'NO') AS 'Stampato',
+		IF(inviato, 'SI', 'NO') AS 'Inviato',
+		IFNULL(data_invio, '') AS 'Data Invio',
+		SUM(
+			IFNULL(CAST(
+				(
+					costo
+					+
+					IF(montato = 0, 0, (b.tempo_installazione/60*prezzo_h))
+				) AS DECIMAL(11,2)
+			) * quantità
+			, 0)
+		) AS "Costo",
+		SUM(
+			IFNULL(CAST(
+				(
+					ROUND(prezzo - (IF(preventivo_lotto.tipo_ricar=1,0,sconto) / 100 * prezzo),2)
+					+
+					IF(montato = 0, 0, (b.tempo_installazione/60*prezzo_h) * ((100 - scontolav)/100))
+				) * ((100 - IFNULL(scontoriga, 0))/100) AS DECIMAL(11,2)
+			) * quantità
+			, 0)
+		) AS "Prezzo",
+		CONCAT(CONCAT(dc.indirizzo,' n.',dc.numero_civico, dc.altro),' - ',concat(IF(f.nome IS NOT NULL AND f.nome <> '', concat(f.nome,' di '), ''), c.nome,' (',c.provincia,')')) AS 'Indirizzo',
+		dc.Km_sede AS "KM Viaggio",
+		dc.Tempo_strada AS "Tempo viaggio",
+		IFNULL(riferimento_principale.mail, '') AS "Email Cliente",
+		IFNULL(riferimento_principale.altro_telefono, "") AS "Telefono Cliente"
+	FROM preventivo
+		LEFT JOIN revisione_preventivo ON revisione=id_revisione AND preventivo.id_preventivo=revisione_preventivo.id_preventivo AND revisione_preventivo.anno=preventivo.anno
+		LEFT JOIN clienti ON clienti.id_cliente=revisione_preventivo.id_cliente
+		LEFT JOIN destinazione_cliente dc ON dc.id_cliente=revisione_preventivo.id_cliente AND dc.id_destinazione=revisione_preventivo.destinazione
+		LEFT JOIN stato_clienti ON clienti.Stato_cliente = stato_clienti.Id_stato
+		LEFT JOIN tipo_rapclie ON tipo_rapclie.id_tipo = clienti.tipo_rapporto
+		LEFT JOIN comune AS c ON c.id_comune=dc.Comune
+		LEFT JOIN frazione AS f ON f.id_frazione=dc.frazione
+		LEFT JOIN riferimento_clienti AS riferimento_principale ON riferimento_principale.id_cliente=clienti.id_cliente AND riferimento_principale.id_riferimento = 1
+		LEFT JOIN articolo_preventivo AS b ON preventivo.id_preventivo=b.id_preventivo AND preventivo.anno=b.anno AND b.id_revisione=revisione 
+		LEFT JOIN preventivo_lotto ON preventivo_lotto.id_preventivo=revisione_preventivo.id_preventivo AND revisione_preventivo.anno=preventivo_lotto.anno AND revisione_preventivo.id_revisione=preventivo_lotto.id_revisione AND preventivo_lotto.posizione=b.lotto  
+		INNER JOIN stato_preventivo ON preventivo.stato = stato_preventivo.id_stato
+		INNER JOIN tipo_preventivo ON preventivo.tipo = tipo_preventivo.id_tipo
+		INNER JOIN tipo_intprev ON preventivo.tipo = tipo_intprev.id_tipo
+	WHERE 
+		preventivo.data_creazione >= iFNULL(start_date, CAST('1970-01-01' AS DATE)) 
+		AND preventivo.data_creazione <= iFNULL(end_date, CAST('2100-01-01' AS DATE))
+		AND preventivo.id_cliente = iFNULL(customer_id, preventivo.id_cliente)
+	GROUP BY preventivo.anno, preventivo.id_preventivo 
+	ORDER BY preventivo.data_creazione DESC
+END; //
+DELIMITER ;
+
