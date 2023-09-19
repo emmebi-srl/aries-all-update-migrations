@@ -2305,9 +2305,9 @@ DELIMITER ;
 
 
 
-DROP PROCEDURE IF EXISTS sp_ariesReportGroupListExport;
+DROP PROCEDURE IF EXISTS sp_printReportGroupListExport;
 DELIMITER //
-CREATE PROCEDURE sp_ariesReportGroupListExport (
+CREATE PROCEDURE sp_printReportGroupListExport (
 	IN start_date DATE,
 	IN end_date DATE,
 	IN customer_id INT
@@ -2318,7 +2318,8 @@ BEGIN
 		resoconto.anno AS 'Anno',
 		data AS 'Data',
 		clienti.Ragione_Sociale AS 'Cliente',
-		tipo_rapclie.nome as 'Tipo Rapporto',
+		Stato_clienti.Nome AS "Stato Cliente",
+		tipo_rapclie.Nome AS "Rapporto Cliente",
 		tipo_resoconto.nome AS 'Tipo',
 		stato_resoconto.nome AS 'Stato',
 		resoconto.descrizione AS 'Descrizione',
@@ -2346,13 +2347,14 @@ BEGIN
 		resoconto.data >= iFNULL(start_date, CAST('1970-01-01' AS DATE)) 
 		AND resoconto.data <= iFNULL(end_date, CAST('2100-01-01' AS DATE))
 		AND resoconto.id_cliente = iFNULL(customer_id, resoconto.id_cliente)
+	GROUP BY resoconto.id_resoconto, resoconto.anno
 	ORDER BY data DESC;
 END; //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS sp_ariesQuoteListExport;
+DROP PROCEDURE IF EXISTS sp_printQuoteListExport;
 DELIMITER //
-CREATE PROCEDURE sp_ariesQuoteListExport (
+CREATE PROCEDURE sp_printQuoteListExport (
 	IN start_date DATE,
 	IN end_date DATE,
 	IN customer_id INT
@@ -2364,7 +2366,8 @@ BEGIN
 		preventivo.revisione AS 'Revisione',
 		preventivo.data_creazione AS 'Data',
 		clienti.Ragione_Sociale AS 'Cliente',
-		tipo_rapclie.nome as 'Tipo Rapporto',
+		Stato_clienti.Nome AS "Stato Cliente",
+		tipo_rapclie.Nome AS "Rapporto Cliente",
 		tipo_preventivo.nome AS 'Tipo',
 		stato_preventivo.nome AS 'Stato',
 		tipo_intprev.nome AS 'Tipo Intervento',
@@ -2414,9 +2417,9 @@ BEGIN
 	WHERE 
 		preventivo.data_creazione >= iFNULL(start_date, CAST('1970-01-01' AS DATE)) 
 		AND preventivo.data_creazione <= iFNULL(end_date, CAST('2100-01-01' AS DATE))
-		AND preventivo.id_cliente = iFNULL(customer_id, preventivo.id_cliente)
+		AND revisione_preventivo.id_cliente = iFNULL(customer_id, revisione_preventivo.id_cliente)
 	GROUP BY preventivo.anno, preventivo.id_preventivo 
-	ORDER BY preventivo.data_creazione DESC
+	ORDER BY preventivo.data_creazione DESC;
 END; //
 DELIMITER ;
 
