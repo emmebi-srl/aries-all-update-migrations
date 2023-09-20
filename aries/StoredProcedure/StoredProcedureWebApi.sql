@@ -4383,7 +4383,7 @@ BEGIN
 		`percorso_default_aggiornamento`,
 		`giorni_avviso_rapporto`,
 		`regime_fiscale`,
-		aries_web_host,
+		'TO_REMOVE' AS aries_web_host,
 		`Data_fine`,
 		`Data_ins`,
 		`Data_mod`,
