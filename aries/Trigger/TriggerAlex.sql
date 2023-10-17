@@ -970,3 +970,117 @@ END
 //
 delimiter ; 
 
+
+-- ############################# TICKETS ##################################################################### 
+DROP TRIGGER IF EXISTS trg_beforeTicketInsert; 
+delimiter //
+CREATE TRIGGER `trg_beforeTicketInsert` BEFORE INSERT ON `ticket` FOR EACH ROW 
+BEGIN
+	DECLARE reminder_event_id INT(11);
+	DECLARE expiration_event_id INT(11);
+
+	IF NEW.data_promemoria IS NOT NULL THEN
+		CALL sp_ariesTicketEnsureReminderEvent(
+			NEW.id_ticket,
+			NEW.anno,
+			NEW.id_impianto,
+			NEW.id_cliente,
+			NEW.urgenza,
+			NEW.data_promemoria,
+			NEW.id_evento_promemoria,
+			NEW.scadenza,
+			NEW.id_evento_scadenza,
+			NEW.descrizione,
+			reminder_event_id
+		);
+		SET NEW.id_evento_promemoria = reminder_event_id;
+	END IF;
+
+	
+	IF NEW.scadenza IS NOT NULL THEN
+		CALL sp_ariesTicketEnsureExpirationEvent(
+			NEW.id_ticket,
+			NEW.anno,
+			NEW.id_impianto,
+			NEW.id_cliente,
+			NEW.urgenza,
+			NEW.data_promemoria,
+			NEW.id_evento_promemoria,
+			NEW.scadenza,
+			NEW.id_evento_scadenza,
+			NEW.descrizione,
+			expiration_event_id
+		);
+		SET NEW.id_evento_scadenza = expiration_event_id;
+	END IF;
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_beforeTicketUpdate; 
+delimiter //
+CREATE TRIGGER `trg_beforeTicketUpdate` BEFORE UPDATE ON `ticket` FOR EACH ROW 
+BEGIN
+	DECLARE reminder_event_id INT(11);
+	DECLARE expiration_event_id INT(11);
+
+	IF NEW.stato_ticket != OLD.stato_ticket AND NEW.stato_ticket IN (3, 4) THEN
+		CALL sp_ariesTicketDeleteReminderEvent(NEW.id_ticket, NEW.anno);
+		CALL sp_ariesTicketDeleteExpirationEvent(NEW.id_ticket, NEW.anno);
+
+		SET NEW.id_evento_promemoria = NULL;
+		SET NEW.id_evento_scadenza = NULL;
+	ELSE
+		IF NEW.data_promemoria IS NULL THEN
+			CALL sp_ariesTicketDeleteReminderEvent(NEW.id_ticket, NEW.anno);
+			SET NEW.id_evento_promemoria = NULL;
+		ELSE
+			CALL sp_ariesTicketEnsureReminderEvent(
+				NEW.id_ticket,
+				NEW.anno,
+				NEW.id_impianto,
+				NEW.id_cliente,
+				NEW.urgenza,
+				NEW.data_promemoria,
+				NEW.id_evento_promemoria,
+				NEW.scadenza,
+				NEW.id_evento_scadenza,
+				NEW.descrizione,
+				reminder_event_id
+			);
+			SET NEW.id_evento_promemoria = reminder_event_id;
+		END IF;
+		
+		IF NEW.scadenza IS NULL THEN
+			CALL sp_ariesTicketDeleteExpirationEvent(NEW.id_ticket, NEW.anno);
+			SET NEW.id_evento_scadenza = NULL;
+		ELSE
+			CALL sp_ariesTicketEnsureExpirationEvent(
+				NEW.id_ticket,
+				NEW.anno,
+				NEW.id_impianto,
+				NEW.id_cliente,
+				NEW.urgenza,
+				NEW.data_promemoria,
+				NEW.id_evento_promemoria,
+				NEW.scadenza,
+				NEW.id_evento_scadenza,
+				NEW.descrizione,
+				expiration_event_id
+			);
+			SET NEW.id_evento_scadenza = expiration_event_id;
+		END IF;
+	END IF;
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_beforeTicketDelete; 
+delimiter //
+CREATE TRIGGER `trg_beforeTicketDelete` BEFORE DELETE ON `ticket` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesTicketDeleteReminderEvent(OLD.id_ticket, OLD.anno);
+	CALL sp_ariesTicketDeleteExpirationEvent(OLD.id_ticket, OLD.anno);
+END
+//
+delimiter ;

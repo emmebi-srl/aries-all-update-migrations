@@ -6927,7 +6927,7 @@ BEGIN
 			giorni_ricorrenza = recurrence_days,
 			Data_esecuzione = execution_date, 
 			Sveglia = has_alarm, 
-			Data_sveglia = alarm,
+			Data_sveglia = IFNULL(alarm, '1970-01-01 00:00:00'),
 			Ora_inizio_esecuzione = execution_start_time, 
 			ora_fine_esecuzione = execution_end_time,
 			stato_notifica = 3, 
@@ -22662,3 +22662,378 @@ BEGIN
 
 END; //
 DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesTicketEnsureReminderEvent;
+DELIMITER //
+CREATE PROCEDURE sp_ariesTicketEnsureReminderEvent (
+	IN ticket_id INT,
+	IN ticket_year INT,
+	IN system_id INT,
+	IN customer_id INT,
+	IN urgency_id INT,
+	IN reminder_date DATE,
+	IN reminder_event_id INT,
+	IN expiration_date DATE,
+	IN expiration_event_id INT,
+	IN ticket_description TEXT,
+	OUT event_id INT(11)
+)
+BEGIN
+	DECLARE event_group_id INT(11);
+	DECLARE urgency VARCHAR(50);
+	DECLARE customer_name VARCHAR(250);
+	DECLARE phone_number VARCHAR(250);
+	DECLARE email VARCHAR(250);
+	DECLARE system_description TEXT;
+	DECLARE event_description TEXT;
+	DECLARE event_subject TEXT;
+
+	SET event_id = reminder_event_id;
+
+	SELECT
+		ragione_sociale,
+		IFNULL(telefono, altro_telefono),
+		mail
+	INTO
+		customer_name,
+		phone_number,
+		email
+	FROM clienti 
+		INNER JOIN riferimento_clienti
+			ON clienti.id_cliente = riferimento_clienti.id_cliente AND id_riferimento = 1
+	WHERE clienti.id_cliente = customer_id;
+
+	SELECT
+		impianto.descrizione
+	INTO
+		system_description
+	FROM impianto
+	WHERE id_impianto = system_id;
+
+	SELECT
+		IFNULL(urgenza.nome, 'NESSUNA')
+	INTO
+		urgency
+	FROM urgenza
+	WHERE id_urgenza = urgency_id;
+
+
+	SELECT 
+		evento_gruppo.id
+	INTO
+		event_group_id
+	FROM evento_gruppo
+		LEFT JOIN evento_gruppo_evento as evento_gruppo_evento_promemoria ON evento_gruppo_evento_promemoria.id_evento = reminder_event_id
+		LEFT JOIN evento_gruppo_evento as evento_gruppo_evento_scadenza ON evento_gruppo_evento_scadenza.id_evento = expiration_event_id
+	WHERE evento_gruppo.id IN (evento_gruppo_evento_promemoria.id_gruppo_evento, evento_gruppo_evento_scadenza.id_gruppo_evento);
+
+
+	IF event_group_id IS NULL THEN
+		INSERT INTO evento_gruppo
+		SET
+			oggetto = CONCAT('PROMEMORIA/SCADENZA TICKET ', ticket_id, '/', ticket_year),
+			descrizione = CONCAT(
+				'TICKET: ', ticket_description, '\n',
+				'CLIENTE: ', IFNULL(customer_name, ''), '\n',
+				'IMPIANTO: ', IFNULL(system_description, ''), '\n'
+			),
+			data_ora_inizio = CONCAT(LEAST(reminder_date, expiration_date), ' ', '08:00:00'),
+			data_ora_fine = CONCAT(GREATEST(reminder_date, expiration_date), ' ', '20:00:00'),
+			Data_ins = NOW(),
+			Data_mod = NOW(),
+			Utente_ins = @USER_ID,
+			Utente_mod = @USER_ID;
+		
+ 		SELECT LAST_INSERT_ID() INTO event_group_id;
+
+	ELSE
+		UPDATE evento_gruppo
+		SET
+			oggetto = CONCAT('PROMEMORIA/SCADENZA TICKET ', ticket_id, '/', ticket_year),
+			descrizione = CONCAT(
+				'TICKET: ', ticket_description, '\n',
+				'CLIENTE: ', IFNULL(customer_name, ''), '\n',
+				'IMPIANTO: ', IFNULL(system_description, ''), '\n'
+			),
+			data_ora_inizio = CONCAT(LEAST(reminder_date, expiration_date), ' ', '08:00:00'),
+			Data_mod = NOW(),
+			Utente_mod = @USER_ID
+		WHERE id = event_group_id;
+
+	END IF;
+
+	
+	SET event_subject = CONCAT('PROMEMORIA TICKET ', ticket_id, '/', ticket_year);
+	SET event_description = CONCAT(
+		'TICKET: ', ticket_description, '\n',
+		'CLIENTE: ', IFNULL(customer_name, ''), '\n',
+		'IMPIANTO: ', IFNULL(system_description, ''), '\n',
+		'URGENZA: ', IFNULL(urgency, ''), '\n',
+		'TELEFONO: ', IFNULL(phone_number, ''), '\n',
+		'EMAIL: ', IFNULL(email, ''), '\n'
+	);
+
+	IF event_id IS NULL THEN
+		INSERT INTO Evento
+		SET 
+			Oggetto = event_subject, 
+			Descrizione = event_description, 
+			Id_riferimento = NULL, 
+			id_tipo_evento = 60, 
+			Eseguito = 0, 
+			Ricorrente = 0,
+			giorni_ricorrenza = 0,
+			Data_esecuzione = reminder_date, 
+			Sveglia = 0, 
+			Data_sveglia = '1970-01-,01 00:00:00',
+			Ora_inizio_esecuzione = '09:00:00',
+			ora_fine_esecuzione = '10:00:00',
+			Data_mod = CURRENT_TIMESTAMP, 
+			Utente_ins = @USER_ID;
+			
+ 		SELECT LAST_INSERT_ID() INTO event_id;
+		
+		INSERT INTO Evento_gruppo_evento (Id_evento, Id_gruppo_evento, Tipo_associazione, Timestamp)
+			VALUES (event_id, event_group_id, 1, CURRENT_TIMESTAMP);
+	ELSE
+		UPDATE Evento
+		SET 
+			Oggetto = event_subject, 
+			Descrizione = event_description, 
+			Data_esecuzione = reminder_date, 
+			Data_mod = CURRENT_TIMESTAMP, 
+			Utente_mod = @USER_ID
+		WHERE Id = event_id; 
+	END IF;
+
+END; //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesTicketEnsureExpirationEvent;
+DELIMITER //
+CREATE PROCEDURE sp_ariesTicketEnsureExpirationEvent (
+	IN ticket_id INT,
+	IN ticket_year INT,
+	IN system_id INT,
+	IN customer_id INT,
+	IN urgency_id INT,
+	IN reminder_date DATE,
+	IN reminder_event_id INT,
+	IN expiration_date DATE,
+	IN expiration_event_id INT,
+	IN ticket_description TEXT,
+	OUT event_id INT(11)
+)
+BEGIN
+	DECLARE event_group_id INT(11);
+	DECLARE urgency VARCHAR(50);
+	DECLARE customer_name VARCHAR(250);
+	DECLARE phone_number VARCHAR(250);
+	DECLARE email VARCHAR(250);
+	DECLARE system_description TEXT;
+	DECLARE event_description TEXT;
+	DECLARE event_subject TEXT;
+
+	SET event_id = expiration_event_id;
+
+	SELECT
+		ragione_sociale,
+		IFNULL(telefono, altro_telefono),
+		mail
+	INTO
+		customer_name,
+		phone_number,
+		email
+	FROM clienti 
+		INNER JOIN riferimento_clienti
+			ON clienti.id_cliente = riferimento_clienti.id_cliente AND id_riferimento = 1
+	WHERE clienti.id_cliente = customer_id;
+
+	SELECT
+		impianto.descrizione
+	INTO
+		system_description
+	FROM impianto
+	WHERE id_impianto = system_id;
+
+	SELECT
+		IFNULL(urgenza.nome, 'NESSUNA')
+	INTO
+		urgency
+	FROM urgenza
+	WHERE id_urgenza = urgency_id;
+
+
+	SELECT 
+		evento_gruppo.id
+	INTO
+		event_group_id
+	FROM evento_gruppo
+		LEFT JOIN evento_gruppo_evento as evento_gruppo_evento_promemoria ON evento_gruppo_evento_promemoria.id_evento = reminder_event_id
+		LEFT JOIN evento_gruppo_evento as evento_gruppo_evento_scadenza ON evento_gruppo_evento_scadenza.id_evento = expiration_event_id
+	WHERE evento_gruppo.id IN (evento_gruppo_evento_promemoria.id_gruppo_evento, evento_gruppo_evento_scadenza.id_gruppo_evento);
+
+
+	IF event_group_id IS NULL THEN
+		INSERT INTO evento_gruppo
+		SET
+			oggetto = CONCAT('PROMEMORIA/SCADENZA TICKET ', ticket_id, '/', ticket_year),
+			descrizione = CONCAT(
+				'TICKET: ', ticket_description, '\n',
+				'CLIENTE: ', IFNULL(customer_name, ''), '\n',
+				'IMPIANTO: ', IFNULL(system_description, ''), '\n'
+			),
+			data_ora_inizio = CONCAT(LEAST(reminder_date, expiration_date), ' ', '08:00:00'),
+			data_ora_fine = CONCAT(GREATEST(reminder_date, expiration_date), ' ', '20:00:00'),
+			Data_ins = NOW(),
+			Data_mod = NOW(),
+			Utente_ins = @USER_ID,
+			Utente_mod = @USER_ID;
+		
+ 		SELECT LAST_INSERT_ID() INTO event_group_id;
+
+	ELSE
+		UPDATE evento_gruppo
+		SET
+			oggetto = CONCAT('PROMEMORIA/SCADENZA TICKET ', ticket_id, '/', ticket_year),
+			descrizione = CONCAT(
+				'TICKET: ', ticket_description, '\n',
+				'CLIENTE: ', IFNULL(customer_name, ''), '\n',
+				'IMPIANTO: ', IFNULL(system_description, ''), '\n'
+			),
+			data_ora_inizio = CONCAT(LEAST(reminder_date, expiration_date), ' ', '08:00:00'),
+			Data_mod = NOW(),
+			Utente_mod = @USER_ID
+		WHERE id = event_group_id;
+
+	END IF;
+	
+	SET event_subject = CONCAT('SCADENZA TICKET ', ticket_id, '/', ticket_year);
+	SET event_description = CONCAT(
+		'TICKET: ', ticket_description, '\n',
+		'CLIENTE: ', IFNULL(customer_name, ''), '\n',
+		'IMPIANTO: ', IFNULL(system_description, ''), '\n',
+		'URGENZA: ', IFNULL(urgency, ''), '\n',
+		'TELEFONO: ', IFNULL(phone_number, ''), '\n',
+		'EMAIL: ', IFNULL(email, ''), '\n'
+	);
+
+
+	IF event_id IS NULL THEN
+		INSERT INTO Evento
+		SET 
+			Oggetto = event_subject, 
+			Descrizione = event_description, 
+			Id_riferimento = NULL, 
+			id_tipo_evento = 60, 
+			Eseguito = 0, 
+			Ricorrente = 0,
+			giorni_ricorrenza = 0,
+			Data_esecuzione = expiration_date, 
+			Sveglia = 0, 
+			Data_sveglia = '1970-01-,01 00:00:00',
+			Ora_inizio_esecuzione = '09:00:00',
+			ora_fine_esecuzione = '10:00:00',
+			Data_mod = CURRENT_TIMESTAMP, 
+			Utente_ins = @USER_ID;
+			
+ 		SELECT LAST_INSERT_ID() INTO event_id;
+		
+		INSERT INTO Evento_gruppo_evento (Id_evento, Id_gruppo_evento, Tipo_associazione, Timestamp)
+			VALUES (event_id, event_group_id, 1, CURRENT_TIMESTAMP);
+	ELSE
+		UPDATE Evento
+		SET 
+			Oggetto = event_subject, 
+			Descrizione = event_description, 
+			Data_esecuzione = expiration_date, 
+			Data_mod = CURRENT_TIMESTAMP, 
+			Utente_mod = @USER_ID
+		WHERE Id = event_id; 
+	END IF;
+
+END; //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesTicketDeleteReminderEvent;
+DELIMITER //
+CREATE PROCEDURE sp_ariesTicketDeleteReminderEvent (
+	IN ticket_id INT,
+	IN ticket_year INT
+)
+BEGIN
+	DECLARE reminder_event_id INT(11);
+	DECLARE expiration_event_id INT(11);
+	DECLARE event_group_id INT(11);
+
+	SELECT id_evento_promemoria, id_evento_scadenza
+		INTO reminder_event_id, expiration_event_id
+	FROM ticket
+	WHERE id_ticket = ticket_id AND anno = ticket_year;
+
+
+	IF reminder_event_id IS NOT NULL THEN
+		SELECT id_gruppo_evento
+			INTO event_group_id
+		FROM evento_gruppo_evento 
+		WHERE id_evento = reminder_event_id;
+
+		UPDATE evento
+		SET Eliminato = 1,
+			Utente_mod = @USER_ID
+		WHERE id = reminder_event_id;
+
+		IF expiration_event_id IS NULL THEN
+			UPDATE evento_gruppo
+			SET Eliminato = 1,
+				Utente_mod = @USER_ID
+			WHERE id = event_group_id;
+		END IF;
+	END IF;
+END; //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesTicketDeleteExpirationEvent;
+DELIMITER //
+CREATE PROCEDURE sp_ariesTicketDeleteExpirationEvent (
+	IN ticket_id INT,
+	IN ticket_year INT
+)
+BEGIN
+	DECLARE reminder_event_id INT(11);
+	DECLARE expiration_event_id INT(11);
+	DECLARE event_group_id INT(11);
+
+	SELECT id_evento_promemoria, id_evento_scadenza
+		INTO reminder_event_id, expiration_event_id
+	FROM ticket
+	WHERE id_ticket = ticket_id AND anno = ticket_year;
+	
+
+	IF expiration_event_id IS NOT NULL THEN
+		SELECT id_gruppo_evento
+			INTO event_group_id
+		FROM evento_gruppo_evento 
+		WHERE id_evento = expiration_event_id;
+
+		UPDATE evento
+		SET Eliminato = 1,
+			Utente_mod = @USER_ID
+		WHERE id = expiration_event_id;
+
+		IF reminder_event_id IS NULL THEN
+			
+			UPDATE evento_gruppo
+			SET Eliminato = 1,
+				Utente_mod = @USER_ID
+			WHERE id = event_group_id;
+
+		END IF;
+	END IF;
+
+END; //
+DELIMITER ;
+
