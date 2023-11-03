@@ -1083,4 +1083,75 @@ BEGIN
 	CALL sp_ariesTicketDeleteExpirationEvent(OLD.id_ticket, OLD.anno);
 END
 //
-delimiter ;
+
+
+-- ############################# CONTRACTS ##################################################################### 
+DROP TRIGGER IF EXISTS trg_beforeContractInsert; 
+delimiter //
+CREATE TRIGGER `trg_beforeContractInsert` BEFORE INSERT ON `contratto` FOR EACH ROW 
+BEGIN
+	SET NEW.data_inserimento = NOW();
+	SET NEW.data=NOW();
+
+	IF NEW.tipo_stampa IS NULL THEN
+		SET NEW.tipo_stampa = (SELECT CAST(var_value AS UNSIGNED) FROM environment_variables WHERE var_key = 'DEFAULT_CONTRACT_PRINT_TYPE');
+	END IF;
+
+	IF NEW.iban IS NULL THEN
+		SET NEW.iban = (SELECT iban FROM azienda ORDER BY id_azienda DESC LIMIT 1);
+	END IF;
+
+	IF NEW.pagamento IS NULL THEN
+		SET NEW.pagamento = (SELECT condizione_pagamento FROM clienti WHERE id_cliente=NEW.id_cliente);
+	END IF;
+
+	IF NEW.id_destinazione IS NULL THEN
+		SET NEW.id_destinazione = (SELECT destinazione FROM revisione_preventivo WHERE id_preventivo = NEW.id_preventivo AND anno = NEW.anno AND id_revisione = NEW.id_revisione);
+	END IF;
+	
+	IF NEW.signor IS NULL THEN
+		SET NEW.signor = (SELECT cortese FROM revisione_preventivo WHERE id_preventivo = NEW.id_preventivo AND anno = NEW.anno AND id_revisione = NEW.id_revisione);
+	END IF;
+
+	IF (NEW.signor IS NOT NULL) AND (NEW.telefono IS NULL) THEN
+		SET NEW.telefono = (SELECT IF(altro_telefono = '' OR altro_telefono IS NULL, telefono, altro_telefono) FROM riferimento_clienti rc WHERE rc.Nome = NEW.signor AND id_cliente = NEW.id_cliente);
+	END IF;
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_afterContractInsert; 
+delimiter //
+CREATE TRIGGER `trg_afterContractInsert` AFTER INSERT ON `contratto` FOR EACH ROW 
+BEGIN
+	IF NEW.tipo_contratto = 2 THEN
+		INSERT INTO contratto_impianto_mese(id_contratto, id_impianto, id_mese)
+		SELECT NEW.id_contratto,
+			id_impianto,
+			numero
+		FROM preventivo_articolo_abbonamento
+        	INNER JOIN preventivo_lotto ON posizione=preventivo_articolo_abbonamento.id_lotto
+				AND preventivo_articolo_abbonamento.anno=preventivo_lotto.anno
+        		AND preventivo_articolo_abbonamento.id_Preventivo=preventivo_lotto.id_preventivo
+				AND preventivo_articolo_abbonamento.revisione=preventivo_lotto.id_revisione
+        WHERE preventivo_articolo_abbonamento.id_preventivo = NEW.id_preventivo
+        	AND preventivo_articolo_abbonamento.anno = NEW.anno
+    		AND preventivo_articolo_abbonamento.revisione = NEW.id_revisione
+        	AND numero <= 12; 
+
+			
+
+
+		INSERT INTO contratto_paragrafo (id_contratto, id_tipo, id_paragrafo, nome, descrizione)
+		SELECT NEW.id_contratto,
+			2,
+			id_paragrafo,
+			nome,
+			descrizione
+		FROM contratto_modello_paragrafo
+		WHERE id_tipo = 3;
+
+	END IF;
+END
+//
+delimiter ; 
