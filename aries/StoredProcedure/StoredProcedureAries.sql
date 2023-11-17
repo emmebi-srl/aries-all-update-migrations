@@ -11873,6 +11873,8 @@ BEGIN
 		Costo,
 		scan,
 		controllo_periodico,
+		controllo_periodico_costo,
+		controllo_periodico_quantita,
 		numero,
 		prima,
 		cost_lav,
@@ -11933,6 +11935,8 @@ BEGIN
 		Costo,
 		scan,
 		controllo_periodico,
+		controllo_periodico_costo,
+		controllo_periodico_quantita,
 		numero,
 		prima,
 		cost_lav,
@@ -11995,6 +11999,8 @@ BEGIN
 		Costo,
 		scan,
 		controllo_periodico,
+		controllo_periodico_costo,
+		controllo_periodico_quantita,
 		numero,
 		prima,
 		cost_lav,
@@ -12057,6 +12063,8 @@ BEGIN
 		Costo,
 		scan,
 		controllo_periodico,
+		controllo_periodico_costo,
+		controllo_periodico_quantita,
 		numero,
 		prima,
 		cost_lav,
@@ -12117,6 +12125,8 @@ BEGIN
 		Costo,
 		scan,
 		controllo_periodico,
+		controllo_periodico_costo,
+		controllo_periodico_quantita,
 		numero,
 		prima,
 		cost_lav,
@@ -12178,6 +12188,8 @@ BEGIN
 		Costo,
 		scan,
 		controllo_periodico,
+		controllo_periodico_costo,
+		controllo_periodico_quantita,
 		numero,
 		prima,
 		cost_lav,
@@ -12239,6 +12251,8 @@ BEGIN
 		Costo,
 		scan,
 		controllo_periodico,
+		controllo_periodico_costo,
+		controllo_periodico_quantita,
 		numero,
 		prima,
 		cost_lav,
@@ -12300,6 +12314,8 @@ BEGIN
 		Costo,
 		scan,
 		controllo_periodico,
+		controllo_periodico_costo,
+		controllo_periodico_quantita,
 		numero,
 		prima,
 		cost_lav,
@@ -12361,6 +12377,8 @@ BEGIN
 		Costo,
 		scan,
 		controllo_periodico,
+		controllo_periodico_costo,
+		controllo_periodico_quantita,
 		numero,
 		prima,
 		cost_lav,
@@ -18176,6 +18194,8 @@ BEGIN
 		Costo,
 		scan,
 		controllo_periodico,
+		controllo_periodico_costo,
+		controllo_periodico_quantita,
 		numero,
 		prima,
 		cost_lav,
@@ -18240,6 +18260,8 @@ BEGIN
 		Costo,
 		scan,
 		controllo_periodico,
+		controllo_periodico_costo,
+		controllo_periodico_quantita,
 		numero,
 		prima,
 		cost_lav,
@@ -22173,12 +22195,14 @@ BEGIN
 	DECLARE total_price DECIMAL(11,2);
 	DECLARE total_cost DECIMAL(11,2);
 	DECLARE total_maintenance_price DECIMAL(11,2);
+	DECLARE total_maintenance_cost DECIMAL(11,2);
 	DECLARE right_of_call_cost DECIMAL(11,2);
 	DECLARE right_of_call_price DECIMAL(11,2);
 
 	
 	SELECT
 		SUM(prezzo_manutenzione),
+		SUM(costo_manutenzione),
 		SUM(costo_diritto_chiamata),
 		SUM(prezzo_diritto_chiamata),
 		SUM(costo_lavoro),
@@ -22191,6 +22215,7 @@ BEGIN
 		SUM(prezzo_totale)
 	INTO
 		total_maintenance_price,
+		total_maintenance_cost,
 		right_of_call_cost,
 		right_of_call_price,
 		total_work_cost,
@@ -22208,6 +22233,7 @@ BEGIN
 
 
 	SET total_maintenance_price = IFNULL(total_maintenance_price, 0);
+	SET total_maintenance_cost = IFNULL(total_maintenance_cost, 0);
 	SET right_of_call_cost = IFNULL(right_of_call_cost, 0);
 	SET right_of_call_price = IFNULL(right_of_call_price, 0);
 	SET total_work_cost = IFNULL(total_work_cost, 0);
@@ -22222,6 +22248,7 @@ BEGIN
 	UPDATE resoconto_totali
 	SET 
 		prezzo_manutenzione = total_maintenance_price,
+		costo_manutenzione = total_maintenance_cost,
 		costo_diritto_chiamata = right_of_call_cost,
 		prezzo_diritto_chiamata = right_of_call_price,
 		costo_lavoro = total_work_cost,
@@ -22247,6 +22274,7 @@ CREATE PROCEDURE `sp_ariesReportTotalsRefresh`(
 )
 BEGIN
 	DECLARE total_maintenance_price DECIMAL(11,2);
+	DECLARE total_maintenance_cost DECIMAL(11,2);
 	DECLARE total_trip_price DECIMAL(11,2);
 	DECLARE total_trip_cost DECIMAL(11,2);
 	DECLARE total_work_price DECIMAL(11,2);
@@ -22289,8 +22317,12 @@ BEGIN
 		SET right_of_call_price = 0;
 	END IF;
 
-	SELECT controllo_periodico
-	INTO total_maintenance_price
+	SELECT
+		controllo_periodico * controllo_periodico_quantita,
+		controllo_periodico_costo * controllo_periodico_quantita
+	INTO
+		total_maintenance_price,
+		total_maintenance_cost
 	FROM rapporto
 	WHERE id_rapporto = report_id AND anno = report_year;
 	
@@ -22333,12 +22365,14 @@ BEGIN
 	SET right_of_call_cost = IFNULL(right_of_call_cost, 0);
 	SET right_of_call_price = IFNULL(right_of_call_price, 0);
 	SET total_maintenance_price = IFNULL(total_maintenance_price, 0);
-	SET total_cost = total_work_cost + total_trip_cost + total_products_cost + right_of_call_cost;
+	SET total_maintenance_cost = IFNULL(total_maintenance_cost, 0);
+	SET total_cost = total_work_cost + total_trip_cost + total_products_cost + right_of_call_cost * total_maintenance_cost;
 	SET total_price = total_work_price + total_trip_price + total_products_price + right_of_call_price + total_maintenance_price;
 
 	UPDATE rapporto_totali
 	SET 
 			prezzo_manutenzione = total_maintenance_price,
+			costo_manutenzione = total_maintenance_cost,
 			prezzo_diritto_chiamata = right_of_call_price,
 			costo_diritto_chiamata = right_of_call_cost,
 			costo_lavoro = total_work_cost,

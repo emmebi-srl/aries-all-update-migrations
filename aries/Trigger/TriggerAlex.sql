@@ -800,8 +800,8 @@ DROP TRIGGER IF EXISTS trg_afterReportInsert;
 delimiter //
 CREATE TRIGGER `trg_afterReportInsert` AFTER INSERT ON `rapporto` FOR EACH ROW 
 BEGIN	
-	INSERT INTO  rapporto_totali (id_rapporto, anno, costo_lavoro, prezzo_lavoro, costo_viaggio, prezzo_viaggio, costo_materiale, prezzo_materiale, costo_totale, prezzo_totale)
-	VALUES (NEW.id_rapporto, NEW.anno, 0, 0, 0, 0, 0, 0, 0, 0);
+	INSERT INTO  rapporto_totali (id_rapporto, anno, costo_manutenzione, costo_lavoro, prezzo_lavoro, costo_viaggio, prezzo_viaggio, costo_materiale, prezzo_materiale, costo_totale, prezzo_totale)
+	VALUES (NEW.id_rapporto, NEW.anno, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 END
 //
 delimiter ; 
@@ -929,8 +929,8 @@ DROP TRIGGER IF EXISTS trg_afterReportGroupInsert;
 delimiter //
 CREATE TRIGGER `trg_afterReportGroupInsert` AFTER INSERT ON `resoconto` FOR EACH ROW 
 BEGIN	
-	INSERT INTO  resoconto_totali (id_resoconto, anno, prezzo_manutenzione, costo_diritto_chiamata, prezzo_diritto_chiamata, costo_lavoro, prezzo_lavoro, costo_viaggio, prezzo_viaggio, costo_materiale, prezzo_materiale, costo_totale, prezzo_totale)
-	VALUES (NEW.id_resoconto, NEW.anno, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	INSERT INTO  resoconto_totali (id_resoconto, anno, prezzo_manutenzione, costo_manutenzione, costo_diritto_chiamata, prezzo_diritto_chiamata, costo_lavoro, prezzo_lavoro, costo_viaggio, prezzo_viaggio, costo_materiale, prezzo_materiale, costo_totale, prezzo_totale)
+	VALUES (NEW.id_resoconto, NEW.anno, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 END
 
 //
@@ -1084,6 +1084,7 @@ BEGIN
 END
 //
 
+delimiter ; 
 
 -- ############################# CONTRACTS ##################################################################### 
 DROP TRIGGER IF EXISTS trg_beforeContractInsert; 
