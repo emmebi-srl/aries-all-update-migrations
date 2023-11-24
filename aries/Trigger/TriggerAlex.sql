@@ -378,6 +378,9 @@ BEGIN
 	IF has_job_link = 1 THEN
 		SIGNAL SQLSTATE '45000'
      	SET MESSAGE_TEXT = 'Cannot update report product becacuse of the job link already exists.';
+
+	ELSE
+		CALL sp_ariesDepotsReportProductDelete(old.id_rapporto, old.anno, old.id_tab);
 	END IF;
 END;
 //
@@ -387,7 +390,22 @@ DROP TRIGGER IF EXISTS trg_afterReportProductUpdate;
 delimiter //
 CREATE TRIGGER `trg_afterReportProductUpdate` AFTER UPDATE ON `rapporto_materiale` FOR EACH ROW 
 BEGIN
+	DECLARE allow_insert BIT;
+	
 	CALL sp_ariesReportTotalsRefresh(NEW.id_rapporto, NEW.anno);
+	
+	IF new.id_materiale IS NOT NULL THEN
+
+		SELECT  fnc_productAllowDepotsScale(new.id_materiale)
+			INTO allow_insert;
+
+			
+		-- CHECK IF IS PRODCUT AND HAI DEPOTS ID
+		IF (allow_insert = 1) AND (new.id_magazzino IS NOT NULL) THEN
+			CALL sp_ariesDepotsScaleByReportProduct(new.id_rapporto, new.anno, new.id_tab,
+				new.quantità, new.id_materiale);
+		END IF;
+	END IF;
 END;
 //
 DELIMITER ;
