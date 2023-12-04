@@ -5005,6 +5005,7 @@ BEGIN
 		SET Result = LAST_INSERT_ID();
 		
 		CALL sp_ariesEmailSetDocumentStatus(Result); 
+		CALL sp_ariesEmailWriteSideEffects(Result); 
 		
 	END IF; 
 	
@@ -5121,7 +5122,7 @@ END//
 DELIMITER ;
 
 
--- Dump della struttura di procedura emmebi.sp_ariesEmailSetDocumentStatus
+-- Dump della struttura di procedura emmebi.sp_ariessssEmailSetDocumentStatus
 DROP PROCEDURE IF EXISTS sp_ariesEmailSetDocumentStatus;
 DELIMITER //
 CREATE  PROCEDURE `sp_ariesEmailSetDocumentStatus`(
@@ -5283,6 +5284,38 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Dump della struttura di procedura emmebi.sp_ariesEmailWriteSideEffects
+DROP PROCEDURE IF EXISTS sp_ariesEmailWriteSideEffects;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesEmailWriteSideEffects`(
+	IN `email_id` INT(11)
+)
+BEGIN
+	
+	DECLARE DocumentType VARCHAR(30); 
+	DECLARE DocumentId VARCHAR(10);
+	DECLARE DocumentYear VARCHAR(10);
+	DECLARE StatusId INT(11);
+	
+	SELECT mail.Tipo_documento,
+		mail.Id_documento,
+		mail.anno_documento, 
+		mail.Id_stato 
+	INTO 
+		DocumentType, 
+		DocumentId, 
+		DocumentYear, 
+		StatusId 
+	FROM mail
+	WHERE Id = email_id; 
+	
+	IF StatusId = 0 AND (DocumentType = 'rapporto_mobile_intervento' OR DocumentType = 'rapporto_mobile_collaudo')  THEN
+		UPDATE rapporto_mobile_destinatario 
+		SET rapporto_mobile_destinatario.id_mail = email_id
+		WHERE Id_rapporto = DocumentId AND anno = DocumentYear; 
+	END IF; 		
+END//
+DELIMITER ;
 
 -- Dump della struttura di procedura emmebi.sp_ariesEmailSetStatus
 DROP PROCEDURE IF EXISTS sp_ariesEmailSetStatus;
@@ -5336,6 +5369,7 @@ BEGIN
 		WHERE mail.Id = email_id;  
 		
 		CALL sp_ariesEmailSetDocumentStatus(email_id); 
+		CALL sp_ariesEmailWriteSideEffects(email_id);
 
 		SET Result = 1;
 	END IF; 
@@ -5433,6 +5467,7 @@ BEGIN
 		WHERE mail.Id = email_id; 
 		
 		CALL sp_ariesEmailSetDocumentStatus(email_id); 
+		CALL sp_ariesEmailWriteSideEffects(email_id); 
 		
 		SET Result = 1;
 	END IF; 
@@ -13328,9 +13363,13 @@ BEGIN
 		rapporto_mobile_destinatario.id_rapporto,
 		rapporto_mobile_destinatario.anno, 
 		rapporto_mobile_destinatario.email, 
-		rapporto_mobile_destinatario.tipo_email
-		
-	FROM rapporto_mobile_destinatario;
+		rapporto_mobile_destinatario.tipo_email,
+		rapporto_mobile_destinatario.id_mail,
+		mail.data_invio AS data_invio_email,
+		mail_stato.nome AS stato_invio_email
+	FROM rapporto_mobile_destinatario
+		LEFT JOIN mail ON mail.id = rapporto_mobile_destinatario.id_mail
+		LEFT JOIN mail_stato ON mail.id_stato = mail_stato.id_stato;
 	                        
 END//
 DELIMITER ;
@@ -13349,9 +13388,13 @@ BEGIN
 		rapporto_mobile_destinatario.id_rapporto,
 		rapporto_mobile_destinatario.anno, 
 		rapporto_mobile_destinatario.email, 
-		rapporto_mobile_destinatario.tipo_email
-		
+		rapporto_mobile_destinatario.tipo_email,
+		rapporto_mobile_destinatario.id_mail,
+		mail.data_invio AS data_invio_email,
+		mail_stato.nome AS stato_invio_email
 	FROM rapporto_mobile_destinatario
+		LEFT JOIN mail ON mail.id = rapporto_mobile_destinatario.id_mail
+		LEFT JOIN mail_stato ON mail.id_stato = mail_stato.id_stato
 	WHERE id_rapporto = report_id AND anno = report_year;
 	                        
 END//
