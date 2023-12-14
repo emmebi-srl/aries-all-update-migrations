@@ -4491,6 +4491,7 @@ BEGIN
 		IFNULL(stm, 0) as stm,
 		`fat_SpeseRap`,
 		`prezzo_manutenzione`,
+		`resoconto_totali`.costo_manutenzione,
 		`costo_diritto_chiamata`,
 		`prezzo_diritto_chiamata`,
 		`costo_lavoro`,
