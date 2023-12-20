@@ -9,6 +9,7 @@ INSERT INTO `utente_roles` (`nome`, `descrizione`, `app_name`) VALUES ('Responsa
 INSERT INTO `utente_roles` (`nome`, `descrizione`, `app_name`) VALUES ('Addetto Contabilita', 'Questo role identifica un addetto alla contabilita', 'accounting_clerk');
 INSERT INTO `utente_roles` (`nome`, `descrizione`, `app_name`) VALUES ('Responsabile Contabilita', 'Questo role identifica un responsabile alla contabilita', 'accounting_manager');
 
+INSERT INTO `utente_roles` (`nome`, `descrizione`, `app_name`, `max_utenti_assegnabili`, `min_utenti_assegnabili`, `timestamp`) VALUES ('Responsabile Magazzino', 'Questa role segna una persona come amministratore magazzino', 'depot_admin', 10, 1, '2023-12-20 08:49:34');
 
 DROP TABLE tablet_posizioni;
 DROP TABLE tablet;
