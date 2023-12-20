@@ -9,7 +9,7 @@ BEGIN
 
 	DECLARE allowUpdate BIT DEFAULT 1; 
 	
-	SET allowUpdate = CONCAT(userId, userName, userPassword) IS NOT NULL;
+	SET allowUpdate = CONCAT(userId, userName) IS NOT NULL;
 	
 	-- CONTROLLARE USERNAME PASSWORD E TIPO UTENTE
 
