@@ -22879,7 +22879,7 @@ BEGIN
 			giorni_ricorrenza = 0,
 			Data_esecuzione = reminder_date, 
 			Sveglia = 0, 
-			Data_sveglia = '1970-01-,01 00:00:00',
+			Data_sveglia = '1970-01-01 00:00:00',
 			Ora_inizio_esecuzione = '09:00:00',
 			ora_fine_esecuzione = '10:00:00',
 			Data_mod = CURRENT_TIMESTAMP, 
@@ -23026,7 +23026,7 @@ BEGIN
 			giorni_ricorrenza = 0,
 			Data_esecuzione = expiration_date, 
 			Sveglia = 0, 
-			Data_sveglia = '1970-01-,01 00:00:00',
+			Data_sveglia = '1970-01-01 00:00:00',
 			Ora_inizio_esecuzione = '09:00:00',
 			ora_fine_esecuzione = '10:00:00',
 			Data_mod = CURRENT_TIMESTAMP, 
@@ -23129,4 +23129,330 @@ BEGIN
 
 END; //
 DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS sp_ariesEmployeeDpiDeleteReminderEvent;
+DELIMITER //
+CREATE PROCEDURE sp_ariesEmployeeDpiDeleteReminderEvent (
+	IN employee_dpi_id INT
+)
+BEGIN
+	DECLARE reminder_event_id INT(11);
+	DECLARE expiration_event_id INT(11);
+	DECLARE event_group_id INT(11);
+
+	SELECT id_evento_promemoria, id_evento_scadenza
+		INTO reminder_event_id, expiration_event_id
+	FROM operaio_dpi
+	WHERE id_dpi = employee_dpi_id;
+
+
+	IF reminder_event_id IS NOT NULL THEN
+		SELECT id_gruppo_evento
+			INTO event_group_id
+		FROM evento_gruppo_evento 
+		WHERE id_evento = reminder_event_id;
+
+		UPDATE evento
+		SET Eliminato = 1,
+			Utente_mod = @USER_ID
+		WHERE id = reminder_event_id;
+
+		IF expiration_event_id IS NULL THEN
+			UPDATE evento_gruppo
+			SET Eliminato = 1,
+				Utente_mod = @USER_ID
+			WHERE id = event_group_id;
+		END IF;
+	END IF;
+END; //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesEmployeeDpiDeleteExpirationEvent;
+DELIMITER //
+CREATE PROCEDURE sp_ariesEmployeeDpiDeleteExpirationEvent (
+	IN employee_dpi_id INT
+)
+BEGIN
+	DECLARE reminder_event_id INT(11);
+	DECLARE expiration_event_id INT(11);
+	DECLARE event_group_id INT(11);
+
+	SELECT id_evento_promemoria, id_evento_scadenza
+		INTO reminder_event_id, expiration_event_id
+	FROM operaio_dpi
+	WHERE id_dpi = employee_dpi_id;
+	
+
+	IF expiration_event_id IS NOT NULL THEN
+		SELECT id_gruppo_evento
+			INTO event_group_id
+		FROM evento_gruppo_evento 
+		WHERE id_evento = expiration_event_id;
+
+		UPDATE evento
+		SET Eliminato = 1,
+			Utente_mod = @USER_ID
+		WHERE id = expiration_event_id;
+
+		IF reminder_event_id IS NULL THEN
+			
+			UPDATE evento_gruppo
+			SET Eliminato = 1,
+				Utente_mod = @USER_ID
+			WHERE id = event_group_id;
+
+		END IF;
+	END IF;
+
+END; //
+DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS sp_ariesEmployeeDpiEnsureReminderEvent;
+DELIMITER //
+CREATE PROCEDURE sp_ariesEmployeeDpiEnsureReminderEvent (
+	IN employee_dpi_id INT,
+	IN employee_id INT,
+	IN product_id VARCHAR(11),
+	IN reminder_date DATE,
+	IN reminder_event_id INT,
+	IN expiration_date DATE,
+	IN expiration_event_id INT,
+	OUT event_id INT(11)
+)
+BEGIN
+	DECLARE event_group_id INT(11);
+	DECLARE employee_name TEXT;
+	DECLARE product_name TEXT;
+	DECLARE event_description TEXT;
+	DECLARE event_subject TEXT;
+
+	SET event_id = reminder_event_id;
+
+	SELECT
+		ragione_sociale
+	INTO
+		employee_name
+	FROM operaio
+	WHERE id_operaio = employee_id;
+
+	SELECT
+		desc_brev
+	INTO
+		product_name
+	FROM articolo
+	WHERE codice_articolo = product_id;
+
+	SELECT 
+		evento_gruppo.id
+	INTO
+		event_group_id
+	FROM evento_gruppo
+		LEFT JOIN evento_gruppo_evento as evento_gruppo_evento_promemoria ON evento_gruppo_evento_promemoria.id_evento = reminder_event_id
+		LEFT JOIN evento_gruppo_evento as evento_gruppo_evento_scadenza ON evento_gruppo_evento_scadenza.id_evento = expiration_event_id
+	WHERE evento_gruppo.id IN (evento_gruppo_evento_promemoria.id_gruppo_evento, evento_gruppo_evento_scadenza.id_gruppo_evento);
+
+
+	IF event_group_id IS NULL THEN
+		INSERT INTO evento_gruppo
+		SET
+			oggetto = CONCAT('PROMEMORIA/SCADENZA DPI ', employee_name),
+			descrizione = CONCAT(
+				'OPERAIO: ', employee_name, '\n',
+				'DPI: ', IFNULL(product_name, ''), '\n'
+			),
+			data_ora_inizio = CONCAT(LEAST(reminder_date, expiration_date), ' ', '08:00:00'),
+			data_ora_fine = CONCAT(GREATEST(reminder_date, expiration_date), ' ', '20:00:00'),
+			Data_ins = NOW(),
+			Data_mod = NOW(),
+			Utente_ins = @USER_ID,
+			Utente_mod = @USER_ID;
+		
+ 		SELECT LAST_INSERT_ID() INTO event_group_id;
+
+	ELSE
+		UPDATE evento_gruppo
+		SET
+			oggetto = CONCAT('PROMEMORIA/SCADENZA DPI ', employee_name),
+			descrizione = CONCAT(
+				'OPERAIO: ', employee_name, '\n',
+				'DPI: ', IFNULL(product_name, ''), '\n'
+			),
+			data_ora_inizio = CONCAT(LEAST(reminder_date, expiration_date), ' ', '08:00:00'),
+			Data_mod = NOW(),
+			Utente_mod = @USER_ID
+		WHERE id = event_group_id;
+
+	END IF;
+
+	
+	SET event_subject = CONCAT('PROMEMORIA DPI ', employee_name);
+	SET event_description = CONCAT(
+		'OPERAIO: ', employee_name, '\n',
+		'DPI: ', IFNULL(product_name, ''), '\n',
+		'SCADENZA: ', IFNULL(expiration_date, ''), '\n'
+	);
+
+	IF event_id IS NULL THEN
+		INSERT INTO Evento
+		SET 
+			Oggetto = event_subject, 
+			Descrizione = event_description, 
+			Id_riferimento = NULL, 
+			id_tipo_evento = 70, 
+			Eseguito = 0, 
+			Ricorrente = 0,
+			giorni_ricorrenza = 0,
+			Data_esecuzione = reminder_date, 
+			Sveglia = 0, 
+			Data_sveglia = '1970-01-01 00:00:00',
+			Ora_inizio_esecuzione = '09:00:00',
+			ora_fine_esecuzione = '10:00:00',
+			Data_mod = CURRENT_TIMESTAMP, 
+			Utente_ins = @USER_ID;
+			
+ 		SELECT LAST_INSERT_ID() INTO event_id;
+		
+		INSERT INTO Evento_gruppo_evento (Id_evento, Id_gruppo_evento, Tipo_associazione, Timestamp)
+			VALUES (event_id, event_group_id, 1, CURRENT_TIMESTAMP);
+	ELSE
+		UPDATE Evento
+		SET 
+			Oggetto = event_subject, 
+			Descrizione = event_description, 
+			Data_esecuzione = reminder_date, 
+			Data_mod = CURRENT_TIMESTAMP, 
+			Utente_mod = @USER_ID
+		WHERE Id = event_id; 
+	END IF;
+
+END; //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesEmployeeDpiEnsureExpirationEvent;
+DELIMITER //
+CREATE PROCEDURE sp_ariesEmployeeDpiEnsureExpirationEvent (
+	IN employee_dpi_id INT,
+	IN employee_id INT,
+	IN product_id VARCHAR(11),
+	IN reminder_date DATE,
+	IN reminder_event_id INT,
+	IN expiration_date DATE,
+	IN expiration_event_id INT,
+	OUT event_id INT(11)
+)
+BEGIN
+	DECLARE event_group_id INT(11);
+	DECLARE employee_name TEXT;
+	DECLARE product_name TEXT;
+	DECLARE event_description TEXT;
+	DECLARE event_subject TEXT;
+
+	SET event_id = expiration_event_id;
+
+	SELECT
+		ragione_sociale
+	INTO
+		employee_name
+	FROM operaio
+	WHERE id_operaio = employee_id;
+
+	SELECT
+		desc_brev
+	INTO
+		product_name
+	FROM articolo
+	WHERE codice_articolo = product_id;
+
+	SELECT 
+		evento_gruppo.id
+	INTO
+		event_group_id
+	FROM evento_gruppo
+		LEFT JOIN evento_gruppo_evento as evento_gruppo_evento_promemoria ON evento_gruppo_evento_promemoria.id_evento = reminder_event_id
+		LEFT JOIN evento_gruppo_evento as evento_gruppo_evento_scadenza ON evento_gruppo_evento_scadenza.id_evento = expiration_event_id
+	WHERE evento_gruppo.id IN (evento_gruppo_evento_promemoria.id_gruppo_evento, evento_gruppo_evento_scadenza.id_gruppo_evento);
+
+
+	IF event_group_id IS NULL THEN
+		INSERT INTO evento_gruppo
+		SET
+			oggetto = CONCAT('PROMEMORIA/SCADENZA DPI ', employee_name),
+			descrizione = CONCAT(
+				'OPERAIO: ', employee_name, '\n',
+				'DPI: ', IFNULL(product_name, ''), '\n'
+			),
+			data_ora_inizio = CONCAT(LEAST(reminder_date, expiration_date), ' ', '08:00:00'),
+			data_ora_fine = CONCAT(GREATEST(reminder_date, expiration_date), ' ', '20:00:00'),
+			Data_ins = NOW(),
+			Data_mod = NOW(),
+			Utente_ins = @USER_ID,
+			Utente_mod = @USER_ID;
+		
+ 		SELECT LAST_INSERT_ID() INTO event_group_id;
+
+	ELSE
+		UPDATE evento_gruppo
+		SET
+			oggetto = CONCAT('PROMEMORIA/SCADENZA DPI ', employee_name),
+			descrizione = CONCAT(
+				'OPERAIO: ', employee_name, '\n',
+				'DPI: ', IFNULL(product_name, ''), '\n'
+			),
+			data_ora_inizio = CONCAT(LEAST(reminder_date, expiration_date), ' ', '08:00:00'),
+			data_ora_fine = CONCAT(GREATEST(reminder_date, expiration_date), ' ', '20:00:00'),
+			Data_mod = NOW(),
+			Utente_mod = @USER_ID
+		WHERE id = event_group_id;
+
+	END IF;
+	
+	SET event_subject = CONCAT('SCADENZA DPI ', employee_name);
+	SET event_description = CONCAT(
+		'OPERAIO: ', employee_name, '\n',
+		'DPI: ', IFNULL(product_name, ''), '\n'
+	);
+
+
+	IF event_id IS NULL THEN
+		INSERT INTO Evento
+		SET 
+			Oggetto = event_subject, 
+			Descrizione = event_description, 
+			Id_riferimento = NULL, 
+			id_tipo_evento = 70, 
+			Eseguito = 0, 
+			Ricorrente = 0,
+			giorni_ricorrenza = 0,
+			Data_esecuzione = expiration_date, 
+			Sveglia = 0, 
+			Data_sveglia = '1970-01-01 00:00:00',
+			Ora_inizio_esecuzione = '09:00:00',
+			ora_fine_esecuzione = '10:00:00',
+			Data_mod = CURRENT_TIMESTAMP, 
+			Utente_ins = @USER_ID;
+			
+ 		SELECT LAST_INSERT_ID() INTO event_id;
+		
+		INSERT INTO Evento_gruppo_evento (Id_evento, Id_gruppo_evento, Tipo_associazione, Timestamp)
+			VALUES (event_id, event_group_id, 1, CURRENT_TIMESTAMP);
+	ELSE
+		UPDATE Evento
+		SET 
+			Oggetto = event_subject, 
+			Descrizione = event_description, 
+			Data_esecuzione = expiration_date, 
+			Data_mod = CURRENT_TIMESTAMP, 
+			Utente_mod = @USER_ID
+		WHERE Id = event_id; 
+	END IF;
+
+END; //
+DELIMITER ;
+
 

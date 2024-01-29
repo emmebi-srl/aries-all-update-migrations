@@ -88,12 +88,12 @@ BEGIN
 	
 	
 	SELECT 
-		`Id`,
+		rapporto_mobile_collaudo.`Id`,
 		`Id_rapporto`,
 		`Anno`,
-		`Id_cliente`,
-		IFNULL(`Id_impianto`, 0) Id_impianto,
-		`Indirizzo`,
+		rapporto_mobile_collaudo.`Id_cliente`,
+		IFNULL(rapporto_mobile_collaudo.Id_impianto, 0) Id_impianto,
+		rapporto_mobile_collaudo.`Indirizzo`,
 		IFNULL(`Telefono`, "") Telefono,
 		IFNULL(`Fax`, "") Fax,
 		IFNULL(`Partita_iva_cod_fisc`, "") Partita_iva_cod_fisc,
@@ -103,10 +103,10 @@ BEGIN
 		`Data`,
 		IFNULL(`Descrizione_veicolo`, "") Descrizione_veicolo,
 		`Tipo_intervento`,
-		IFNULL(`Tipo_impianto`, 0) Tipo_impianto,
+		IFNULL(rapporto_mobile_collaudo.`Tipo_impianto`, 0) Tipo_impianto,
 		`Ragione_sociale`,
 		IFNULL(`Tipo_modello_impianto`, "") Tipo_modello_impianto,
-		IFNULL(`Stato_impianto`, "") Stato_impianto,
+		IFNULL(rapporto_mobile_collaudo.`Stato_impianto`, "") Stato_impianto,
 		IF(`Test_check_1`= 1, "X", "") Test_check_1,
 		IF(`Test_check_2`= 1, "X", "") Test_check_2,
 		IF(`Test_check_3`= 1, "X", "") Test_check_3,
@@ -215,7 +215,7 @@ BEGIN
 		IF(`Test_quantita_46_3` = 0, "", CONCAT(Test_quantita_46_3, "")) Test_quantita_46_3,
 		IF(`Test_quantita_47_3` = 0, "", CONCAT(Test_quantita_47_3, "")) Test_quantita_47_3,
 		IF(`Test_quantita_48_3` = 0, "", CONCAT(Test_quantita_48_3, "")) Test_quantita_48_3,
-		IFNULL(`Note`, "") Note,
+		IFNULL(rapporto_mobile_collaudo.`Note`, "") Note,
 		IF(DATE_FORMAT(Data_intervento, "%Y-%m-%d") <> "1970-01-01", DATE_FORMAT(Data_intervento, "%d/%m/%Y"), "") `Data_intervento`,
 		IF(DATE_FORMAT(Ora_inizio_intervento_1, "%H:%i") <> "00:00", DATE_FORMAT(Ora_inizio_intervento_1, "%H:%i"), "") `Ora_inizio_intervento_1`,
 		IF(DATE_FORMAT(Ora_fine_intervento_1, "%H:%i") <> "00:00", DATE_FORMAT(Ora_fine_intervento_1, "%H:%i"), "") `Ora_fine_intervento_1`,
@@ -236,8 +236,14 @@ BEGIN
 		IF(`Imponibile` = 0, "", CONCAT(Imponibile, "")) Imponibile,
 		IF(`Iva` = 0, "", CONCAT(Iva, "")) Iva,
 		IF(`Totale_prezzo` = 0, "", CONCAT(Totale_prezzo, "")) Totale_prezzo,
-		Utente_inserimento Id_utente
+		Utente_inserimento AS Id_utente,
+		CONCAT(CONCAT(dc.indirizzo,' n.', IFNULL(dc.numero_civico, ''), ' ',IFNULL(dc.altro, '')),' - ',concat(IF(f.nome IS NOT NULL AND f.nome <> '', concat(f.nome,' di '), ''), c.nome,' (',c.provincia,')')) AS 'Indirizzo_impianto'
 	FROM rapporto_mobile_collaudo 
+	LEFT JOIN impianto ON impianto.id_impianto = rapporto_mobile_collaudo.id_impianto
+		INNER JOIN destinazione_cliente AS dc ON dc.id_cliente = rapporto_mobile_collaudo.id_cliente
+			AND impianto.destinazione = dc.Id_destinazione
+		INNER JOIN comune AS c ON c.id_comune=dc.Comune
+		LEFT JOIN frazione AS f ON f.id_frazione=dc.frazione
 	WHERE Inviato = 0; 
 	
 END; //

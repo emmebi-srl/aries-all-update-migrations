@@ -1174,3 +1174,142 @@ BEGIN
 END
 //
 delimiter ; 
+
+
+-- ############################# OPERAIO DPI ##################################################################### 
+DROP TRIGGER IF EXISTS trg_beforeEmployeeDpiInsert; 
+delimiter //
+CREATE TRIGGER `trg_beforeEmployeeDpiInsert` BEFORE INSERT ON `operaio_dpi` FOR EACH ROW 
+BEGIN
+	DECLARE reminder_event_id INT(11);
+	DECLARE expiration_event_id INT(11);
+
+	IF NEW.data_promemoria IS NOT NULL THEN
+		CALL sp_ariesEmployeeDpiEnsureReminderEvent(
+			NEW.id_dpi,
+			NEW.Id_operaio,
+			NEW.id_articolo,
+			NEW.data_promemoria,
+			NEW.id_evento_promemoria,
+			NEW.data_scadenza,
+			NEW.id_evento_scadenza,
+			reminder_event_id
+		);
+		SET NEW.id_evento_promemoria = reminder_event_id;
+	END IF;
+
+	
+	IF NEW.data_scadenza IS NOT NULL THEN
+		CALL sp_ariesEmployeeDpiEnsureExpirationEvent(
+			NEW.id_dpi,
+			NEW.Id_operaio,
+			NEW.id_articolo,
+			NEW.data_promemoria,
+			NEW.id_evento_promemoria,
+			NEW.data_scadenza,
+			NEW.id_evento_scadenza,
+			expiration_event_id
+		);
+		SET NEW.id_evento_scadenza = expiration_event_id;
+	END IF;
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_beforeEmployeeDpiUpdate; 
+delimiter //
+CREATE TRIGGER `trg_beforeEmployeeDpiUpdate` BEFORE UPDATE ON `operaio_dpi` FOR EACH ROW 
+BEGIN
+	DECLARE reminder_event_id INT(11);
+	DECLARE expiration_event_id INT(11);
+
+	IF NEW.stato != OLD.stato AND NEW.stato IN (3, 4) THEN
+		CALL sp_ariesEmployeeDpiDeleteReminderEvent(NEW.id_dpi);
+		CALL sp_ariesEmployeeDpiDeleteExpirationEvent(NEW.id_dpi);
+
+		SET NEW.id_evento_promemoria = NULL;
+		SET NEW.id_evento_scadenza = NULL;
+	ELSE
+		IF NEW.data_promemoria IS NULL THEN
+			CALL sp_ariesEmployeeDpiDeleteReminderEvent(NEW.id_dpi);
+			SET NEW.id_evento_promemoria = NULL;
+		ELSE
+			CALL sp_ariesEmployeeDpiEnsureReminderEvent(
+				NEW.id_dpi,
+				NEW.Id_operaio,
+				NEW.id_articolo,
+				NEW.data_promemoria,
+				NEW.id_evento_promemoria,
+				NEW.data_scadenza,
+				NEW.id_evento_scadenza,
+				reminder_event_id
+			);
+			SET NEW.id_evento_promemoria = reminder_event_id;
+		END IF;
+		
+		IF NEW.data_scadenza IS NULL THEN
+			CALL sp_ariesEmployeeDpiDeleteExpirationEvent(NEW.id_dpi);
+			SET NEW.id_evento_scadenza = NULL;
+		ELSE
+			CALL sp_ariesEmployeeDpiEnsureExpirationEvent(
+				NEW.id_dpi,
+				NEW.Id_operaio,
+				NEW.id_articolo,
+				NEW.data_promemoria,
+				NEW.id_evento_promemoria,
+				NEW.data_scadenza,
+				NEW.id_evento_scadenza,
+				expiration_event_id
+			);
+			SET NEW.id_evento_scadenza = expiration_event_id;
+		END IF;
+	END IF;
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_beforeEmployeeDpiDelete; 
+delimiter //
+CREATE TRIGGER `trg_beforeEmployeeDpiDelete` BEFORE DELETE ON `operaio_dpi` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesEmployeeDpiDeleteReminderEvent(OLD.id_dpi);
+	CALL sp_ariesEmployeeDpiDeleteExpirationEvent(OLD.id_dpi);
+END
+//
+
+delimiter ; 
+
+
+-- ############################# TIPO TITOLO ##################################################################### 
+
+DROP TRIGGER IF EXISTS trg_beforeTitleTypeUpdate; 
+delimiter //
+CREATE TRIGGER `trg_beforeTitleTypeUpdate` BEFORE UPDATE ON `tipo_titolo` FOR EACH ROW 
+BEGIN
+	IF NEW.nome != OLD.nome THEN
+		UPDATE riferimento_clienti SET titolo = NEW.nome WHERE titolo = OLD.nome;
+	END IF;
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_beforeTitleTypeDelete; 
+delimiter //
+CREATE TRIGGER `trg_beforeTitleTypeDelete` BEFORE DELETE ON `tipo_titolo` FOR EACH ROW 
+BEGIN
+	DECLARE rif_counter INT(11);
+
+	SELECT COUNT(*)
+		INTO rif_counter
+	FROM riferimento_clienti
+	WHERE titolo = OLD.nome;
+
+	IF rif_counter > 0 THEN
+		SIGNAL SQLSTATE '45000'
+     	SET MESSAGE_TEXT = 'Cannot delete "tipo_titolo" becacuse it is in use on "riferimento_clienti"';
+	END IF;
+
+END
+//
+
+delimiter ; 
