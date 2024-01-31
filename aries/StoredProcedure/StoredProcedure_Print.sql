@@ -1714,7 +1714,8 @@ BEGIN
 		stato_preventivo.Nome as Stato,
 		stato_preventivo.Colore as Stato_colore,
 		SUM(CAST(ROUND(prezzo * (100 - IF(preventivo_lotto.tipo_ricar = 1, 0, sconto)) / 100, 2) * (100 - IFNULL(NULLIF(scontoriga, ""), 0)) / 100 AS DECIMAL(11, 2)) * quantità) 
-		+ SUM(CAST((IF(montato = "0", 0, articolo_preventivo.tempo_installazione / 60 * prezzo_h * (100 - scontolav) / 100) * ((100 - IFNULL(scontoriga, 0)) / 100)) AS DECIMAL(11, 2)) * quantità) as prezzo
+		+ SUM(CAST((IF(montato = "0", 0, articolo_preventivo.tempo_installazione / 60 * prezzo_h * (100 - scontolav) / 100) * ((100 - IFNULL(scontoriga, 0)) / 100)) AS DECIMAL(11, 2)) * quantità) as prezzo,
+		IFNULL(revisione_preventivo.inviato, 0) > 0 as inviato
 	FROM preventivo
 		INNER JOIN revisione_preventivo ON revisione_preventivo.Id_revisione = preventivo.revisione
 			AND preventivo.id_preventivo = revisione_Preventivo.id_preventivo
@@ -1749,7 +1750,8 @@ BEGIN
 		stato_resoconto.colore AS 'stato_colore',
 		tipo_resoconto.nome AS 'tipo',
 		resoconto.descrizione,
-		resoconto_totali.prezzo_totale
+		resoconto_totali.prezzo_totale,
+		IFNULL(resoconto.inviato, 0) > 0 as inviato
 	FROM resoconto
 		INNER JOIN stato_resoconto ON stato_resoconto.Id_stato = resoconto.stato
 		INNER JOIN tipo_resoconto ON tipo_resoconto.id_tipo = resoconto.tipo_resoconto
@@ -1777,7 +1779,8 @@ BEGIN
 		condizione_pagamento.nome as 'condizione_pagamento',
 		SUBSTRING(fattura.nota_interna, 1, 40) AS nota_interna,
 		causale_fattura.Nome as 'causale_fattura',
-		fattura.importo_totale as prezzo_totale
+		fattura.importo_totale as prezzo_totale,
+		IFNULL(fattura.inviato, 0) > 0 as inviato
 	FROM fattura
 		INNER JOIN stato_fattura ON stato_fattura.Id_stato = fattura.stato
 		INNER JOIN tipo_fattura ON tipo_fattura.id_tipo = fattura.tipo_fattura
@@ -1944,7 +1947,8 @@ BEGIN
 		IFNULL(commessa.data_inizio, inizio) AS 'data_inizio',
 		stato_commessa.colore AS 'Stato_colore',
 		commessa.descrizione AS 'descrizione',
-		commessa_sotto.nome AS 'sottocommessa'
+		commessa_sotto.nome AS 'sottocommessa',
+		IFNULL(commessa.inv_com, 0) > 0 as inviato
 	FROM commessa
 		INNER JOIN stato_commessa ON stato_commessa.Id_stato = commessa.stato_commessa
 		INNER JOIN commessa_sotto ON commessa_sotto.id_commessa = commessa.id_commessa
