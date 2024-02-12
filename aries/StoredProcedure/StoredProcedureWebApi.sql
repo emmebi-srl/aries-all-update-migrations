@@ -556,18 +556,6 @@ BEGIN
 END; //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS sp_apiSystemProductGet;
-DELIMITER //
-CREATE PROCEDURE sp_apiSystemProductGet ()
-BEGIN
-	SELECT Id_impianto, 
-		Id_articolo,
-		count(id_articolo) "quantita"
-	FROM impianto_componenti
-	WHERE Data_dismesso IS NULL
-	GROUP BY id_impianto, id_articolo;
-END; //
-DELIMITER ;
 
 DROP PROCEDURE IF EXISTS sp_apiSystemNoteGet;
 DELIMITER //
@@ -3338,6 +3326,28 @@ END; //
 DELIMITER ;
 
 
+
+
+DROP PROCEDURE IF EXISTS sp_apiSystemProductGetMobileSync;
+DELIMITER //
+CREATE PROCEDURE sp_apiSystemProductGetMobileSync(
+)
+BEGIN
+	SELECT Id_impianto, 
+		Id_articolo,
+		Data_scadenza, 
+		Data_installazione, 
+		Id AS Posizione, 
+		Data_dismesso, 
+		COUNT(*) AS quantita,
+		BOX
+	FROM impianto_componenti
+	WHERE data_dismesso IS NULL
+	GROUP BY id_impianto, id_articolo, Data_scadenza;
+END; //
+DELIMITER ;
+
+
 DROP PROCEDURE IF EXISTS sp_apiConfigurationPathGetByKey;
 DELIMITER //
 CREATE PROCEDURE sp_apiConfigurationPathGetByKey (
@@ -3423,6 +3433,33 @@ BEGIN
 END; //
 DELIMITER ;
 
+
+DROP PROCEDURE IF EXISTS sp_apiSystemProductGet;
+DROP PROCEDURE IF EXISTS sp_apiSystemSimTopUpGet;
+DELIMITER //
+CREATE PROCEDURE sp_apiSystemSimTopUpGet (
+)
+BEGIN
+	SELECT impianto_ricarica_tipo.id,
+		impianto_ricarica_tipo.Id_impianto, 
+		impianto_ricarica_tipo.Tipo_ricarica, 
+		Tipo_ricarica.Nome AS 'nome_tipo_ricarica', 
+		impianto_ricarica_tipo.`nota`,
+		impianto_ricarica_tipo.`importo`,
+		impianto_ricarica_tipo.`durata`,
+		impianto_ricarica_tipo.`numero`,
+		impianto_ricarica_tipo.`intestatario`,
+		impianto_ricarica_tipo.`acarico`,
+		impianto_ricarica_tipo.`data_attivazione`,
+		impianto_ricarica_tipo.`data_rinnovo`,
+		impianto_ricarica_tipo.`data_scadenza`,
+		impianto_ricarica_tipo.`richiedi_invio_promemoria`,
+		impianto_ricarica_tipo.`data_ultimo_promemoria`
+	FROM impianto_ricarica_tipo
+		INNER JOIN Tipo_ricarica ON Tipo_ricarica.Id_tipo = impianto_ricarica_tipo.Tipo_ricarica;
+
+END; //
+DELIMITER ;
 
 DROP PROCEDURE IF EXISTS sp_apiSystemSimTopUpdateRequireReminder; 
 DELIMITER $$
