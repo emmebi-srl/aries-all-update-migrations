@@ -290,15 +290,6 @@ DELIMITER ;;
 end */;;
 DELIMITER ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 */ /*!50003 TRIGGER `del_note_mobile` AFTER DELETE ON `note_mobile` FOR EACH ROW BEGIN
-
-        insert into note_mobile_old (id_cliente, ragione_sociale, desc_brev, id_impianto, id_articolo, id_nota_old, testo, tipo_nota, id_tecnico, id_utente, data)
-
-                      values  (old.id_cliente, old.ragione_sociale, old.desc_brev, old.id_impianto, old.id_articolo, old.id_nota, old.testo, old.tipo_nota,old.id_tecnico, old.id_utente, old.data);
-
-END */;;
-DELIMITER ;
-DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 */ /*!50003 TRIGGER `del_rapp` BEFORE DELETE ON `rapporto` FOR EACH ROW delete from rapporto_materiale where id_rapporto=old.id_rapporto and anno=old.anno */;;
 DELIMITER ;
 

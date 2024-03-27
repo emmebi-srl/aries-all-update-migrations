@@ -7531,7 +7531,8 @@ BEGIN
 		`Nome`,
 		`Descrizione`,
 		`colore`,
-		`bloccato`
+		`bloccato`,
+		fatturato
 	FROM Stato_rapporto
 	WHERE Id_stato = status_id; 
 
@@ -11436,6 +11437,51 @@ END//
 DELIMITER ;
 
 
+-- Dump della struttura di procedura emmebi.sp_ariesReportSetInvoiceData
+DROP PROCEDURE IF EXISTS sp_ariesReportSetInvoiceData;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesReportSetInvoiceData`(
+	IN report_id INT(11),
+	IN report_year INT(11), 
+	IN invoice_id INT(11),
+	IN invoice_year INT(11), 
+	OUT result  TINYINT
+)
+BEGIN
+	SET result = 1; 
+
+	UPDATE rapporto 
+	SET	
+		Fattura = invoice_id,
+		Anno_fattura = invoice_year
+	WHERE id_rapporto = report_id AND anno = report_year;
+
+				
+END//
+DELIMITER ;
+
+-- Dump della struttura di procedura sp_ariesInvoiceDelete
+DROP PROCEDURE IF EXISTS sp_ariesInvoiceDelete;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesInvoiceDelete`(
+	IN enter_id INT(11),
+	IN enter_year INT(11),
+	OUT result  TINYINT
+)
+BEGIN
+	DECLARE `_rollback` BOOL DEFAULT 0;
+	DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET `_rollback` = 1;	
+		
+	START TRANSACTION;
+
+  UPDATE rapporto
+	SET stato=1,
+		Fattura = NULL,
+		Anno_fattura = NULL
+	WHERE anno_fattura = enter_year AND Fattura = enter_id;
+
+
+
 -- Dump della struttura di procedura emmebi.sp_ariesReportChangeYear
 DROP PROCEDURE IF EXISTS sp_ariesReportChangeYear;
 DELIMITER //
@@ -11926,7 +11972,8 @@ BEGIN
 		filename_firma_per_ddt,
 		numero_allegati
 	FROM rapporto
-	ORDER BY anno desc, data_esecuzione desc, Id_rapporto desc;
+	ORDER BY anno desc, data_esecuzione desc, Id_rapporto desc
+	LIMIT 1000;
 				
 END//
 DELIMITER ;
@@ -23455,4 +23502,403 @@ BEGIN
 END; //
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS  sp_userHasModuleAccess;
+DELIMITER // 
+CREATE PROCEDURE sp_userHasModuleAccess(user_id INT(11), module_name VARCHAR(100), OUT result BIT(1))
+BEGIN   
 
+	DECLARE val BIT(1) DEFAULT 0;
+   	DECLARE user_type_id INT(11) default 0;
+
+	DECLARE `_has_exception` BOOL DEFAULT 0;
+	DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET `_has_exception` = 1;
+
+   	SELECT tipo_utente INTO user_type_id FROM utente WHERE id_utente = user_id;
+
+	SET @query_stmt = CONCAT('SELECT ',module_name,' > 0 FROM tipo_utente WHERE id_tipo = ', user_type_id);
+   
+	PREPARE stmt FROM @query_stmt;
+	EXECUTE stmt;
+	
+	
+	DEALLOCATE PREPARE stmt;
+
+	IF _has_exception THEN
+		SET val = 0;
+	END IF;
+
+	SET result = val;
+END // 
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesHomeNotifications;
+DELIMITER //
+CREATE PROCEDURE sp_ariesHomeNotifications (IN user_id INT(11))
+BEGIN
+	DECLARE roles TEXT DEFAULT '';
+	DECLARE is_admin BIT(1) DEFAULT 0;
+	DECLARE user_type_id INT(11) default 0;
+
+	DECLARE days_quotes_sent_reminder INT(11) default 0;
+	DECLARE days_quotes_sent_expiration INT(11) default 0;
+
+	DECLARE has_email_access BIT(1) DEFAULT 0;
+	DECLARE has_quote_access BIT(1) DEFAULT 0;
+	DECLARE has_report_access BIT(1) DEFAULT 0;
+	DECLARE has_invoice_access BIT(1) DEFAULT 0;
+	DECLARE has_supplier_invoice_access BIT(1) DEFAULT 0;
+	DECLARE has_report_group_access BIT(1) DEFAULT 0;
+	DECLARE has_customer_access BIT(1) DEFAULT 0;
+	DECLARE has_supplier_access BIT(1) DEFAULT 0;
+	DECLARE has_system_access BIT(1) DEFAULT 0;
+	DECLARE has_product_access BIT(1) DEFAULT 0;
+	DECLARE has_subscription_access BIT(1) DEFAULT 0;
+	DECLARE has_ticket_access BIT(1) DEFAULT 0;
+
+	DECLARE days_reminder_payment_invoices INT(11) DEFAULT 30;
+	DECLARE days_reminder_subscription_requests INT(11) DEFAULT 30;
+
+	SET roles = (SELECT GROUP_CONCAT(ur.app_name)
+		FROM utente_utente_roles uur
+			INNER JOIN utente_roles ur ON uur.id_utente_roles = ur.id
+		WHERE uur.id_utente = user_id);
+	
+	SET is_admin = FIND_IN_SET('aries_admin', roles) > 0;
+
+	SELECT
+		IFNULL(giorni_promemoria, 30),
+		IFNULL(notifica_attesa, 30)
+	INTO 
+		days_reminder_payment_invoices,
+		days_reminder_subscription_requests
+	FROM Azienda
+	ORDER BY id_azienda DESC
+	LIMIT 1;
+
+	
+   SELECT tipo_utente INTO user_type_id FROM utente WHERE id_utente = user_id;
+	SELECT 
+		mail,
+		preventivo,
+		rapporto,
+		fattura,
+		fatturar,
+		resoconto,
+		clienti,
+		fornitore,
+		impianto OR impianto_tecnico,
+		articolo,
+		abbonamento,
+		ticket,
+		rapporto
+	INTO
+		has_email_access,
+		has_quote_access,
+		has_report_access,
+		has_invoice_access,
+		has_supplier_invoice_access,
+		has_report_group_access,
+		has_customer_access,
+		has_supplier_access,
+		has_system_access,
+		has_product_access,
+		has_subscription_access,
+		has_ticket_access,
+		has_report_access
+	FROM tipo_utente
+	WHERE id_tipo = user_type_id;
+
+	
+	DROP TABLE IF EXISTS temp_notifications;
+	CREATE TEMPORARY TABLE temp_notifications (
+	  	`tipo_notifica` VARCHAR(50) NOT NULL,
+	  	`colore` VARCHAR(50) NOT NULL,
+	  	`data_notifica` DATE NULL,
+	  	`descrizione` VARCHAR(255) NOT NULL,
+	  	`nome` VARCHAR(100) NOT NULL,
+		immagine INT(11) NOT NULL,
+		giorni INT(11) NOT NULL,
+		giorni_scaduto INT(11) NOT NULL
+	);
+	
+  	## EMAIL WITH SENDING ERROR OR INIFITE SENDING
+	IF has_email_access THEN
+		INSERT INTO temp_notifications
+		SELECT "failed_emails" AS tipo_notifica,
+			"clYellow" As colore,
+			NULL as data,
+			CONCAT(count(Id)," mail non inviate ") AS descrizione,
+			"MAIL FALLITE",
+			21 as immagine,
+			0 as giorni,
+			0 as giorni_scaduto
+		FROM mail
+			WHERE mail.Id_stato=2 OR ((NOW() - data_invio) div 60 > 20 AND mail.Id_stato=0 AND mail.tipo="1") AND mail.tipo="1" 
+		HAVING count(Id) > 0;
+	END IF;
+   
+  	## REPORTS
+	IF has_report_access THEN
+		INSERT INTO temp_notifications
+		SELECT "new_reports" AS "tipo_notifica",
+			"clyellow" AS "colore",
+			NULL AS "data",
+			CONCAT(count(*)," nuovi rapporti inviati da mobile") AS "descrizione",
+			"NUOVI RAPPORTI",
+			8 as immagine,
+			0 as giorni,
+			0 as giorni_scaduto
+		FROM rapporto_mobile
+		WHERE visionato = 0 AND inviato = 1 AND data IS NOT NULL
+		HAVING count(*) > 0
+
+		
+   		## CHECKLISTS MOBILE - NEW
+		UNION ALL
+		SELECT "new_checklists" AS "tipo_notifica",
+			"clyellow" AS "colore",
+			NULL AS "data",
+			CONCAT(count(*)," nuove checklist inviate da mobile") AS "descrizione",
+			"NUOVE CHECKLISTS",
+			3 as immagine,
+			0 as giorni,
+			0 as giorni_scaduto
+		FROM checklist
+		WHERE visionata = 0 
+		HAVING count(*) > 0;
+	END IF;
+
+
+
+ 
+	## Invoices payments
+	IF has_invoice_access THEN
+		INSERT INTO temp_notifications
+		SELECT "invoice_payments_reminder" AS "tipo_notifica",
+			"clyellow" AS "colore",
+			NULL AS "data", 
+			CONCAT(count(*)," in scadenza entro ", days_reminder_payment_invoices, " giorni") AS "descrizione",
+			"PAGAMENTI FATTURE",
+			34 as immagine,
+			days_reminder_payment_invoices as giorni,
+			90 as giorni_scaduto
+		FROM (
+			SELECT concat (fattura.id_fattura," ",fattura.anno) AS "gruppa"
+			FROM fattura 
+				INNER JOIN condizione_pagamento AS a ON cond_pagamento = a.id_condizione 
+				LEFT JOIN condizioni_giorno AS g ON g.id_condizione = a.id_condizione 
+			WHERE DATE_FORMAT(LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY, "%Y%m%d") >=  DATE_FORMAT(CURRENT_DATE - INTERVAL 90  day, "%Y%m%d")
+				AND DATE_FORMAT(LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY, "%Y%m%d") <= DATE_FORMAT(CURRENT_DATE + INTERVAL days_reminder_payment_invoices  day, "%Y%m%d")
+				AND fattura.stato IN (1, 4) 
+				AND (fattura.data_invio_promemoria IS NULL OR data_invio_promemoria="0002-02-02")
+			GROUP BY gruppa) AS app
+		HAVING count(*)>0;
+	END IF;
+
+	# Quotes waiting for reply
+	IF has_quote_access THEN
+		SELECT IFNULL(valore + 0, 30) INTO days_quotes_sent_reminder
+		FROM preventivo_impost
+		WHERE tipo = 'promem_invio';
+		
+		SELECT IFNULL(valore + 0, 60) INTO days_quotes_sent_expiration
+		FROM preventivo_impost
+		WHERE tipo = 'scad_invio';
+
+		INSERT INTO temp_notifications
+		SELECT "quotes_sent_reminder" AS "tipo_notifica",
+			"clyellow" AS "colore",
+			NULL AS "data", 
+			CONCAT(count(*)," preventivi in attesa di risposta. ") AS "descrizione",
+			"PREVENTIVI INVIATI",
+			1 as immagine,
+			0 as giorni,
+			0 as giorni_scaduto
+		FROM preventivo
+		WHERE (
+				(data_invio IS NOT NULL AND primo_sollecito IS NULL AND DATEDIFF(curdate(), data_invio) > days_quotes_sent_reminder)
+				OR (primo_sollecito IS NOT NULL AND secondo_sollecito IS NULL AND DATEDIFF(curdate(), primo_sollecito) > days_quotes_sent_expiration)
+			)
+		HAVING count(*)>0;
+	END IF;
+
+
+  	# CUSTOMER - INSERTED TO DOUBLE CHECK
+	IF has_customer_access THEN
+		INSERT INTO temp_notifications
+   		SELECT "customer_to_handle" AS "Id_evento",
+			"clyellow" AS "colore",
+			NULL AS "data",
+			CONCAT(count(*)," nuovi clienti inseriti da gestire.") AS "descrizione",
+			"CLIENTI INSERITI",
+			13 as immagine,
+			0 as giorni,
+			0 as giorni_scaduto
+		FROM clienti
+		WHERE modi = 5
+		HAVING count(*) > 0;
+	END IF;
+
+
+  	# Subscriptions
+	IF has_subscription_access THEN
+		INSERT INTO temp_notifications
+		SELECT "subscription_requests_reminder" AS "Id_evento",
+			"clyellow" AS "colore",
+			NULL AS "data",
+			CONCAT(count(*)," in attesa di risposta da piu di ", days_reminder_subscription_requests, " giorni.") AS "descrizione",
+			"RICHIESTE DI ABBONAMENTO",
+			19 as immagine,
+			0 as giorni,
+			0 as giorni_scaduto
+		FROM impianto
+		WHERE DATEDIFF(CURRENT_DATE, impianto.data_invio_doc) > days_reminder_subscription_requests
+			AND impianto.stato_invio_doc="clyellow"
+		HAVING count(*) > 0;
+	END IF;
+
+	IF has_system_access THEN
+		INSERT INTO temp_notifications
+		SELECT "expiring_systems_warranty" AS "Id_evento",
+			"clyellow" AS "colore",
+			NULL AS "data",
+			CONCAT(count(*)," in scadenza entro 60 giorni.") AS "descrizione",
+			"GARANZIE IMPIANTI",
+			35 as immagine,
+			60 as giorni,
+			30 as giorni_scaduto
+		FROM impianto
+			INNER JOIN stato_impianto ON stato_impianto.id_stato = impianto.stato
+		WHERE DATEDIFF(impianto.scadenza_garanzia,CURRENT_DATE) BETWEEN -30 AND 60
+			AND stato_impianto.bloccato = 0
+		HAVING count(*)>0
+
+		UNION ALL
+		SELECT "system_subscriptions_to_renew" AS "Id_evento",
+			"ClYellow" AS "colore",
+			NULL AS "data",
+			CONCAT(count(*)," impianti in attesa di rinnovo abbonamento per l''anno ",  IF(MONTH(CURRENT_DATE()) >= 11, YEAR(CURRENT_DATE()) + 1,  YEAR(CURRENT_DATE())), ".") AS descrizione,
+			"RINNOVO ABBONAMENTI",
+			28 as immagine,
+			0 as giorni,
+			0 as giorni_scaduto
+		FROM (
+			SELECT IFNULL(flag_abbonamento, 0 ) as flag_abbonamento, impianto.id_impianto, impianto.descrizione,
+				clienti.ragione_sociale, abbonamento.nome AS "abbonamento", tipo_impianto.nome AS "tipo_impianto", ia.anno,
+				iu.manutenzione, iu.importo_abbonamento, impianto.persone, round(tempo_manutenzione/60,2) AS "Tempo_manutenzione", Costo_manutenzione
+			FROM impianto
+				LEFT JOIN impianto_abbonamenti AS ia ON ia.id_impianto=impianto.id_impianto
+				LEFT JOIN abbonamento ON abbonamento.id_abbonamento=id_abbonamenti
+				LEFT JOIN clienti ON clienti.id_cliente = impianto.id_cliente
+				LEFT JOIN tipo_impianto ON id_tipo=tipo_impianto
+				LEFT JOIN stato_impianto ON impianto.stato = id_stato
+				LEFT JOIN impianto_uscita AS iu ON iu.id_impianto=ia.id_impianto AND iu.anno=ia.anno AND ia.id_abbonamenti=iu.id_abbonamento
+			WHERE non_abbonato = 0
+				AND ia.id_impianto IS NOT NULL
+				AND ((flag_abbonamento_anno IS NULL) 
+				AND stato_impianto.bloccato = 0
+				OR (flag_abbonamento_anno <> year(curdate()) + 1 AND month(curdate()) >= 11)
+				OR (flag_abbonamento_anno <> year(curdate()) AND month(curdate()) < 11))
+			GROUP by ia.id_impianto) AS sub_exp_subquery
+		HAVING count(*)>0
+
+		UNION ALL
+		SELECT "expiring_system_components",
+			"clYellow",
+			NULL, 
+			CONCAT(count(*)," componenti impianto in scadenza entro 30 giorni") AS "descrizione",
+			"COMPONENII IMPIANTI" ,
+			17 as immagine,
+			30 as giorni,
+			60 as giorni_scaduto
+		FROM impianto_componenti 
+			INNER JOIN articolo ON impianto_componenti.id_articolo = articolo.codice_articolo 
+			INNER JOIN impianto ON impianto_componenti.id_impianto = impianto.id_impianto
+			INNER JOIN stato_impianto ON stato_impianto.id_stato = impianto.stato
+		WHERE DATEDIFF(curdate(), data_scadenza) BETWEEN -60 AND 30
+			AND data_scadenza IS NOT NULL
+			AND data_dismesso IS NULL
+			AND impianto_componenti.stato = 1
+			AND stato_impianto.bloccato = 0
+		HAVING count(*)>0
+
+		UNION ALL
+		SELECT "expiring_system_sims",
+			"clyellow" AS "colore",
+			NULL AS "data",
+			CONCAT(count(*)," in scadenza entro 30 giorni.") AS "descrizione",
+			"RICARICHE IMPIANTI",
+			36 as immagine,
+			30 as giorni,
+			60 as giorni_scaduto
+		FROM impianto_ricarica_tipo
+			INNER JOIN impianto ON impianto.Id_impianto = impianto_ricarica_tipo.id_impianto
+			INNER JOIN stato_impianto ON stato_impianto.id_stato = impianto.stato
+		WHERE DATEDIFF(impianto_ricarica_tipo.data_scadenza, CURRENT_DATE) BETWEEN -60 AND 30
+			AND stato_impianto.bloccato = 0
+		HAVING count(*)>0
+		
+
+		UNION ALL
+		SELECT "system_maintenance_list",
+			"clyellow" AS "colore",
+			NULL AS "data",
+			CONCAT(count(*)," in scadenza entro 30 giorni.") AS "descrizione",
+			"CONTROLLI PERIODICI",
+			23 as immagine,
+			30 as giorni,
+			60 as giorni_scaduto
+		FROM impianto_abbonamenti_mesi
+			INNER JOIN impianto ON impianto.Id_impianto = impianto_abbonamenti_mesi.impianto
+			INNER JOIN stato_impianto ON stato_impianto.id_stato = impianto.stato
+		WHERE eseguito_il IS NULL
+			AND DATEDIFF(
+				IFNULL(da_eseguire, DATE_ADD(MAKEDATE(impianto_abbonamenti_mesi.anno, 1), INTERVAL (impianto_abbonamenti_mesi.mese)-1 MONTH)),
+				CURRENT_DATE
+			) BETWEEN -60 AND 30
+			AND stato_impianto.bloccato = 0
+		HAVING COUNT(*)>0;
+	END IF;
+    
+	
+	IF has_ticket_access THEN
+		INSERT INTO temp_notifications 
+		SELECT "expiring_tickets",
+			"clyellow"  AS "colore",
+			NULL AS "data",
+			CONCAT(count(*)," in scadenza entro 30 giorni.") AS descrizione ,
+			"SCADENZA TICKET" AS "tipo",
+			7 as immagine,
+			30 as giorni,
+			60 as giorni_scaduto
+		FROM ticket
+		WHERE DATEDIFF(scadenza, CURRENT_DATE) BETWEEN -60 AND 30
+			AND scadenza IS NOT NULL
+			AND data_soluzione IS NULL
+			AND stato_ticket IN (1, 2)
+		HAVING count(*)>0;
+	END IF;
+      
+  	## List corsi in scadenza
+	INSERT INTO temp_notifications 
+	SELECT "expiring_courses",
+		"clWhite" AS colore,
+		NULL AS data_inizio,
+		CONCAT(count(*)," in scadenza entro 30 giorni.") AS descrizione,
+		"CORSI SCADUTI",
+		0 as immagine,
+		30 as giorni,
+		60 as giorni_scaduto
+	FROM corso
+			LEFT JOIN operaio_corso ON corso.id_corso = operaio_corso.id_corso
+		LEFT JOIN operaio ON operaio.id_operaio = operaio_corso.id_operaio
+		LEFT JOIN tipo_evento ON tipo_evento = tipo_evento.id_tipo
+	WHERE DATEDIFF(data_fine, CURRENT_DATE) BETWEEN -60 AND 30
+		AND corso.stato = 1
+	HAVING COUNT(*) > 0;
+	
+	
+	SELECT * FROM temp_notifications ORDER BY nome;
+
+END; //
+DELIMITER ;

@@ -1313,3 +1313,21 @@ END
 //
 
 delimiter ; 
+
+
+
+-- ############################# PREVENTIVO ##################################################################### 
+
+DROP TRIGGER IF EXISTS trg_beforeQuoteUpdate; 
+delimiter //
+CREATE TRIGGER `trg_beforeQuoteUpdate` BEFORE UPDATE ON `preventivo` FOR EACH ROW 
+BEGIN
+	IF NEW.stato != OLD.stato THEN
+		IF fnc_quoteStatusShouldClearReminders(NEW.stato) THEN
+			SET NEW.primo_sollecito = NULL;
+			SET NEW.secondo_sollecito = NULL;
+		END IF;
+	END IF;
+END
+//
+delimiter ;

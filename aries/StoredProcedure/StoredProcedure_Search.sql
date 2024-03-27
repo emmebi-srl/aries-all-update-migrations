@@ -89,6 +89,37 @@ END $$
 DELIMITER ;
 
 
+DROP PROCEDURE IF EXISTS sp_searchInvoicesLight; 
+DELIMITER $$
+CREATE PROCEDURE `sp_searchInvoicesLight`(
+	IN `search_text` TEXT,
+	IN customer_id INT(11)
+)
+BEGIN
+	
+	SELECT 
+		fattura.id_fattura, 
+		fattura.anno,
+		ragione_sociale,
+		fattura.nota_interna as Descrizione, 
+		fattura.Stato AS "Stato",
+		stato_fattura.colore,
+		fattura.data AS "data"
+	FROM fattura
+		INNER JOIN clienti ON clienti.id_cliente = fattura.id_cliente
+		INNER JOIN stato_fattura ON stato_fattura.id_stato = fattura.stato
+	WHERE (ragione_sociale LIKE CONCAT('%', search_text, '%') 
+		OR fattura.id_fattura LIKE CONCAT('%', search_text, '%')
+		OR fattura.anno LIKE CONCAT('%', search_text, '%')
+		OR fattura.nota_interna LIKE CONCAT('%', search_text, '%'))
+		AND IF(customer_id = -1, True, fattura.id_cliente = customer_id)
+	ORDER BY fattura.data desc, id_fattura desc 
+	LIMIT 100;
+
+END $$
+DELIMITER ;
+
+
 DROP PROCEDURE IF EXISTS sp_searchJobsLight; 
 DELIMITER $$
 CREATE PROCEDURE `sp_searchJobsLight`(

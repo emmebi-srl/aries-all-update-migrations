@@ -1374,8 +1374,8 @@ DROP VIEW IF EXISTS vw_systems_expirations_summary;
 CREATE VIEW vw_systems_expirations_summary AS
 	SELECT 
 		ticket.id_ticket AS id_riferimento,
-		"ticket" AS "tipo_entita",
-		"Ticket" AS tipo_scadenza,
+		"ticket_expiration" AS "tipo_entita",
+		"Scadenza Ticket" AS tipo_scadenza,
 		ticket.Id_impianto AS id_impianto,
 		ticket.Id_cliente AS id_cliente,
 		ticket.Descrizione AS descrizione,
@@ -1385,8 +1385,30 @@ CREATE VIEW vw_systems_expirations_summary AS
 		ticket.data_ultimo_promemoria,
 		NULL AS quantita
 	FROM ticket
-	WHERE scadenza IS NOT NULL AND Stato_ticket IN (1, 2)
+	WHERE scadenza IS NOT NULL
+		AND data_soluzione IS NULL
+		AND Stato_ticket IN (1, 2)
 	
+	UNION ALL 
+	SELECT 
+		ticket.id_ticket AS id_riferimento,
+		"ticket_reminder" AS "tipo_entita",
+		"Promemoria Ticket" AS tipo_scadenza,
+		ticket.Id_impianto AS id_impianto,
+		ticket.Id_cliente AS id_cliente,
+		ticket.Descrizione AS descrizione,
+		scadenza AS data_scadenza,
+		ticket.richiedi_invio_promemoria,
+		ticket.data_promemoria,
+		ticket.data_ultimo_promemoria,
+		NULL AS quantita
+	FROM ticket
+	WHERE scadenza IS NOT NULL
+		AND (DATEDIFF(scadenza, CURRENT_DATE) >= 30 OR scadenza IS NULL)
+		AND data_promemoria IS NOT NULL
+		AND data_soluzione IS NULL
+		AND stato_ticket IN (1, 2)
+
 	UNION ALL
 	SELECT
 		impianto_componenti.id_impianto_componenti AS id_riferimento,
@@ -1403,7 +1425,10 @@ CREATE VIEW vw_systems_expirations_summary AS
 	FROM impianto_componenti
 		INNER JOIN articolo ON impianto_componenti.Id_articolo = articolo.Codice_articolo
 		INNER JOIN impianto ON impianto.Id_impianto = impianto_componenti.id_impianto
-	WHERE data_scadenza IS NOT NULL AND data_dismesso IS NULL
+		INNER JOIN stato_impianto ON stato_impianto.id_stato = impianto.stato
+	WHERE data_scadenza IS NOT NULL
+		AND data_dismesso IS NULL
+		AND stato_impianto.bloccato = 0
 	GROUP BY impianto_componenti.id_impianto, impianto_componenti.Id_articolo, impianto_componenti.data_scadenza
 		
 	
@@ -1422,7 +1447,7 @@ CREATE VIEW vw_systems_expirations_summary AS
 		NULL AS quantità
 	FROM impianto
 	WHERE scadenza_garanzia IS NOT NULL
-		AND scadenza_garanzia >= DATE_ADD(CURRENT_DATE, INTERVAL -2 MONTH) 
+		AND scadenza_garanzia >= DATE_ADD(CURRENT_DATE, INTERVAL -6 MONTH) 
 	
 	UNION ALL
 	SELECT
@@ -1439,7 +1464,9 @@ CREATE VIEW vw_systems_expirations_summary AS
 		NULL AS quantità
 	FROM impianto_abbonamenti_mesi
 		INNER JOIN impianto ON impianto.Id_impianto = impianto_abbonamenti_mesi.impianto
+		INNER JOIN stato_impianto ON stato_impianto.id_stato = impianto.stato
 	WHERE eseguito_il IS NULL
+		AND stato_impianto.bloccato = 0
 		
 	
 	UNION ALL
@@ -1457,8 +1484,10 @@ CREATE VIEW vw_systems_expirations_summary AS
 		NULL AS quantità
 	FROM impianto_ricarica_tipo
 		INNER JOIN impianto ON impianto.Id_impianto = impianto_ricarica_tipo.id_impianto
-	WHERE data_rinnovo IS NOT NULL AND (data_scadenza IS NULL OR data_rinnovo < data_scadenza)
-		AND data_rinnovo >= DATE_ADD(CURRENT_DATE, INTERVAL -6 MONTH) 
+		INNER JOIN stato_impianto ON stato_impianto.id_stato = impianto.stato
+	WHERE data_rinnovo IS NOT NULL
+		AND (data_scadenza IS NULL OR data_rinnovo < data_scadenza)	
+		AND stato_impianto.bloccato = 0
 	
 	
 	UNION ALL
@@ -1476,6 +1505,8 @@ CREATE VIEW vw_systems_expirations_summary AS
 		NULL AS quantità
 	FROM impianto_ricarica_tipo
 		INNER JOIN impianto ON impianto.Id_impianto = impianto_ricarica_tipo.id_impianto
-	WHERE data_scadenza IS NOT NULL AND (data_rinnovo  IS NULL OR data_scadenza > data_rinnovo)
-		AND data_scadenza >= DATE_ADD(CURRENT_DATE, INTERVAL -6 MONTH);
+		INNER JOIN stato_impianto ON stato_impianto.id_stato = impianto.stato
+	WHERE data_scadenza IS NOT NULL
+		AND (data_rinnovo  IS NULL OR data_scadenza > data_rinnovo)
+		AND stato_impianto.bloccato = 0;
 		

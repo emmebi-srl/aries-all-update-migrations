@@ -525,3 +525,20 @@ BEGIN
 	
 END // 
 DELIMITER ;
+
+
+DROP FUNCTION IF EXISTS  fnc_quoteStatusShouldClearReminders;
+DELIMITER // 
+CREATE FUNCTION fnc_quoteStatusShouldClearReminders(quote_status_id INT(11)) RETURNS BIT(1)
+BEGIN
+	DECLARE val BIT(1) DEFAULT 0;
+	
+    SELECT reset_promemoria_invio
+        INTO val 
+    FROM stato_preventivo
+    WHERE Id_stato = quote_status_id;
+
+	RETURN  val;
+	
+END // 
+DELIMITER ;
