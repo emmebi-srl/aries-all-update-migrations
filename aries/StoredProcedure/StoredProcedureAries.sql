@@ -7850,7 +7850,8 @@ BEGIN
 		importo_iva,
 		importo_totale,
 		costo_totale,
-		id_documento_ricezione
+		id_documento_ricezione,
+		movimenta_magazzino
 	FROM Fattura;
 	
 END//
@@ -7908,7 +7909,8 @@ BEGIN
 		importo_iva,
 		importo_totale,
 		costo_totale,
-		id_documento_ricezione
+		id_documento_ricezione,
+		movimenta_magazzino
 	FROM Fattura
 	WHERE Fattura.Id = enter_id;
 	
@@ -7968,7 +7970,8 @@ BEGIN
 		importo_iva,
 		importo_totale,
 		costo_totale,
-		id_documento_ricezione
+		id_documento_ricezione,
+		movimenta_magazzino
 	FROM Fattura
 	WHERE Fattura.Id_fattura = enter_id AND Fattura.anno = enter_year;
 	
@@ -8026,7 +8029,8 @@ BEGIN
 		importo_iva,
 		importo_totale,
 		costo_totale,
-		id_documento_ricezione
+		id_documento_ricezione,
+		movimenta_magazzino
 	FROM Fattura
 		INNER JOIN fattura_tag ON Fattura.id_fattura = fattura_tag.id_fattura AND Fattura.anno = fattura_tag.anno_fattura
 	WHERE fattura_tag.id_tag = tag_id; 
@@ -17242,7 +17246,8 @@ BEGIN
 		`pec_destinatario`,
 		tipo_fattura_elettronica,
 		sorgente_documento,
-		e_fattura_filename
+		e_fattura_filename,
+		movimenta_magazzino
 	FROM fornfattura;
 	
 END//
@@ -17296,7 +17301,8 @@ BEGIN
 		`pec_destinatario`,
 		tipo_fattura_elettronica,
 		sorgente_documento,
-		e_fattura_filename
+		e_fattura_filename,
+		movimenta_magazzino
 	FROM fornfattura
 	WHERE fornfattura.Id_fattura = enter_id AND fornfattura.anno = enter_year;
 	

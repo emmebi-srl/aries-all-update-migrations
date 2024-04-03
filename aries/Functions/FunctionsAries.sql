@@ -293,10 +293,10 @@ BEGIN
 	DECLARE allow_insert BIT(1);
 
 	-- CONTROL IF INVOICE TYPE = 5 (FATTURA ACCOMPAGNATORIA)
-	SELECT 	COUNT(id_fattura)
+	SELECT 	movimenta_magazzino
 				INTO allow_insert
 	FROM  	fornfattura 
-	WHERE 	(tipo_fattura = 5 AND id_fattura=invoice_id AND anno=invoice_year); 
+	WHERE 	(id_fattura=invoice_id AND anno=invoice_year); 
 	
 	-- CONTROL IF PRODUCT HAS CATEGORY THAT ALLOW DEPOSITS MOVEMENT
 	IF (allow_insert = 1) THEN
@@ -323,10 +323,10 @@ BEGIN
 	DECLARE allow_insert BIT(1);
 
 	-- CONTROL IF INVOICE TYPE = 5 (FATTURA ACCOMPAGNATORIA)
-	SELECT 	COUNT(id_fattura)
+	SELECT movimenta_magazzino
 				INTO allow_insert
 	FROM  	fattura 
-	WHERE 	(tipo_fattura = 5 AND id_fattura=invoice_id AND anno=invoice_year); 
+	WHERE 	(id_fattura=invoice_id AND anno=invoice_year); 
 	
 	-- CONTROL IF PRODUCT HAS CATEGORY THAT ALLOW DEPOSITS MOVEMENT
 	IF (allow_insert = 1) THEN
