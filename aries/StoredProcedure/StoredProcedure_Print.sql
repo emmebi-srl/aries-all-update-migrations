@@ -2427,3 +2427,72 @@ BEGIN
 END; //
 DELIMITER ;
 
+
+
+DROP PROCEDURE IF EXISTS sp_printReportAttachments; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printReportAttachments`(
+	IN `report_id` INT(11),
+	IN `report_year` INT(11)
+)
+BEGIN
+	DECLARE done INT DEFAULT 0;
+	DECLARE prev_file_path VARCHAR(500) DEFAULT NULL;
+	DECLARE row_file_path VARCHAR(500) DEFAULT NULL;
+
+	DECLARE V_curA CURSOR FOR
+		SELECT file_path
+		FROM rapporto_allegati
+		WHERE (file_name LIKE '%.jpg' OR file_name LIKE '%.bmp' OR file_name LIKE '%.jpeg')
+			AND id_rapporto = report_id AND anno_rapporto = report_year;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+
+	
+	DROP TEMPORARY TABLE IF EXISTS report_attachments_for_print;
+	CREATE TEMPORARY TABLE report_attachments_for_print (
+		`id_rapporto` BIGINT(20) NOT NULL,
+		`anno_rapporto` INT(11) NOT NULL,
+		`file_path_primo` VARCHAR(500) NOT NULL,
+		`file_path_secondo` VARCHAR(500) NOT NULL
+	);
+
+
+	OPEN V_curA;
+	loopA: LOOP
+		FETCH V_curA INTO row_file_path;
+		IF done = 1 THEN 
+			LEAVE loopA;
+		END IF;
+
+		IF prev_file_path IS NULL THEN
+			SET prev_file_path = row_file_path;
+		ELSE
+			INSERT INTO report_attachments_for_print VALUES (
+				report_id,
+				report_year,
+				prev_file_path,
+				row_file_path
+			);
+			SET prev_file_path = NULL;
+		END IF;
+	END LOOP;
+	CLOSE V_curA;
+
+
+	IF prev_file_path IS NOT NULL THEN
+		INSERT INTO report_attachments_for_print VALUES (
+			report_id,
+			report_year,
+			prev_file_path,
+			''
+		);
+	END IF;
+
+   		
+	SELECT *
+	FROM report_attachments_for_print;
+	   
+END $$
+DELIMITER ;
+

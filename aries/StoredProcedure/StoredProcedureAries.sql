@@ -17996,7 +17996,69 @@ BEGIN
 END//
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS sp_ariesInvoiceClone;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesInvoiceClone`( 
+	IN invoice_id INT(11),
+	IN invoice_year INT(11),
+	OUT result INT(11)
+)
+BEGIN
+	DECLARE `_rollback` BOOL DEFAULT 0;
+  	DECLARE new_id INT(11); 
+  	DECLARE new_year INT(11);
+	DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET `_rollback` = 1;	
+		
+	START TRANSACTION;
+	SET result = 1;
+	SET new_year = 0;
+	
+	SELECT IFNULL(MAX(id_fattura) + 1, 1) 
+		INTO new_id
+	FROM fattura
+	WHERE anno = 0; 
 
+	INSERT INTO fattura (
+		Id_fattura, anno, id_cliente, id_destinazione, destinazione, Data_registrazione, data_modifica, DATA,
+		cond_pagamento, banca, annotazioni, Stato, causale_fattura, nota_interna, iban, abi, cab, tipo_fattura,
+		incasso, bollo, trasporto, pagato_il, tramite, insoluto, stampato, subappalto, id_utente, scont_mat, id_iv,
+		movimenta_magazzino, id_documento_ricezione, id_tipo_natura_iva, area_attivita,
+		importo_imponibile, importo_iva, importo_totale, costo_totale
+	)
+	SELECT new_id, new_year, id_cliente, id_destinazione, destinazione, NOW(), NOW(), NOW(),
+		cond_pagamento, banca, annotazioni, 5, causale_fattura, nota_interna, iban, abi, cab, tipo_fattura,
+		incasso, bollo, trasporto, pagato_il, tramite, 0, 0, subappalto, @USER_ID, scont_mat, id_iv,
+		movimenta_magazzino, id_documento_ricezione, id_tipo_natura_iva, area_attivita,
+		importo_imponibile, importo_iva, importo_totale, costo_totale
+	FROM fattura
+	WHERE id_fattura = invoice_id AND anno = invoice_year;
+
+	INSERT INTO fattura_articoli (
+		id_fattura, Anno, n_tab, Descrizione, um, quantità, prezzo_unitario, sconto, costo, serial_number,
+		id_materiale, Iva, codice_fornitore, anno_rif, id_rif, tipo, idnota
+	)
+	SELECT new_id, new_year, n_tab, Descrizione, um, quantità, prezzo_unitario, sconto, costo, serial_number,
+		id_materiale, Iva, codice_fornitore, anno_rif, id_rif, tipo, idnota
+	FROM fattura_articoli
+	WHERE id_fattura = invoice_id AND anno = invoice_year;
+	
+	INSERT INTO fattura_totali_iva (
+		id_fattura, Anno, id_iva, importo_imponibile, importo_iva, importo_totale
+	)
+	SELECT new_id, new_year, id_iva, importo_imponibile, importo_iva, importo_totale
+	FROM fattura_totali_iva
+	WHERE id_fattura = invoice_id AND anno = invoice_year;
+
+
+	IF `_rollback` THEN
+	  ROLLBACK;
+	  SET Result = 0; 
+	ELSE
+		COMMIT; 
+	END IF;
+
+END//
+DELIMITER ;
 
 DROP PROCEDURE IF EXISTS sp_ariesQuoteLinkToTicket;
 DELIMITER //
@@ -22360,6 +22422,68 @@ BEGIN
 END //
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS sp_ariesReportRestoreStatus;
+DELIMITER //
+CREATE PROCEDURE `sp_ariesReportRestoreStatus`(
+	IN report_id INT(11),
+	IN report_year INT(11)
+)
+main_proc:BEGIN
+	DECLARE is_locked_status BIT(1);
+	DECLARE invoice_id INT(11);
+	DECLARE invoice_year INT(11);
+	DECLARE has_job_link BIT(1);
+	DECLARE new_status_id INT(11);
+	DECLARE status_id INT(11);
+
+	SELECT stato, Fattura, anno_fattura INTO status_id, invoice_id, invoice_year
+	FROM Rapporto
+	WHERE id_rapporto = report_id AND anno = report_year;
+
+	SELECT bloccato INTO is_locked_status
+	FROM stato_rapporto
+	WHERE id_stato = status_id;
+
+
+	IF is_locked_status THEN
+		LEAVE main_proc;
+	END IF;
+
+	
+	
+	SELECT fnc_reportHasJobLink(report_id, report_year) INTO has_job_link;
+
+	IF invoice_id > 0 AND invoice_id IS NOT NULL THEN
+		IF invoice_year = 0 THEN
+			SELECT id_stato INTO new_status_id 
+			FROM stato_rapporto
+			WHERE nome LIKE "%PREFATTURA"
+			LIMIT 1;
+		ELSE
+			SELECT id_stato INTO new_status_id 
+			FROM stato_rapporto
+			WHERE nome LIKE "%FATTURATO%"
+			LIMIT 1;
+		END IF;
+	ELSEIF has_job_link THEN
+		SELECT id_stato INTO new_status_id 
+		FROM stato_rapporto
+		WHERE nome LIKE "%COMMESSA%"
+		LIMIT 1;
+	END IF;
+
+
+	IF new_status_id IS NULL THEN
+		SET new_status_id = 1;
+	END IF;
+	
+	UPDATE rapporto
+	SET stato = new_status_id 
+	WHERE id_rapporto = report_id AND anno = report_year;
+
+END //
+DELIMITER ;
+
 
 
 DROP PROCEDURE IF EXISTS sp_ariesReportTotalsRefresh;
@@ -23906,5 +24030,58 @@ BEGIN
 	
 	SELECT * FROM temp_notifications ORDER BY nome;
 
+END; //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesReportAttachmentGetByReport;
+DELIMITER //
+CREATE PROCEDURE sp_ariesReportAttachmentGetByReport (IN report_id INT(11), IN report_year INT(11))
+BEGIN
+	SELECT *
+	FROM rapporto_allegati
+	WHERE id_rapporto = report_id AND anno_rapporto = report_year;
+END; //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesReportAttachmentRename;
+DELIMITER //
+CREATE PROCEDURE sp_ariesReportAttachmentRename (IN in_id INT(11), IN in_file_name VARCHAR(500), IN in_file_path VARCHAR(500))
+BEGIN
+	UPDATE rapporto_allegati
+	SET file_name = in_file_name,
+		file_path = in_file_path
+	WHERE id = in_id;
+END; //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesReportAttachmentDelete;
+DELIMITER //
+CREATE PROCEDURE sp_ariesReportAttachmentDelete (IN in_id INT(11))
+BEGIN
+	DECLARE report_id INT(11);
+	DECLARE report_year INT(11);
+
+	SELECT id_rapporto, anno_rapporto INTO report_id, report_year
+	FROM rapporto_allegati
+	WHERE id = in_id;
+
+	UPDATE rapporto
+	SET numero_allegati = numero_allegati - 1
+	WHERE id_rapporto = report_id AND anno = report_year;
+
+	DELETE FROM rapporto_allegati
+	WHERE id = in_id;
+END; //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesReportAttachmentGetById;
+DELIMITER //
+CREATE PROCEDURE sp_ariesReportAttachmentGetById (IN in_id INT(11))
+BEGIN
+	SELECT *
+	FROM rapporto_allegati
+	WHERE id = in_id;
 END; //
 DELIMITER ;

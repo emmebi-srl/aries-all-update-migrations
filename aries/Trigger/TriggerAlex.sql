@@ -936,6 +936,7 @@ delimiter //
 CREATE TRIGGER `trg_afterReportGroupReportLinkDelete` AFTER DELETE ON `resoconto_rapporto` FOR EACH ROW 
 BEGIN	
 	CALL sp_ariesReportGroupTotalsRefresh(OLD.id_resoconto, OLD.anno_reso);
+	CALL sp_ariesReportRestoreStatus(OLD.id_rapporto, OLD.anno);
 END
 //
 delimiter ; 
@@ -952,7 +953,7 @@ BEGIN
 END
 
 //
-delimiter ; 
+delimiter ;
 
 
 -- ############################# SYSTEM SUBSCRIPTIONS ##################################################################### 

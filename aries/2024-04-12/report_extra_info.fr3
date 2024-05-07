@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<TfrxReport Version="5.6" DotMatrixReport="False" IniFile="\Software\Fast Reports" PreviewOptions.Buttons="4095" PreviewOptions.Zoom="1" PrintOptions.Printer="Default" PrintOptions.PrintOnSheet="0" ReportOptions.CreateDate="43545,3130433796" ReportOptions.Description.Text="" ReportOptions.LastChange="45413,4546041204" ScriptLanguage="JScript" ScriptText.Text="function Picture1OnBeforePrint(Sender)&#13;&#10;{&#13;&#10;       Picture1.LoadFromFile(&#60;frxDsReportAttachments.&#34;file_path_primo&#34;&#62;);&#13;&#10;}&#13;&#10;&#13;&#10;function Picture2OnBeforePrint(Sender)&#13;&#10;{&#13;&#10;       if (&#60;frxDsReportAttachments.&#34;file_path_secondo&#34;&#62; != &#34;&#34;) {&#13;&#10;               Picture2.LoadFromFile(&#60;frxDsReportAttachments.&#34;file_path_secondo&#34;&#62;);&#13;&#10;       }&#13;&#10;}&#13;&#10;&#13;&#10;&#13;&#10;function Memo4OnBeforePrint(Sender)&#13;&#10;{&#13;&#10;       if (Report.Variables[&#34;report_technician_notes&#34;] != null) {&#13;&#10;               Memo4.Text = Report.Variables[&#34;report_technician_notes&#34;];&#13;&#10;       }&#13;&#10;&#13;&#10;       if (Memo4.Text == &#34;&#34;) {&#13;&#10;               ReportTitle1.Visible = False;&#13;&#10;       }&#13;&#10;}">
+  <Datasets>
+    <item DataSet="FReports.frxDsReportAttachments" DataSetName="frxDsReportAttachments"/>
+  </Datasets>
+  <Variables>
+    <item Name="company_name" Value="'EMMEBI SRL a socio unico'"/>
+    <item Name="company_sector" Value="'Sistemi di Sicurezza'"/>
+    <item Name="company_street" Value="'Via Gen. C. A. Dalla Chiesa '"/>
+    <item Name="company_street_number" Value="'10'"/>
+    <item Name="company_municipality" Value="'Breda di Piave'"/>
+    <item Name="company_province" Value="'TV'"/>
+    <item Name="company_phone" Value="'0422 600050'"/>
+    <item Name="company_mobile_phone" Value="'3356055425'"/>
+    <item Name="company_vat_number" Value="'04371390263'"/>
+    <item Name="company_businesses_register_province" Value="'TV'"/>
+    <item Name="company_businesses_register_number_ciaa" Value="'TV-344298'"/>
+    <item Name="company_provincial_register_province" Value="'TV'"/>
+    <item Name="company_provincial_register_number" Value="'103276'"/>
+    <item Name="company_website" Value="'www.emmebi.tv.it'"/>
+    <item Name="company_fax" Value="''"/>
+    <item Name="company_email" Value="'info@emmebi.tv.it'"/>
+    <item Name="company_tax_code" Value="'04371390263'"/>
+    <item Name="company_rea_number" Value="'TV-344298'"/>
+    <item Name="company_inps_position" Value="'8400'"/>
+    <item Name="company_inail_position" Value="'20839290 50 '"/>
+    <item Name="company_ateco_code" Value="'43.21.02'"/>
+    <item Name="company_insurance_rct" Value="'AXA POLIZZA NR 123456'"/>
+    <item Name="company_hamlet" Value="''"/>
+    <item Name="company_capital" Value="'25.000,00'"/>
+    <item Name="company_enabling" Value="'Abilitazione A-B-G (limitatamente parte elettronica)'"/>
+    <item Name="company_bank" Value="' INTESA SANPAOLO S.P.A.-SUSEGANA'"/>
+    <item Name="company_iban" Value="'IT34I0306961788100000000699'"/>
+    <item Name="company_postal_code" Value="'31030'"/>
+    <item Name="company_tax_regime" Value="'RF01'"/>
+    <item Name="company_holder" Value="'BARBON MIRCO '"/>
+    <item Name="formatted_current_date" Value="'01/05/2024'"/>
+    <item Name="formatted_current_date_time" Value="'01/05/2024 10:52:29'"/>
+    <item Name="formatted_current_short_date_time" Value="'01/05/2024 10:52'"/>
+    <item Name="report_technician_notes"/>
+  </Variables>
+  <TfrxDataPage Name="Data" Height="1000" Left="0" Top="0" Width="1000"/>
+  <TfrxReportPage Name="Page1" PaperWidth="210" PaperHeight="297" PaperSize="9" LeftMargin="10" RightMargin="10" TopMargin="10" BottomMargin="10" ColumnWidth="0" ColumnPositions.Text="" HGuides.Text="" VGuides.Text="">
+    <TfrxReportTitle Name="ReportTitle1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="86,92919" Left="0" Top="0" Width="718,1107" OnBeforePrint="ReportTitle1OnBeforePrint" AllowSplit="True" Stretched="True">
+      <TfrxMemoView Name="Memo4" Left="7,55906" Top="41,57483" Width="702,99258" Height="18,89765" OnBeforePrint="Memo4OnBeforePrint" StretchMode="smActualHeight" Text=""/>
+      <TfrxMemoView Name="Memo1" Left="7,55906" Top="15,11812" Width="702,99258" Height="18,89765" OnBeforePrint="Memo4OnBeforePrint" StretchMode="smActualHeight" Font.Charset="1" Font.Color="16711680" Font.Height="-13" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="APPUNTI"/>
+    </TfrxReportTitle>
+    <TfrxMasterData Name="MasterData1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="222,99227" Left="0" Top="162,51979" Width="718,1107" ColumnWidth="0" ColumnGap="0" DataSet="FReports.frxDsReportAttachments" DataSetName="frxDsReportAttachments" RowCount="0">
+      <TfrxPictureView Name="Picture1" Left="7,55906" Top="18,89765" Width="268,34663" Height="188,9765" OnBeforePrint="Picture1OnBeforePrint" DataField="file_path_primo" DataSet="FReports.frxDsReportAttachments" DataSetName="frxDsReportAttachments" HightQuality="False" Transparent="False" TransparentColor="16777215"/>
+      <TfrxPictureView Name="Picture2" Left="366,61441" Top="18,89765" Width="275,90569" Height="188,9765" OnBeforePrint="Picture2OnBeforePrint" DataField="file_path_secondo" DataSet="FReports.frxDsReportAttachments" DataSetName="frxDsReportAttachments" HightQuality="False" Transparent="False" TransparentColor="16777215"/>
+    </TfrxMasterData>
+    <TfrxHeader Name="Header1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="37,7953" Left="0" Top="124,72449" Width="718,1107">
+      <TfrxMemoView Name="Memo2" Left="7,55906" Top="15,11812" Width="170,07885" Height="18,89765" OnBeforePrint="Memo4OnBeforePrint" StretchMode="smActualHeight" Font.Charset="1" Font.Color="16711680" Font.Height="-13" Font.Name="Arial" Font.Style="1" ParentFont="False" Text="ALLEGATI"/>
+    </TfrxHeader>
+  </TfrxReportPage>
+</TfrxReport>
