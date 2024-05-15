@@ -17310,6 +17310,60 @@ END//
 DELIMITER ;
 
 
+-- Dump della struttura di procedura emmebi.sp_ariesSupplierInvoiceGetByExternalId
+DROP PROCEDURE IF EXISTS sp_ariesSupplierInvoiceGetByExternalId;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesSupplierInvoiceGetByExternalId`(
+	IN external_id VARCHAR(150)
+)
+BEGIN
+
+	SELECT
+		`Id_fattura`,
+		`anno`,
+		`id_fornitore`,
+		`Data_registrazione`,
+		`data_modifica`,
+		`data`,
+		`cond_pagamento`,
+		`annotazioni`,
+		`Stato`,
+		`causale_fattura`,
+		`nota_interna`,
+		`tipo_fattura`,
+		`incasso`,
+		`bollo`,
+		`trasporto`,
+		`ricevuto`,
+		`pagato_il`,
+		`tramite`,
+		`insoluto`,
+		`fattura_fornitore`,
+		`totale`,
+		`totiva`,
+		`scan`,
+		`modifica`,
+		`costo_cavi`,
+		`uso_consumo`,
+		`id_attività`,
+		`iva_incasso`,
+		`iva_bollo`,
+		`aliquota_iva_BTI`,
+		`formato_trasmissione`,
+		`progressivo_invio`,
+		`codice_destinatario`,
+		`pec_destinatario`,
+		tipo_fattura_elettronica,
+		sorgente_documento,
+		e_fattura_filename,
+		movimenta_magazzino
+	FROM fornfattura
+	WHERE fornfattura.fattura_fornitore = external_id;
+	
+END//
+DELIMITER ;
+
+
 -- Dump della struttura di procedura emmebi.sp_ariesSupplierInvoiceDeleteByIdAndYear
 DROP PROCEDURE IF EXISTS sp_ariesSupplierInvoiceDeleteByIdAndYear;
 DELIMITER //
