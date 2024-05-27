@@ -23871,7 +23871,7 @@ BEGIN
 			FROM fattura 
 				INNER JOIN condizione_pagamento AS a ON cond_pagamento = a.id_condizione 
 				LEFT JOIN condizioni_giorno AS g ON g.id_condizione = a.id_condizione 
-			WHERE DATE_FORMAT(LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY, "%Y%m%d") >=  DATE_FORMAT(CURRENT_DATE - INTERVAL 90  day, "%Y%m%d")
+			WHERE DATE_FORMAT(LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY, "%Y%m%d") >=  DATE_FORMAT(CURRENT_DATE - INTERVAL 0  day, "%Y%m%d")
 				AND DATE_FORMAT(LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY, "%Y%m%d") <= DATE_FORMAT(CURRENT_DATE + INTERVAL days_reminder_payment_invoices  day, "%Y%m%d")
 				AND fattura.stato IN (1, 4) 
 				AND (fattura.data_invio_promemoria IS NULL OR data_invio_promemoria="0002-02-02")

@@ -1475,7 +1475,8 @@ BEGIN
 		rapporto.Costo,
 		rapporto.Totale,
 		DATE_FORMAT(data_esecuzione, '%m %Y') AS titolo_gruppo,
-		DATE_FORMAT(data_esecuzione, '%Y-%m') AS id_gruppo
+		DATE_FORMAT(data_esecuzione, '%Y-%m') AS id_gruppo,
+		GROUP_CONCAT(CONCAT(rm.`quantità`, ' x ', rm.descrizione) SEPARATOR '|') AS Materiale
 	FROM tmp_reportsList AS tmp_reports 
 		INNER jOIN Rapporto 
 			ON Rapporto.Id_rapporto = tmp_reports.Id_Rapporto AND Rapporto.Anno = tmp_reports.Anno
@@ -1488,6 +1489,7 @@ BEGIN
 		LEFT JOIN rapporto_tecnico_lavoro  
 			ON rapporto_tecnico_lavoro.id_rapporto=rapporto.id_rapporto 
 			AND rapporto_tecnico_lavoro.anno=rapporto.anno 
+		LEFT JOIN rapporto_materiale rm ON rapporto.id_rapporto = rm.id_rapporto AND rapporto.Anno = rm.Anno
 	GROUP BY tmp_reports.id_rapporto, tmp_reports.anno
 	ORDER BY  data_esecuzione DESC, a.ragione_sociale ASC;	
 
