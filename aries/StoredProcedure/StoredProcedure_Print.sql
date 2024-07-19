@@ -1555,20 +1555,27 @@ BEGIN
 		DATE_FORMAT(data_documento, '%m %Y') AS titolo_gruppo,
 		DATE_FORMAT(data_documento, '%Y-%m') AS id_gruppo,
 		causale_trasporto.causale AS "causale_trasporto", 
-		IFNULL(CONCAT(b1.cap," - ",b1.nome,"(", b.provincia,")"), "") AS "Comune",  
 		CAST(IFNULL(SUM(prezzo*quantità-(prezzo*quantità/100*sconto)),2) AS DECIMAL(11,2)) AS prezzo_totale, 
-		CAST(IFNULL(SUM(costo*quantità-(costo*quantità/100*sconto)),2) AS DECIMAL(11,2)) AS costo_totale
+		CAST(IFNULL(SUM(costo*quantità-(costo*quantità/100*sconto)),2) AS DECIMAL(11,2)) AS costo_totale,
+		CONCAT(CONCAT(dc.indirizzo,' n.',dc.numero_civico, dc.altro),' - ',concat(IF(f.nome IS NOT NULL AND f.nome <> '', concat(f.nome,' di '), ''), c.nome,' (',c.provincia,')')) AS 'indirizzo',
+		IFNULL(CONCAT(c.cap," - ",c.nome,"(", dc.provincia,")"), "") AS "comune",  
+		dc.Km_sede AS "km_viaggio",
+		dc.Tempo_strada AS "tempo_viaggio",
+		IFNULL(riferimento_principale.mail, '') AS "email_cliente",
+		IFNULL(riferimento_principale.altro_telefono, "") AS "telefono_cliente"
 	FROM tmp_ddtsList AS tmp_ddts
 		INNER jOIN Ddt 
 			ON Ddt.Id_ddt = tmp_ddts.Id_ddt AND Ddt.Anno = tmp_ddts.Anno
 		LEFT JOIN causale_trasporto ON ddt.causale=id_causale
 		INNER JOIN clienti ON clienti.id_cliente = ddt.id_cliente 
-		LEFT JOIN destinazione_cliente AS b ON b.id_cliente=ddt.id_cliente AND b.id_destinazione=ddt.id_destinazione
-		LEFT JOIN comune AS b1 ON b1.id_comune=b.comune
+		LEFT JOIN destinazione_cliente AS dc ON dc.id_cliente=ddt.id_cliente AND dc.id_destinazione=ddt.id_destinazione
+		LEFT JOIN comune AS c ON c.id_comune=dc.comune
 		LEFT JOIN impianto ON id_impianto = ddt.impianto
 		LEFT JOIN articoli_ddt ON articoli_ddt.id_ddt=ddt.id_ddt AND articoli_ddt.anno=ddt.anno
 		LEFT JOIN commessa_ddt ON commessa_ddt.Id_ddt=ddt.id_ddt AND commessa_ddt.Anno_ddt=ddt.anno 
 		LEFT JOIN stato_ddt ON ddt.stato = stato_ddt.id_stato 
+		LEFT JOIN frazione AS f ON f.id_frazione=dc.frazione
+		LEFT JOIN riferimento_clienti AS riferimento_principale ON riferimento_principale.id_cliente=clienti.id_cliente AND riferimento_principale.id_riferimento = 1
 	GROUP BY ddt.id_ddt, ddt.anno
 	ORDER BY  data_documento DESC, ragione_sociale ASC;	
 
@@ -2495,6 +2502,53 @@ BEGIN
 	SELECT *
 	FROM report_attachments_for_print;
 	   
+END $$
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_printSupplierInvoices; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printSupplierInvoices`(
+	IN `supplier_id` INT(11),
+	IN `from_date` DATE,
+	IN `to_date` DATE
+)
+BEGIN
+
+	SELECT fornfattura.id_fattura AS 'rif_prot',
+		fornfattura.fattura_fornitore AS 'id_fattura',
+		fornfattura.anno AS 'anno',
+		fornitore.Id_fornitore AS 'Id_fornitore',
+		fornitore.ragione_sociale AS 'ragione_sociale',
+		a.nome AS 'nome_condizione_pagamento',
+		a.tipo AS 'id_tipo_pagamento',
+		tipo_pagamento.nome AS 'nome_tipo_pagamento',
+		fornfattura.data AS 'data_documento',
+		tipo_iva_BTI.aliquota AS 'iva',
+		( totale +(((trasporto/100)*(100+IFNULL(tipo_iva_BTI.aliquota, 0))) + ((bollo/100)*(100+if(iva_bollo=0,
+		0,
+		IFNULL(tipo_iva_BTI.aliquota, 0)))) + ((incasso/100)*(100+if(iva_incasso=0,
+		0,
+		IFNULL(tipo_iva_BTI.aliquota, 0)))) )) AS 'totale_imponibile',
+		(totiva +(((trasporto/100)*(100+IFNULL(tipo_iva_BTI.aliquota, 0))) + ((bollo/100)*(100+if(iva_bollo=0,
+		0,
+		IFNULL(tipo_iva_BTI.aliquota, 0)))) + ((incasso/100)*(100+if(iva_incasso=0,
+		0,
+		IFNULL(tipo_iva_BTI.aliquota, 0)))) )) AS 'totale_ivato'
+	FROM fornfattura
+		INNER JOIN condizione_pagamento AS a
+		      ON cond_pagamento = a.id_condizione
+		LEFT JOIN condizioni_giorno AS g 
+		      ON g.id_condizione = a.id_condizione 
+		INNER JOIN fornitore
+		      ON fornfattura.id_fornitore=fornitore.id_fornitore
+		LEFT JOIN tipo_pagamento
+		      ON a.tipo=tipo_pagamento.id_tipo
+		LEFT JOIN Tipo_iva AS tipo_iva_BTI
+				ON tipo_iva_BTI.id_iva = aliquota_iva_BTI
+	WHERE (fornfattura.`data` BETWEEN from_date AND to_date) AND fornitore.id_fornitore = IF(supplier_id > 0, supplier_id, fornitore.id_fornitore)
+	GROUP BY fornfattura.id_fattura, fornfattura.anno 
+	ORDER BY nome_condizione_pagamento, fornfattura.data;
 END $$
 DELIMITER ;
 

@@ -1373,7 +1373,7 @@ CREATE VIEW vw_systems_exports_to_contact AS
 DROP VIEW IF EXISTS vw_systems_expirations_summary;
 CREATE VIEW vw_systems_expirations_summary AS
 	SELECT 
-		ticket.id_ticket AS id_riferimento,
+		ticket.id AS id_riferimento,
 		"ticket_expiration" AS "tipo_entita",
 		"Scadenza Ticket" AS tipo_scadenza,
 		ticket.Id_impianto AS id_impianto,
@@ -1388,26 +1388,6 @@ CREATE VIEW vw_systems_expirations_summary AS
 	WHERE scadenza IS NOT NULL
 		AND data_soluzione IS NULL
 		AND Stato_ticket IN (1, 2)
-	
-	UNION ALL 
-	SELECT 
-		ticket.id_ticket AS id_riferimento,
-		"ticket_reminder" AS "tipo_entita",
-		"Promemoria Ticket" AS tipo_scadenza,
-		ticket.Id_impianto AS id_impianto,
-		ticket.Id_cliente AS id_cliente,
-		ticket.Descrizione AS descrizione,
-		scadenza AS data_scadenza,
-		ticket.richiedi_invio_promemoria,
-		ticket.data_promemoria,
-		ticket.data_ultimo_promemoria,
-		NULL AS quantita
-	FROM ticket
-	WHERE scadenza IS NOT NULL
-		AND (DATEDIFF(scadenza, CURRENT_DATE) >= 30 OR scadenza IS NULL)
-		AND data_promemoria IS NOT NULL
-		AND data_soluzione IS NULL
-		AND stato_ticket IN (1, 2)
 
 	UNION ALL
 	SELECT
@@ -1510,3 +1490,42 @@ CREATE VIEW vw_systems_expirations_summary AS
 		AND (data_rinnovo  IS NULL OR data_scadenza > data_rinnovo)
 		AND stato_impianto.bloccato = 0;
 		
+
+DROP VIEW IF EXISTS vw_supplier_invoices_details;
+CREATE VIEW vw_supplier_invoices_details AS	
+	SELECT fornfattura.id_fattura AS 'rif_prot',
+		fornfattura.fattura_fornitore AS 'id_fattura',
+		fornfattura.anno AS 'anno',
+		fornitore.Id_fornitore AS 'Id_fornitore',
+		fornitore.ragione_sociale AS 'ragione_sociale',
+		a.nome AS 'nome_condizione_pagamento',
+		a.tipo AS 'id_tipo_pagamento',
+		tipo_pagamento.nome AS 'nome_tipo_pagamento',
+		fornfattura.data AS 'data_documento',
+		tipo_iva_BTI.aliquota AS 'iva',
+		( totale +(((trasporto/100)*(100+IFNULL(tipo_iva_BTI.aliquota, 0))) + ((bollo/100)*(100+if(iva_bollo=0,
+		0,
+		IFNULL(tipo_iva_BTI.aliquota, 0)))) + ((incasso/100)*(100+if(iva_incasso=0,
+		0,
+		IFNULL(tipo_iva_BTI.aliquota, 0)))) )) AS 'totale_imponibile',
+		(totiva +(((trasporto/100)*(100+IFNULL(tipo_iva_BTI.aliquota, 0))) + ((bollo/100)*(100+if(iva_bollo=0,
+		0,
+		IFNULL(tipo_iva_BTI.aliquota, 0)))) + ((incasso/100)*(100+if(iva_incasso=0,
+		0,
+		IFNULL(tipo_iva_BTI.aliquota, 0)))) )) AS 'totale_ivato',
+		stato_fattura.nome AS 'stato_fattura'
+	FROM fornfattura
+		INNER JOIN condizione_pagamento AS a
+		      ON cond_pagamento = a.id_condizione
+		LEFT JOIN condizioni_giorno AS g 
+		      ON g.id_condizione = a.id_condizione 
+		INNER JOIN fornitore
+		      ON fornfattura.id_fornitore=fornitore.id_fornitore
+		LEFT JOIN tipo_pagamento
+		      ON a.tipo=tipo_pagamento.id_tipo
+		LEFT JOIN Tipo_iva AS tipo_iva_BTI
+				ON tipo_iva_BTI.id_iva = aliquota_iva_BTI
+		INNER JOIN stato_fattura
+			ON stato_fattura.id_stato = fornfattura.stato
+	GROUP BY fornfattura.id_fattura, fornfattura.anno;
+	

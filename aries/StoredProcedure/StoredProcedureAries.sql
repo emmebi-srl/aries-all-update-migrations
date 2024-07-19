@@ -17314,7 +17314,9 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS sp_ariesSupplierInvoiceGetByExternalId;
 DELIMITER //
 CREATE  PROCEDURE `sp_ariesSupplierInvoiceGetByExternalId`(
-	IN external_id VARCHAR(150)
+	IN external_id VARCHAR(150),
+	IN invoice_year VARCHAR(150),
+	IN supplier_id VARCHAR(150)
 )
 BEGIN
 
@@ -17358,7 +17360,7 @@ BEGIN
 		e_fattura_filename,
 		movimenta_magazzino
 	FROM fornfattura
-	WHERE fornfattura.fattura_fornitore = external_id;
+	WHERE fornfattura.fattura_fornitore = external_id AND fornfattura.anno = invoice_year AND fornfattura.id_fornitore = IF(supplier_id > 0, supplier_id, fornfattura.id_fornitore) ;
 	
 END//
 DELIMITER ;
@@ -22835,9 +22837,10 @@ BEGIN
 		AND id_impianto = iFNULL(system_id, id_impianto) 
 		AND id_cliente = iFNULL(customer_id, id_cliente)
 		AND tipo_entita = iFNULL(entity_type, tipo_entita)
-		AND IF(reminder_status = 'to_handle', 1, richiedi_invio_promemoria) = richiedi_invio_promemoria
-		AND IF(reminder_status = 'to_be_sent', data_promemoria > CURRENT_DATE, True)
-		AND IF(reminder_status = 'sent', data_promemoria <= CURRENT_DATE, True);
+		AND IF(reminder_status = 'to_handle', richiedi_invio_promemoria = false, True)
+		AND IF(reminder_status = 'to_be_sent', richiedi_invio_promemoria = true AND data_promemoria > CURRENT_DATE, True)
+		AND IF(reminder_status = 'sent', data_promemoria <= CURRENT_DATE AND data_ultimo_promemoria IS NOT NULL, True)
+		AND IF(reminder_status = 'handled', data_promemoria IS NOT NULL, True);
 END; //
 DELIMITER ;
 
@@ -22858,6 +22861,7 @@ BEGIN
 		tipo_scadenza,
 		ses.id_impianto,
 		ses.id_cliente,
+		clienti.ragione_sociale,
 		Stato_clienti.Nome AS "stato_cliente",
 		Tipo_impianto.nome AS "tipo_impianto",
 		stato_impianto.Nome AS "stato_impianto",
@@ -22868,6 +22872,7 @@ BEGIN
 		data_ultimo_promemoria,
 		quantita,
 		CONCAT(CONCAT(dc.indirizzo,' n.',dc.numero_civico, dc.altro),' - ',concat(IF(f.nome IS NOT NULL AND f.nome <> '', concat(f.nome,' di '), ''), c.nome,' (',c.provincia,')')) AS 'Indirizzo',
+		CONCAT(c.nome,' (',c.provincia,')') AS 'citta',
 		dc.Km_sede AS "km_viaggio",
 		dc.Tempo_strada AS tempo_viaggio,
 		rc.id_riferimento AS id_riferimento_promemoria,
@@ -22889,9 +22894,9 @@ BEGIN
 		AND ses.id_impianto = iFNULL(system_id, ses.id_impianto) 
 		AND ses.id_cliente = iFNULL(customer_id, ses.id_cliente)
 		AND ses.tipo_entita = iFNULL(entity_type, CAST(ses.tipo_entita AS CHAR(100)))
-		AND IF(reminder_status = 'to_handle', richiedi_invio_promemoria = false, True)
-		AND IF(reminder_status = 'to_be_sent', data_promemoria > CURRENT_DATE, True)
-		AND IF(reminder_status = 'sent', data_promemoria <= CURRENT_DATE, True)
+		AND IF(reminder_status = 'to_handle', richiedi_invio_promemoria = false AND data_ultimo_promemoria IS NULL, True)
+		AND IF(reminder_status = 'to_be_sent', richiedi_invio_promemoria = true AND data_promemoria > CURRENT_DATE, True)
+		AND IF(reminder_status = 'sent', data_promemoria <= CURRENT_DATE AND data_ultimo_promemoria IS NOT NULL, True)
 		AND IF(reminder_status = 'handled', data_promemoria IS NOT NULL, True)
 	ORDER BY data_scadenza DESC;
 END; //
@@ -22931,12 +22936,12 @@ BEGIN
 	SET promemoria_cliente = 1
 	WHERE id = contact_id;
 
-	if entity_type = 'ticket' THEN
+	if entity_type = 'ticket_expiration' THEN
 		
 		UPDATE Ticket
 		SET richiedi_invio_promemoria = require_reminder_to_be_sent,
 			data_promemoria = CAST(reminder_send_date AS DATE)
-		WHERE id_ticket = reference_id;
+		WHERE Id = reference_id;
 
 	ELSEIF entity_type = 'system_sim_expiration' THEN
 		
@@ -22959,7 +22964,7 @@ BEGIN
 			data_promemoria = reminder_send_date
 		WHERE id = reference_id;
 
-	ELSEIF entity_type = 'system_warranty' THEN
+	ELSEIF entity_type = 'system_warrantzy' THEN
 			
 		UPDATE impianto
 		SET richiedi_invio_promemoria_garanzia = require_reminder_to_be_sent,

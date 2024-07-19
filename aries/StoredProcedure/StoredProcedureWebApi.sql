@@ -169,6 +169,7 @@ BEGIN
 
 	SELECT DISTINCT id_riferimento, 
 		riferimento_clienti.id_cliente, 
+		IFNULL(titolo, "") 'titolo', 
 		IFNULL(nome, "") 'nome', 
 		IFNULL(riferimento_figura.Figura, "") 'figura',
 		IFNULL(riferimento_clienti.Telefono, "") 'telefono', 
@@ -194,6 +195,7 @@ BEGIN
 
 	SELECT DISTINCT id_riferimento, 
 		riferimento_clienti.id_cliente, 
+		IFNULL(titolo, "") 'titolo', 
 		IFNULL(nome, "") 'nome', 
 		IFNULL(riferimento_figura.Figura, "") 'figura',
 		IFNULL(riferimento_clienti.Telefono, "") 'telefono', 
@@ -375,7 +377,8 @@ BEGIN
 		ticket.id_utente, 
 		ticket.stampato, 
 		ticket.inviato, 
-		ticket.data_promemoria
+		ticket.data_promemoria,
+		ticket.richiedi_invio_promemoria
 	FROM ticket
 	WHERE ((`ticket`.`Stato_ticket`                       = '1' OR `ticket`.`Stato_ticket`                       = '2') AND (`ticket`.`Id_impianto`                       IS NOT NULL)); 
 END; //
@@ -407,7 +410,8 @@ BEGIN
 		ticket.id_utente, 
 		ticket.stampato, 
 		ticket.inviato, 
-		ticket.data_promemoria
+		ticket.data_promemoria,
+		ticket.richiedi_invio_promemoria
 	FROM ticket
 	WHERE ((`ticket`.`Stato_ticket`                       = '1' OR `ticket`.`Stato_ticket`                       = '2') AND  FIND_IN_SET(`ticket`.`Id_impianto`, system_ids)); 
 END; //
@@ -433,7 +437,8 @@ BEGIN
 		IFNULL(`impianto`.`combinatore_telefonico`,'') AS `combinatore_telefonico`,
 		`impianto`.`orario_prog`                       AS `orario_prog`, 
 		checklist_model_impianto.id_checklist,
-		abbonamento.nome as "abbonamento"
+		abbonamento.nome as "abbonamento",
+		richiedi_invio_promemoria_garanzia
 	FROM `impianto`
 		INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 		INNER JOIN stato_impianto ON id_stato = Stato
@@ -479,7 +484,8 @@ BEGIN
 			 * COS(RADIANS(longitude - destinazione_cliente.longitudine))
 			 + SIN(RADIANS(latitude))
 			 * SIN(RADIANS(destinazione_cliente.latitudine)))) AS distanza,
-			abbonamento.nome as "abbonamento"
+			abbonamento.nome as "abbonamento",
+			richiedi_invio_promemoria_garanzia
 		FROM impianto
 			INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 			INNER JOIN stato_impianto ON id_stato = Stato
@@ -516,7 +522,8 @@ BEGIN
 		IFNULL(`impianto`.`combinatore_telefonico`,'') AS `combinatore_telefonico`,
 		`impianto`.`orario_prog`                       AS `orario_prog`, 
 		checklist_model_impianto.id_checklist,
-		abbonamento.nome as "abbonamento"
+		abbonamento.nome as "abbonamento",
+		richiedi_invio_promemoria_garanzia
 	FROM `impianto`
 		INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 		INNER JOIN stato_impianto ON id_stato = Stato
@@ -546,7 +553,8 @@ BEGIN
 		IFNULL(`impianto`.`combinatore_telefonico`,'') AS `combinatore_telefonico`,
 		`impianto`.`orario_prog`                       AS `orario_prog`, 
 			checklist_model_impianto.id_checklist,
-		abbonamento.nome as "abbonamento"
+		abbonamento.nome as "abbonamento",
+		richiedi_invio_promemoria_garanzia
 	FROM `impianto`
 		INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 		INNER JOIN stato_impianto ON id_stato = Stato
@@ -555,6 +563,75 @@ BEGIN
 	WHERE impianto.id_impianto = id;
 END; //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_apiSystemGetBetweenWarrantyDates;
+DELIMITER //
+CREATE PROCEDURE sp_apiSystemGetBetweenWarrantyDates  (
+	from_date DATE,
+	to_date DATE
+)
+BEGIN
+	SELECT `impianto`.`Id_impianto`,
+		`impianto`.`Id_cliente`                       AS `id_cliente`,
+		IFNULL(`impianto`.`Abbonamento`,0) AS `id_abbonamento`, 
+		impianto.Destinazione AS Id_destinazione, 
+		IFNULL(`impianto`.`Data_Funzione`, CAST('0000-00-00 00:00:00' AS DATETIME)) AS `data_funzione`, 
+		IFNULL(`impianto`.`scadenza_garanzia`, CAST('0000-00-00 00:00:00' AS DATETIME)) AS `Scadenza_Garanzia`,
+		`impianto`.`Tipo_impianto` AS `tipo_impianto`,
+		`tipo_impianto`.`Nome` AS `tipo_impianto_descrizione`,
+		`impianto`.`Stato` AS `stato`,
+		`stato_impianto`.`Nome` AS `stato_descrizione`,
+		`impianto`.`Descrizione`                       AS `descrizione`, 
+		IFNULL(`impianto`.`centrale`,'') AS `centrale`, 
+		IFNULL(`impianto`.`gsm`,'') AS `gsm`, 
+		IFNULL(`impianto`.`combinatore_telefonico`,'') AS `combinatore_telefonico`,
+		`impianto`.`orario_prog`                       AS `orario_prog`, 
+			checklist_model_impianto.id_checklist,
+		abbonamento.nome as "abbonamento",
+		richiedi_invio_promemoria_garanzia
+	FROM `impianto`
+		INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
+		INNER JOIN stato_impianto ON id_stato = Stato
+		LEFT JOIN checklist_model_impianto ON impianto.id_impianto = checklist_model_impianto.id_impianto
+		LEFT JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
+	WHERE scadenza_garanzia BETWEEN from_date AND to_date;
+END; //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_apiSystemGetBetweenWarrantyReminderDates;
+DELIMITER //
+CREATE PROCEDURE sp_apiSystemGetBetweenWarrantyReminderDates  (
+	from_date DATE,
+	to_date DATE
+)
+BEGIN
+	SELECT `impianto`.`Id_impianto`,
+		`impianto`.`Id_cliente`                       AS `id_cliente`,
+		IFNULL(`impianto`.`Abbonamento`,0) AS `id_abbonamento`, 
+		impianto.Destinazione AS Id_destinazione, 
+		IFNULL(`impianto`.`Data_Funzione`, CAST('0000-00-00 00:00:00' AS DATETIME)) AS `data_funzione`, 
+		IFNULL(`impianto`.`scadenza_garanzia`, CAST('0000-00-00 00:00:00' AS DATETIME)) AS `Scadenza_Garanzia`,
+		`impianto`.`Tipo_impianto` AS `tipo_impianto`,
+		`tipo_impianto`.`Nome` AS `tipo_impianto_descrizione`,
+		`impianto`.`Stato` AS `stato`,
+		`stato_impianto`.`Nome` AS `stato_descrizione`,
+		`impianto`.`Descrizione`                       AS `descrizione`, 
+		IFNULL(`impianto`.`centrale`,'') AS `centrale`, 
+		IFNULL(`impianto`.`gsm`,'') AS `gsm`, 
+		IFNULL(`impianto`.`combinatore_telefonico`,'') AS `combinatore_telefonico`,
+		`impianto`.`orario_prog`                       AS `orario_prog`, 
+			checklist_model_impianto.id_checklist,
+		abbonamento.nome as "abbonamento",
+		richiedi_invio_promemoria_garanzia
+	FROM `impianto`
+		INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
+		INNER JOIN stato_impianto ON id_stato = Stato
+		LEFT JOIN checklist_model_impianto ON impianto.id_impianto = checklist_model_impianto.id_impianto
+		LEFT JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento
+	WHERE data_promemoria_garanzia BETWEEN from_date AND to_date;
+END; //
+DELIMITER ;
+
 
 
 DROP PROCEDURE IF EXISTS sp_apiSystemNoteGet;
@@ -2445,7 +2522,8 @@ BEGIN
 			abbonamenti AS Id_abbonamento, 
 			da_eseguire, 
 			eseguito_il, 
-			prezzo 
+			prezzo,
+			richiedi_invio_promemoria
 		FROM impianto_abbonamenti_mesi
 		WHERE Eseguito_il IS NULL AND FIND_IN_SET(`impianto_abbonamenti_mesi`.`impianto`, system_ids)
 		ORDER BY IFNULL(da_eseguire, LAST_DAY(STR_TO_DATE(CONCAT(Anno,'-', mese, '-', '01'), '%Y-%m-%d'))) ASC 
@@ -2455,6 +2533,54 @@ BEGIN
 	
 END //
 DELIMITER ;
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS sp_apiSystemPeriodicCheckGetBetweenExpectedExecutionDates;
+CREATE PROCEDURE sp_apiSystemPeriodicCheckGetBetweenExpectedExecutionDates
+(
+	from_date DATE,
+	to_date DATE
+)
+BEGIN
+	SELECT Id, 
+		impianto AS Id_impianto, 
+		mese,
+		anno,
+		abbonamenti AS Id_abbonamento, 
+		da_eseguire, 
+		eseguito_il, 
+		prezzo,
+		richiedi_invio_promemoria
+	FROM impianto_abbonamenti_mesi
+	WHERE da_eseguire BETWEEN from_date AND to_date
+	ORDER BY da_eseguire;
+END //
+DELIMITER ;
+
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS sp_apiSystemPeriodicCheckGetBetweenReminderDates;
+CREATE PROCEDURE sp_apiSystemPeriodicCheckGetBetweenReminderDates
+(
+	from_date DATE,
+	to_date DATE
+)
+BEGIN
+	SELECT Id, 
+		impianto AS Id_impianto, 
+		mese,
+		anno,
+		abbonamenti AS Id_abbonamento, 
+		da_eseguire, 
+		eseguito_il, 
+		prezzo,
+		richiedi_invio_promemoria
+	FROM impianto_abbonamenti_mesi
+	WHERE data_promemoria BETWEEN from_date AND to_date
+	ORDER BY data_promemoria;
+END //
+DELIMITER ;
+
 
 
 DELIMITER //
@@ -3317,7 +3443,8 @@ BEGIN
 		Data_installazione, 
 		Id AS Posizione, 
 		Data_dismesso, 
-		BOX
+		BOX,
+		richiedi_invio_promemoria
 	FROM impianto_componenti
 	WHERE (data_scadenza < end_date)
 	ORDER BY data_scadenza DESC;
@@ -3340,13 +3467,13 @@ BEGIN
 		Id AS Posizione, 
 		Data_dismesso, 
 		COUNT(*) AS quantita,
-		BOX
+		BOX,
+		richiedi_invio_promemoria
 	FROM impianto_componenti
 	WHERE data_dismesso IS NULL
 	GROUP BY id_impianto, id_articolo, Data_scadenza;
 END; //
 DELIMITER ;
-
 
 DROP PROCEDURE IF EXISTS sp_apiConfigurationPathGetByKey;
 DELIMITER //
@@ -3403,9 +3530,9 @@ END; //
 DELIMITER ;
 
 
-DROP PROCEDURE IF EXISTS sp_apiSystemSimTopUpGetBetweenDates;
+DROP PROCEDURE IF EXISTS sp_apiSystemSimTopUpGetBetweenExpirationDates;
 DELIMITER //
-CREATE PROCEDURE sp_apiSystemSimTopUpGetBetweenDates (
+CREATE PROCEDURE sp_apiSystemSimTopUpGetBetweenExpirationDates (
 	from_date DATE,
 	to_date DATE
 )
@@ -3428,8 +3555,65 @@ BEGIN
 		impianto_ricarica_tipo.`data_ultimo_promemoria`
 	FROM impianto_ricarica_tipo
 		INNER JOIN Tipo_ricarica ON Tipo_ricarica.Id_tipo = impianto_ricarica_tipo.Tipo_ricarica
-	WHERE (data_scadenza BETWEEN from_date AND to_date
-		OR data_rinnovo BETWEEN from_date AND to_date); 
+	WHERE data_scadenza BETWEEN from_date AND to_date; 
+END; //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_apiSystemSimTopUpGetBetweenRenewDates;
+DELIMITER //
+CREATE PROCEDURE sp_apiSystemSimTopUpGetBetweenRenewDates (
+	from_date DATE,
+	to_date DATE
+)
+BEGIN
+
+	SELECT impianto_ricarica_tipo.id,
+		impianto_ricarica_tipo.Id_impianto, 
+		impianto_ricarica_tipo.Tipo_ricarica, 
+		Tipo_ricarica.Nome AS 'nome_tipo_ricarica', 
+		impianto_ricarica_tipo.`nota`,
+		impianto_ricarica_tipo.`importo`,
+		impianto_ricarica_tipo.`durata`,
+		impianto_ricarica_tipo.`numero`,
+		impianto_ricarica_tipo.`intestatario`,
+		impianto_ricarica_tipo.`acarico`,
+		impianto_ricarica_tipo.`data_attivazione`,
+		impianto_ricarica_tipo.`data_rinnovo`,
+		impianto_ricarica_tipo.`data_scadenza`,
+		impianto_ricarica_tipo.`richiedi_invio_promemoria`,
+		impianto_ricarica_tipo.`data_ultimo_promemoria`
+	FROM impianto_ricarica_tipo
+		INNER JOIN Tipo_ricarica ON Tipo_ricarica.Id_tipo = impianto_ricarica_tipo.Tipo_ricarica
+	WHERE data_rinnovo BETWEEN from_date AND to_date; 
+END; //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_apiSystemSimTopUpGetBetweenReminderDates;
+DELIMITER //
+CREATE PROCEDURE sp_apiSystemSimTopUpGetBetweenReminderDates (
+	from_date DATE,
+	to_date DATE
+)
+BEGIN
+
+	SELECT impianto_ricarica_tipo.id,
+		impianto_ricarica_tipo.Id_impianto, 
+		impianto_ricarica_tipo.Tipo_ricarica, 
+		Tipo_ricarica.Nome AS 'nome_tipo_ricarica', 
+		impianto_ricarica_tipo.`nota`,
+		impianto_ricarica_tipo.`importo`,
+		impianto_ricarica_tipo.`durata`,
+		impianto_ricarica_tipo.`numero`,
+		impianto_ricarica_tipo.`intestatario`,
+		impianto_ricarica_tipo.`acarico`,
+		impianto_ricarica_tipo.`data_attivazione`,
+		impianto_ricarica_tipo.`data_rinnovo`,
+		impianto_ricarica_tipo.`data_scadenza`,
+		impianto_ricarica_tipo.`richiedi_invio_promemoria`,
+		impianto_ricarica_tipo.`data_ultimo_promemoria`
+	FROM impianto_ricarica_tipo
+		INNER JOIN Tipo_ricarica ON Tipo_ricarica.Id_tipo = impianto_ricarica_tipo.Tipo_ricarica
+	WHERE data_promemoria BETWEEN from_date AND to_date; 
 END; //
 DELIMITER ;
 
@@ -3471,7 +3655,7 @@ BEGIN
   UPDATE impianto_ricarica_tipo 
   SET richiedi_invio_promemoria = require_customer_reminder,
 	data_ultimo_promemoria = NOW()
-  WHERE FIND_IN_SET(Id, idArray);
+  WHERE FIND_IN_SET(Id, id_array);
 END
 $$
 
@@ -3562,13 +3746,88 @@ BEGIN
 		ticket.id_utente, 
 		ticket.stampato, 
 		ticket.inviato, 
-		ticket.data_promemoria
+		ticket.data_promemoria,
+		ticket.richiedi_invio_promemoria
 	FROM ticket
 	WHERE (`ticket`.`Stato_ticket`                       IN (1,2) and ticket.scadenza < end_date)
 	ORDER BY ticket.scadenza DESC; 
 	
 END; //
 DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_apiTicketGetBetweenExpirationDates;
+DELIMITER //
+CREATE PROCEDURE sp_apiTicketGetBetweenExpirationDates (
+	from_date DATE,
+	to_date DATE
+)
+BEGIN
+	SELECT `ticket`.`id`                       AS `id`,
+		`ticket`.`Id_ticket`                       AS `id_ticket`,
+		`ticket`.`anno`                       AS `anno`,
+		`ticket`.`Id_impianto`                       AS `id_impianto`,
+		`ticket`.`Id_cliente`                       AS `id_cliente`,
+		ticket.id_destinazione,
+		`ticket`.`Urgenza`                       AS `urgenza`,
+		`ticket`.`Descrizione`                       AS `ticket_descrizione`,
+		IFNULL(ticket.Data_ticket, ticket.data_ora) AS "data_ticket", 
+		ticket.scadenza AS Data_scadenza, 
+		ticket.data_ora,
+		ticket.data_soluzione, 
+		ticket.Causale, 
+		ticket.intervento,
+		ticket.Comunicazione, 
+		ticket.Stato_ticket,
+		ticket.tempo, 
+		ticket.id_utente, 
+		ticket.stampato, 
+		ticket.inviato, 
+		ticket.data_promemoria,
+		ticket.richiedi_invio_promemoria
+	FROM ticket
+	WHERE scadenza BETWEEN from_date AND to_date
+	ORDER BY ticket.scadenza DESC; 
+	
+END; //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_apiTicketGetBetweenReminderDates;
+DELIMITER //
+CREATE PROCEDURE sp_apiTicketGetBetweenReminderDates (
+	from_date DATE,
+	to_date DATE
+)
+BEGIN
+	SELECT `ticket`.`id`                       AS `id`,
+		`ticket`.`Id_ticket`                       AS `id_ticket`,
+		`ticket`.`anno`                       AS `anno`,
+		`ticket`.`Id_impianto`                       AS `id_impianto`,
+		`ticket`.`Id_cliente`                       AS `id_cliente`,
+		ticket.id_destinazione,
+		`ticket`.`Urgenza`                       AS `urgenza`,
+		`ticket`.`Descrizione`                       AS `ticket_descrizione`,
+		IFNULL(ticket.Data_ticket, ticket.data_ora) AS "data_ticket", 
+		ticket.scadenza AS Data_scadenza, 
+		ticket.data_ora,
+		ticket.data_soluzione, 
+		ticket.Causale, 
+		ticket.intervento,
+		ticket.Comunicazione, 
+		ticket.Stato_ticket,
+		ticket.tempo, 
+		ticket.id_utente, 
+		ticket.stampato, 
+		ticket.inviato, 
+		ticket.data_promemoria,
+		ticket.richiedi_invio_promemoria
+	FROM ticket
+	WHERE data_promemoria BETWEEN from_date AND to_date
+	ORDER BY ticket.data_promemoria DESC; 
+END; //
+DELIMITER ;
+
 
 DROP PROCEDURE IF EXISTS sp_apiServiceAlertGeneralConfigurationGetLast;
 DELIMITER //
@@ -4545,3 +4804,137 @@ BEGIN
 		INNER JOIN tipo_resoconto ON resoconto.tipo_resoconto = tipo_resoconto.id_tipo;
 END//
 DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_apiTicketUpdateRequireReminder; 
+DELIMITER $$
+
+CREATE PROCEDURE sp_apiTicketUpdateRequireReminder(
+IN id_array MEDIUMTEXT,
+IN require_customer_reminder BIT)
+BEGIN
+  UPDATE ticket 
+  SET richiedi_invio_promemoria = require_customer_reminder,
+	data_ultimo_promemoria = NOW()
+  WHERE FIND_IN_SET(Id, id_array);
+END
+$$
+
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_apiSystemProductUpdateRequireReminder; 
+DELIMITER $$
+
+CREATE PROCEDURE sp_apiSystemProductUpdateRequireReminder(
+IN id_array MEDIUMTEXT,
+IN require_customer_reminder BIT)
+BEGIN
+  UPDATE impianto_componenti 
+  SET richiedi_invio_promemoria = require_customer_reminder,
+	data_ultimo_promemoria = NOW()
+  WHERE FIND_IN_SET(Id_impianto_componenti, id_array);
+END
+$$
+
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_apiSystemProductGetBetweenExpirationDates;
+DELIMITER //
+CREATE PROCEDURE sp_apiSystemProductGetBetweenExpirationDates (
+	from_date DATE,
+	to_date DATE
+)
+BEGIN
+	SELECT Id_impianto, 
+		Id_articolo,
+		Data_scadenza, 
+		Data_installazione, 
+		Id AS Posizione, 
+		Data_dismesso, 
+		COUNT(*) AS quantita,
+		BOX,
+		richiedi_invio_promemoria
+	FROM impianto_componenti
+	WHERE scadenza BETWEEN from_date AND to_date
+	GROUP BY id_impianto, id_articolo, Data_scadenza;
+END; //
+DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS sp_apiSystemProductGetBetweenReminderDates;
+DELIMITER //
+CREATE PROCEDURE sp_apiSystemProductGetBetweenReminderDates (
+	from_date DATE,
+	to_date DATE
+)
+BEGIN
+	SELECT Id_impianto, 
+		Id_articolo,
+		Data_scadenza, 
+		Data_installazione, 
+		Id AS Posizione, 
+		Data_dismesso, 
+		COUNT(*) AS quantita,
+		BOX,
+		richiedi_invio_promemoria
+	FROM impianto_componenti
+	WHERE data_promemoria BETWEEN from_date AND to_date
+	GROUP BY id_impianto, id_articolo, Data_scadenza;
+END; //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_apiSystemComponentsUpdateRequireReminder;
+DELIMITER //
+CREATE PROCEDURE sp_apiSystemComponentsUpdateRequireReminder(
+	IN system_id INT,
+	IN product_code VARCHAR(50),
+	IN expiration_date DATE,
+	IN require_customer_reminder BIT
+	)
+BEGIN
+  UPDATE impianto_componenti 
+  SET richiedi_invio_promemoria = require_customer_reminder,
+	data_ultimo_promemoria = NOW()
+  WHERE Data_scadenza = expiration_date
+	AND id_impianto = system_id
+	AND id_articolo = product_code;
+END; //
+
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_apiSystemUpdateRequireWarrantyReminder; 
+DELIMITER $$
+
+CREATE PROCEDURE sp_apiSystemUpdateRequireWarrantyReminder(
+IN id_array MEDIUMTEXT,
+IN require_customer_reminder BIT)
+BEGIN
+  UPDATE impianto
+  SET richiedi_invio_promemoria_garanzia = require_customer_reminder,
+	data_ultimo_promemoria_garanzia = NOW()
+  WHERE FIND_IN_SET(Id_impianto, id_array);
+END
+$$
+
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_apiSystemPeriodicCheckUpdateRequireReminder; 
+DELIMITER $$
+
+CREATE PROCEDURE sp_apiSystemPeriodicCheckUpdateRequireReminder(
+IN id_array MEDIUMTEXT,
+IN require_customer_reminder BIT)
+BEGIN
+  UPDATE impianto_abbonamenti_mesi
+  SET richiedi_invio_promemoria = require_customer_reminder,
+	data_ultimo_promemoria = NOW()
+  WHERE FIND_IN_SET(Id, id_array);
+END
+$$
+
+DELIMITER ;
+
