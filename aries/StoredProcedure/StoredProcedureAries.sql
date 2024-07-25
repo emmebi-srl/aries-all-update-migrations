@@ -22566,6 +22566,8 @@ BEGIN
 	DECLARE right_of_call_chargeable BIT(1);
 	DECLARE right_of_call_cost DECIMAL(11,2);
 	DECLARE right_of_call_price DECIMAL(11,2);
+	DECLARE is_under_warranty BIT(1);
+	DECLARE is_price_predefined BIT(1);
 
 	SELECT costo_h, straordinario_c, costo_km, prezzo
 		INTO default_hourly_cost, default_hourly_cost_extra, default_km_cost, default_hourly_price
