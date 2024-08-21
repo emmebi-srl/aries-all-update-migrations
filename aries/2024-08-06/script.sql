@@ -1,0 +1,1 @@
+INSERT IGNORE INTO `stampante_moduli_formati` (`Id_modulo`, `Id_documento`, `Id_formato`, `Timestamp`) VALUES ('1', '14', '2', NOW());

@@ -200,3 +200,32 @@ BEGIN
 	ORDER BY prior desc;
 END $$
 DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_searchPaymentConditionsLight; 
+DELIMITER $$
+CREATE PROCEDURE `sp_searchPaymentConditionsLight`(
+	IN `search_text` TEXT
+)
+BEGIN
+	
+	SELECT DISTINCT
+		id_condizione,
+		condizione_pagamento.nome,
+		condizione_pagamento.descrizione,
+		tipo_pagamento.nome as tipo_pagamento,
+		modalitaPA,
+		condizioniPA,
+		temporanea
+	FROM condizione_pagamento
+		INNER JOIN tipo_pagamento ON condizione_pagamento.tipo = tipo_pagamento.id_tipo
+	WHERE (condizione_pagamento.nome LIKE CONCAT('%', search_text, '%') 
+		OR condizione_pagamento.descrizione LIKE CONCAT('%', search_text, '%')
+		OR tipo_pagamento.nome LIKE CONCAT('%', search_text, '%')
+		OR modalitaPA LIKE CONCAT('%', search_text, '%')
+		OR condizioniPA LIKE CONCAT('%', search_text, '%'))
+	ORDER BY nome
+	LIMIT 100;
+
+END $$
+DELIMITER ;

@@ -9586,6 +9586,7 @@ BEGIN
 		Descrizione, 
 		tipo, 
 		pagato,
+		temporanea,
 		mesi, 
 		modalitaPA,
 		condizioniPA, 
@@ -9611,6 +9612,7 @@ BEGIN
 		Descrizione, 
 		tipo, 
 		pagato,
+		temporanea,
 		mesi, 
 		modalitaPA,
 		condizioniPA, 
@@ -17396,6 +17398,47 @@ BEGIN
 
 	UPDATE fornfattura
 	SET scan = scan_value
+	WHERE Id_fattura = enter_id AND anno = enter_year;
+	SET Result = 1;
+	
+END//
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesSupplierInvoiceSetPaymentCondition;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesSupplierInvoiceSetPaymentCondition`(
+	IN enter_id INT(11), 
+	IN enter_year INT(11),
+	IN payment_condition_id INT(1),
+	OUT Result INT(11)
+	
+)
+BEGIN
+
+	UPDATE fornfattura
+	SET cond_pagamento = payment_condition_id
+	WHERE Id_fattura = enter_id AND anno = enter_year;
+	SET Result = 1;
+	
+END//
+DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS sp_ariesInvoiceSetPaymentCondition;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesInvoiceSetPaymentCondition`(
+	IN enter_id INT(11), 
+	IN enter_year INT(11),
+	IN payment_condition_id INT(1),
+	OUT Result INT(11)
+	
+)
+BEGIN
+
+	UPDATE fattura
+	SET cond_pagamento = payment_condition_id
 	WHERE Id_fattura = enter_id AND anno = enter_year;
 	SET Result = 1;
 	

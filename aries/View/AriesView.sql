@@ -1529,3 +1529,40 @@ CREATE VIEW vw_supplier_invoices_details AS
 			ON stato_fattura.id_stato = fornfattura.stato
 	GROUP BY fornfattura.id_fattura, fornfattura.anno;
 	
+
+
+DROP VIEW IF EXISTS vw_supplier_invoices_payments_details;
+CREATE VIEW vw_supplier_invoices_payments_details AS	
+	SELECT 
+		fornfattura.id_fattura AS "id_fattura",
+		fornfattura.anno AS "anno", 
+		fornfattura.fattura_fornitore AS "id_fattura_fornitore",
+		fornfattura.data AS "data_fattura",
+		fornitore.id_fornitore,
+		ragione_sociale,
+		a.nome AS "condizione_pagamento",
+		IFNULL(tipopag.id_tipo, tipo_pagamento.id_tipo) AS "id_tipo_pagamento",
+		IFNULL(tipopag.nome, tipo_pagamento.nome) AS "tipo_pagamento",
+		(((totiva)+(
+			((trasporto/100)*(100+(SELECT aliquota FROM tipo_iva WHERE id_iva=aliquota_iva_BTI))) + 
+			((bollo/100)*(100+if(iva_bollo=0, 0, (SELECT aliquota FROM tipo_iva WHERE id_iva=aliquota_iva_BTI)))) + 
+			((incasso/100)*(100+if(iva_incasso=0, 0, (SELECT aliquota FROM tipo_iva WHERE id_iva=aliquota_iva_BTI))))
+		))/a.mesi) AS "importo_pagamento",
+		SUM(totiva+(
+			((trasporto/100)*(100+(SELECT aliquota  FROM tipo_iva WHERE id_iva=aliquota_iva_BTI))) + 
+			((bollo/100)*(100+if(iva_bollo=0, 0, (SELECT aliquota FROM tipo_iva WHERE id_iva=aliquota_iva_BTI)))) + 
+			((incasso/100)*(100+if(iva_incasso=0, 0, (SELECT aliquota FROM tipo_iva WHERE id_iva=aliquota_iva_BTI))))
+		)) AS "importo_fattura",
+		LAST_DAY(fornfattura.data + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY AS "data_pagamento_prevista",
+		fornfattura_pagamenti.`data` AS "data_pagamento_effettiva",
+		if(id_pagamento IS NOT NULL,"1","0") AS pagato, 
+		if(id_pagamento IS NOT NULL, CONCAT("Pagato con ", tipopag.nome," il ", DATE_FORMAT(fornfattura_pagamenti.data,"%m/%d/%Y")),"") AS "nota_pagamento_effettuato"
+	FROM fornfattura
+		INNER JOIN condizione_pagamento AS a ON cond_pagamento = a.id_condizione
+		LEFT JOIN condizioni_giorno AS g ON g.id_condizione = a.id_condizione
+		INNER JOIN fornitore ON fornfattura.id_fornitore=fornitore.id_fornitore
+		LEFT JOIN tipo_pagamento ON a.tipo=tipo_pagamento.id_tipo
+		LEFT JOIN fornfattura_pagamenti ON fornfattura.id_fattura = fornfattura_pagamenti.id_fattura AND fornfattura.anno = fornfattura_pagamenti.anno AND DATE_FORMAT(LAST_DAY(fornfattura.data + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY, "%Y%m%d")=id_pagamento
+		LEFT JOIN tipo_pagamento AS tipopag ON fornfattura_pagamenti.tipo_pagamento = tipopag.id_tipo AND id_pagamento = DATE_FORMAT(LAST_DAY(fornfattura.data + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY, '%Y%m%d')
+	GROUP BY fornfattura.fattura_fornitore, data_pagamento_prevista;
+
