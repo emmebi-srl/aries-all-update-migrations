@@ -1,0 +1,1 @@
+INSERT INTO `tipo_resoconto` (`nome`) VALUES ('GHOST');

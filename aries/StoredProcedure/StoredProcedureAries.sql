@@ -23852,7 +23852,8 @@ BEGIN
 	  	`nome` VARCHAR(100) NOT NULL,
 		immagine INT(11) NOT NULL,
 		giorni INT(11) NOT NULL,
-		giorni_scaduto INT(11) NOT NULL
+		giorni_scaduto INT(11) NOT NULL,
+		bold BIT(1) NOT NULL
 	);
 	
   	## EMAIL WITH SENDING ERROR OR INIFITE SENDING
@@ -23865,7 +23866,8 @@ BEGIN
 			"MAIL FALLITE",
 			21 as immagine,
 			0 as giorni,
-			0 as giorni_scaduto
+			0 as giorni_scaduto,
+			0 as bold
 		FROM mail
 			WHERE mail.Id_stato=2 OR ((NOW() - data_invio) div 60 > 20 AND mail.Id_stato=0 AND mail.tipo="1") AND mail.tipo="1" 
 		HAVING count(Id) > 0;
@@ -23881,7 +23883,8 @@ BEGIN
 			"NUOVI RAPPORTI",
 			8 as immagine,
 			0 as giorni,
-			0 as giorni_scaduto
+			0 as giorni_scaduto,
+			0 as bold
 		FROM rapporto_mobile
 		WHERE visionato = 0 AND inviato = 1 AND data IS NOT NULL
 		HAVING count(*) > 0
@@ -23896,7 +23899,8 @@ BEGIN
 			"NUOVE CHECKLISTS",
 			3 as immagine,
 			0 as giorni,
-			0 as giorni_scaduto
+			0 as giorni_scaduto,
+			0 as bold
 		FROM checklist
 		WHERE visionata = 0 
 		HAVING count(*) > 0;
@@ -23915,7 +23919,8 @@ BEGIN
 			"PAGAMENTI FATTURE",
 			34 as immagine,
 			days_reminder_payment_invoices as giorni,
-			90 as giorni_scaduto
+			90 as giorni_scaduto,
+			0 as bold
 		FROM (
 			SELECT concat (fattura.id_fattura," ",fattura.anno) AS "gruppa"
 			FROM fattura 
@@ -23947,7 +23952,8 @@ BEGIN
 			"PREVENTIVI INVIATI",
 			1 as immagine,
 			0 as giorni,
-			0 as giorni_scaduto
+			0 as giorni_scaduto,
+			0 as bold
 		FROM preventivo
 		WHERE (
 				(data_invio IS NOT NULL AND primo_sollecito IS NULL AND DATEDIFF(curdate(), data_invio) > days_quotes_sent_reminder)
@@ -23967,7 +23973,8 @@ BEGIN
 			"CLIENTI INSERITI",
 			13 as immagine,
 			0 as giorni,
-			0 as giorni_scaduto
+			0 as giorni_scaduto,
+			0 as bold
 		FROM clienti
 		WHERE modi = 5
 		HAVING count(*) > 0;
@@ -23984,7 +23991,8 @@ BEGIN
 			"RICHIESTE DI ABBONAMENTO",
 			19 as immagine,
 			0 as giorni,
-			0 as giorni_scaduto
+			0 as giorni_scaduto,
+			0 as bold
 		FROM impianto
 		WHERE DATEDIFF(CURRENT_DATE, impianto.data_invio_doc) > days_reminder_subscription_requests
 			AND impianto.stato_invio_doc="clyellow"
@@ -24000,7 +24008,8 @@ BEGIN
 			"GARANZIE IMPIANTI",
 			35 as immagine,
 			60 as giorni,
-			30 as giorni_scaduto
+			30 as giorni_scaduto,
+			0 as bold
 		FROM impianto
 			INNER JOIN stato_impianto ON stato_impianto.id_stato = impianto.stato
 		WHERE DATEDIFF(impianto.scadenza_garanzia,CURRENT_DATE) BETWEEN -30 AND 60
@@ -24015,7 +24024,8 @@ BEGIN
 			"RINNOVO ABBONAMENTI",
 			28 as immagine,
 			0 as giorni,
-			0 as giorni_scaduto
+			0 as giorni_scaduto,
+			0 as bold
 		FROM (
 			SELECT IFNULL(flag_abbonamento, 0 ) as flag_abbonamento, impianto.id_impianto, impianto.descrizione,
 				clienti.ragione_sociale, abbonamento.nome AS "abbonamento", tipo_impianto.nome AS "tipo_impianto", ia.anno,
@@ -24044,7 +24054,8 @@ BEGIN
 			"COMPONENII IMPIANTI" ,
 			17 as immagine,
 			30 as giorni,
-			60 as giorni_scaduto
+			60 as giorni_scaduto,
+			0 as bold
 		FROM impianto_componenti 
 			INNER JOIN articolo ON impianto_componenti.id_articolo = articolo.codice_articolo 
 			INNER JOIN impianto ON impianto_componenti.id_impianto = impianto.id_impianto
@@ -24064,7 +24075,8 @@ BEGIN
 			"RICARICHE IMPIANTI",
 			36 as immagine,
 			30 as giorni,
-			60 as giorni_scaduto
+			60 as giorni_scaduto,
+			0 as bold
 		FROM impianto_ricarica_tipo
 			INNER JOIN impianto ON impianto.Id_impianto = impianto_ricarica_tipo.id_impianto
 			INNER JOIN stato_impianto ON stato_impianto.id_stato = impianto.stato
@@ -24081,7 +24093,8 @@ BEGIN
 			"CONTROLLI PERIODICI",
 			23 as immagine,
 			30 as giorni,
-			60 as giorni_scaduto
+			60 as giorni_scaduto,
+			0 as bold
 		FROM impianto_abbonamenti_mesi
 			INNER JOIN impianto ON impianto.Id_impianto = impianto_abbonamenti_mesi.impianto
 			INNER JOIN stato_impianto ON stato_impianto.id_stato = impianto.stato
@@ -24104,7 +24117,8 @@ BEGIN
 			"SCADENZA TICKET" AS "tipo",
 			7 as immagine,
 			30 as giorni,
-			60 as giorni_scaduto
+			60 as giorni_scaduto,
+			0 as bold
 		FROM ticket
 		WHERE DATEDIFF(scadenza, CURRENT_DATE) BETWEEN -60 AND 30
 			AND scadenza IS NOT NULL
@@ -24122,13 +24136,33 @@ BEGIN
 		"CORSI SCADUTI",
 		0 as immagine,
 		30 as giorni,
-		60 as giorni_scaduto
+		60 as giorni_scaduto,
+		0 as bold
 	FROM corso
 			LEFT JOIN operaio_corso ON corso.id_corso = operaio_corso.id_corso
 		LEFT JOIN operaio ON operaio.id_operaio = operaio_corso.id_operaio
 		LEFT JOIN tipo_evento ON tipo_evento = tipo_evento.id_tipo
 	WHERE DATEDIFF(data_fine, CURRENT_DATE) BETWEEN -60 AND 30
 		AND corso.stato = 1
+	HAVING COUNT(*) > 0;
+
+	INSERT INTO temp_notifications 
+	SELECT "aries_server_warning",
+		"$7280FA" AS colore,
+		NULL AS data_inizio,
+		CONCAT("Ci sono ", count(*), " rapporti bloccati, Aries Server sembra BLOCCATO.") AS descrizione,
+		"ARIES SERVER",
+		19 as immagine,
+		0 as giorni,
+		0 as giorni_scaduto,
+		1 as bold
+	FROM (
+		SELECT id_rapporto, anno
+		FROM rapporto_mobile WHERE DATA IS NOT NULL AND inviato = 0 AND visionato = 0 AND ROUND(time_to_sec((TIMEDIFF(NOW(), timestamp_invio))) / 60) > 5
+		UNION ALL 
+		SELECT id_rapporto, anno
+		FROM rapporto_mobile_collaudo WHERE DATA IS NOT NULL AND processato = 0 AND ROUND(time_to_sec((TIMEDIFF(NOW(), timestamp_invio))) / 60) > 5
+	) AS blocked
 	HAVING COUNT(*) > 0;
 	
 	
