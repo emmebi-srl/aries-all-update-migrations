@@ -2279,7 +2279,7 @@ BEGIN
 		impianto.Costo_Manutenzione AS "Costo Manutenzione",
 		ses.descrizione AS "Descrizione Impianto",
 		data_scadenza AS "Data scadenza",
-		richiedi_invio_promemoria AS "Richiedi invio promemoria",
+		IF(stato_promemoria_cliente.rif_applicazioni = "to_send", 1, 0) AS "Richiedi invio promemoria",
 		data_promemoria AS "Data promemoria",
 		data_ultimo_promemoria AS "Data ultimo promemora",
 		quantita AS "Quantita",
@@ -2290,7 +2290,8 @@ BEGIN
 		IFNULL(riferimento_principale.altro_telefono, "") AS "Telefono Cliente",
 		rc.id_riferimento AS "ID contatto Promemoria",
 		IFNULL(rc.mail, '') AS "Email Promemoria",
-		IFNULL(rc.altro_telefono, "") AS "Telefono Promemoria"
+		IFNULL(rc.altro_telefono, "") AS "Telefono Promemoria",
+		stato_promemoria_cliente.nome AS "Stato Promemoria"
 	FROM vw_systems_expirations_summary AS ses
 		INNER JOIN impianto ON ses.id_impianto = impianto.Id_impianto
 		INNER JOIN clienti ON ses.Id_cliente = clienti.Id_cliente
@@ -2302,6 +2303,7 @@ BEGIN
 			AND impianto.destinazione = dc.Id_destinazione
 		INNER JOIN tipo_rapclie ON tipo_rapclie.id_tipo = clienti.tipo_rapporto
 		INNER JOIN comune AS c ON c.id_comune=dc.Comune
+		INNER JOIN stato_promemoria_cliente ON stato_promemoria_cliente.id = ses.id_stato_promemoria
 		LEFT JOIN frazione AS f ON f.id_frazione=dc.frazione
 		LEFT JOIN riferimento_clienti AS rc ON rc.id_cliente=ses.id_cliente AND rc.Promemoria_cliente=1
 		LEFT JOIN riferimento_clienti AS riferimento_principale ON riferimento_principale.id_cliente=ses.id_cliente AND riferimento_principale.id_riferimento = 1

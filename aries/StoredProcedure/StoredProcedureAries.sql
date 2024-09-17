@@ -22871,7 +22871,7 @@ CREATE PROCEDURE sp_ariesSystemsExpirationsCounter (
 	IN system_id INT,
 	IN customer_id INT,
 	IN entity_type VARCHAR(100),
-	IN reminder_status VARCHAR(20) -- sent, to_be_sent, to_handle
+	IN reminder_status VARCHAR(200) -- sent, to_be_sent, to_handle
 )
 BEGIN
 	SELECT COUNT(*)
@@ -22882,10 +22882,7 @@ BEGIN
 		AND id_impianto = iFNULL(system_id, id_impianto) 
 		AND id_cliente = iFNULL(customer_id, id_cliente)
 		AND tipo_entita = iFNULL(entity_type, tipo_entita)
-		AND IF(reminder_status = 'to_handle', richiedi_invio_promemoria = false, True)
-		AND IF(reminder_status = 'to_be_sent', richiedi_invio_promemoria = true AND data_promemoria > CURRENT_DATE, True)
-		AND IF(reminder_status = 'sent', data_promemoria <= CURRENT_DATE AND data_ultimo_promemoria IS NOT NULL, True)
-		AND IF(reminder_status = 'handled', data_promemoria IS NOT NULL, True);
+		AND (FIND_IN_SET(stato_promemoria_cliente.rif_applicazioni, reminder_status) OR reminder_status IS NULL);
 END; //
 DELIMITER ;
 
@@ -22897,7 +22894,7 @@ CREATE PROCEDURE sp_ariesSystemsExpirationsSearch (
 	IN system_id INT,
 	IN customer_id INT,
 	IN entity_type VARCHAR(100),
-	IN reminder_status VARCHAR(20) -- sent, to_be_sent, handled, to_handle
+	IN reminder_status VARCHAR(200) -- sent, to_be_sent, handled, to_handle
 )
 BEGIN
 	SELECT 
@@ -22912,7 +22909,7 @@ BEGIN
 		stato_impianto.Nome AS "stato_impianto",
 		ses.descrizione,
 		data_scadenza,
-		richiedi_invio_promemoria,
+		IF(stato_promemoria_cliente.rif_applicazioni = "to_send", 1, 0) as richiedi_invio_promemoria,
 		data_promemoria,
 		data_ultimo_promemoria,
 		quantita,
@@ -22921,7 +22918,10 @@ BEGIN
 		dc.Km_sede AS "km_viaggio",
 		dc.Tempo_strada AS tempo_viaggio,
 		rc.id_riferimento AS id_riferimento_promemoria,
-		CONCAT(rc.nome, ' - ', rc.mail, '/', rc.altro_telefono) AS riferimento_promemoria
+		CONCAT(rc.nome, ' - ', rc.mail, '/', rc.altro_telefono) AS riferimento_promemoria,
+		ses.id_stato_promemoria,
+		stato_promemoria_cliente.nome as stato_promemoria,
+		stato_promemoria_cliente.colore as colore_stato_promemoria
 	FROM vw_systems_expirations_summary AS ses
 		INNER JOIN impianto ON ses.id_impianto = impianto.Id_impianto
 		INNER JOIN clienti ON ses.Id_cliente = clienti.Id_cliente
@@ -22931,6 +22931,7 @@ BEGIN
 		INNER JOIN destinazione_cliente AS dc ON dc.id_cliente = ses.id_cliente
 			AND impianto.destinazione = dc.Id_destinazione
 		INNER JOIN comune AS c ON c.id_comune=dc.Comune
+		INNER JOIN stato_promemoria_cliente ON stato_promemoria_cliente.id = ses.id_stato_promemoria
 		LEFT JOIN frazione AS f ON f.id_frazione=dc.frazione
 		LEFT JOIN riferimento_clienti AS rc ON rc.id_cliente=ses.id_cliente AND Promemoria_cliente=1
 	WHERE
@@ -22939,10 +22940,7 @@ BEGIN
 		AND ses.id_impianto = iFNULL(system_id, ses.id_impianto) 
 		AND ses.id_cliente = iFNULL(customer_id, ses.id_cliente)
 		AND ses.tipo_entita = iFNULL(entity_type, CAST(ses.tipo_entita AS CHAR(100)))
-		AND IF(reminder_status = 'to_handle', richiedi_invio_promemoria = false AND data_ultimo_promemoria IS NULL, True)
-		AND IF(reminder_status = 'to_be_sent', richiedi_invio_promemoria = true AND data_promemoria > CURRENT_DATE, True)
-		AND IF(reminder_status = 'sent', data_promemoria <= CURRENT_DATE AND data_ultimo_promemoria IS NOT NULL, True)
-		AND IF(reminder_status = 'handled', data_promemoria IS NOT NULL, True)
+		AND (FIND_IN_SET(stato_promemoria_cliente.rif_applicazioni, reminder_status) OR reminder_status IS NULL)
 	ORDER BY data_scadenza DESC;
 END; //
 DELIMITER ;
@@ -22969,50 +22967,56 @@ CREATE PROCEDURE sp_ariesSystemsExpirationsSetReminderInfo (
 	IN reference_id INT,
 	IN entity_type VARCHAR(100),
 	IN system_id INT,
-	IN require_reminder_to_be_sent BIT,
+	IN reminder_status_ref VARCHAR(50),
 	IN reminder_send_date DATETIME,
 	IN contact_id INT
 )
 BEGIN
 	DECLARE product_code VARCHAR(100);
 	DECLARE expiration_date DATE;
+	DECLARE new_status_id INT;
 
 	UPDATE riferimento_clienti
 	SET promemoria_cliente = 1
 	WHERE id = contact_id;
 
+	SELECT id
+	INTO new_status_id
+	FROM stato_promemoria_cliente
+	WHERE rif_applicazioni = reminder_status_ref;
+
 	if entity_type = 'ticket_expiration' THEN
 		
 		UPDATE Ticket
-		SET richiedi_invio_promemoria = require_reminder_to_be_sent,
+		SET id_stato_promemoria = new_status_id,
 			data_promemoria = CAST(reminder_send_date AS DATE)
 		WHERE Id = reference_id;
 
 	ELSEIF entity_type = 'system_sim_expiration' THEN
 		
 		UPDATE impianto_ricarica_tipo
-		SET richiedi_invio_promemoria = require_reminder_to_be_sent,
+		SET id_stato_promemoria = new_status_id,
 			data_promemoria = reminder_send_date
 		WHERE id = reference_id;
 
 	ELSEIF entity_type = 'system_sim_renew' THEN
 			
 		UPDATE impianto_ricarica_tipo
-		SET richiedi_invio_promemoria = require_reminder_to_be_sent,
+		SET id_stato_promemoria = new_status_id,
 			data_promemoria = reminder_send_date
 		WHERE id = reference_id;
 
 	ELSEIF entity_type = 'system_maintenance_month' THEN
 			
 		UPDATE impianto_abbonamenti_mesi
-		SET richiedi_invio_promemoria = require_reminder_to_be_sent,
+		SET id_stato_promemoria = new_status_id,
 			data_promemoria = reminder_send_date
 		WHERE id = reference_id;
 
 	ELSEIF entity_type = 'system_warrantzy' THEN
 			
 		UPDATE impianto
-		SET richiedi_invio_promemoria_garanzia = require_reminder_to_be_sent,
+		SET id_stato_promemoria_garanzia = new_status_id,
 			data_promemoria_garanzia = reminder_send_date
 		WHERE id_impianto = reference_id;
 
@@ -23025,7 +23029,7 @@ BEGIN
 			AND id_impianto_componenti = reference_id;
 
 		UPDATE impianto_componenti
-		SET richiedi_invio_promemoria = require_reminder_to_be_sent,
+		SET id_stato_promemoria = new_status_id,
 			data_promemoria = reminder_send_date
 		WHERE id_impianto = system_id
 			AND Id_articolo = product_code
