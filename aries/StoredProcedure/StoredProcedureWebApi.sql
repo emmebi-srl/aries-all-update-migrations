@@ -917,7 +917,8 @@ BEGIN
 		Id_impianto, 
 		id_destinazione, 
 		id_cliente, 
-		Stato,
+		Stato as id_stato,
+		stato_rapporto.nome as stato,
 		CAST(Data_esecuzione AS DATETIME) Data_esecuzione, 
 		CONCAT(IFNULL(relazione, ""), "\nNOTE IN EVIDENZA: ", IFNULL(note_generali, ""),
 			"\nAPPUNTI: ", IFNULL(appunti, "")) relazione,
@@ -4767,10 +4768,13 @@ BEGIN
 		`impianto`.`orario_prog` AS `orario_prog`,
 		clienti.ragione_sociale AS `ragione_sociale`,
 		checklist_model_impianto.id_checklist,
-		abbonamento.nome as abbonamento
+		abbonamento.nome as abbonamento,
+		impianto.id_stato_promemoria_garanzia,
+		stato_promemoria_cliente.rif_applicazioni as rif_stato_promemoria_garanzia
 	FROM `impianto`
 		LEFT JOIN checklist_model_impianto ON impianto.id_impianto = checklist_model_impianto.id_impianto
 		INNER JOIN clienti ON impianto.id_cliente = clienti.id_cliente
+		INNER JOIN stato_promemoria_cliente ON impianto.id_stato_promemoria_garanzia = stato_promemoria_cliente.id
 		INNER JOIN tipo_impianto ON id_tipo = Tipo_impianto
 		INNER JOIN stato_impianto ON id_stato = Stato
 		LEFT JOIN abbonamento ON impianto.abbonamento = abbonamento.id_abbonamento

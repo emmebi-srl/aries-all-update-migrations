@@ -2537,6 +2537,7 @@ BEGIN
 		a.tipo AS 'id_tipo_pagamento',
 		tipo_pagamento.nome AS 'nome_tipo_pagamento',
 		fornfattura.data AS 'data_documento',
+		tipo_attivita.nome AS 'attivita_fornitore',
 		tipo_iva_BTI.aliquota AS 'iva',
 		( totale +(((trasporto/100)*(100+IFNULL(tipo_iva_BTI.aliquota, 0))) + ((bollo/100)*(100+if(iva_bollo=0,
 		0,
@@ -2555,6 +2556,8 @@ BEGIN
 		      ON g.id_condizione = a.id_condizione 
 		INNER JOIN fornitore
 		      ON fornfattura.id_fornitore=fornitore.id_fornitore
+		LEFT JOIN tipo_attivita
+			  ON fornfattura.id_attività = tipo_attivita.id_tipo
 		LEFT JOIN tipo_pagamento
 		      ON a.tipo=tipo_pagamento.id_tipo
 		LEFT JOIN Tipo_iva AS tipo_iva_BTI

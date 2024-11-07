@@ -948,10 +948,19 @@ DROP TRIGGER IF EXISTS trg_afterReportGroupInsert;
 delimiter //
 CREATE TRIGGER `trg_afterReportGroupInsert` AFTER INSERT ON `resoconto` FOR EACH ROW 
 BEGIN	
-	INSERT INTO  resoconto_totali (id_resoconto, anno, prezzo_manutenzione, costo_manutenzione, costo_diritto_chiamata, prezzo_diritto_chiamata, costo_lavoro, prezzo_lavoro, costo_viaggio, prezzo_viaggio, costo_materiale, prezzo_materiale, costo_totale, prezzo_totale)
-	VALUES (NEW.id_resoconto, NEW.anno, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	INSERT INTO  resoconto_totali (id_resoconto, anno, prezzo_manutenzione, costo_manutenzione, costo_diritto_chiamata, prezzo_diritto_chiamata, costo_lavoro, prezzo_lavoro,
+		costo_viaggio, prezzo_viaggio, costo_materiale, prezzo_materiale, costo_totale, prezzo_totale, costo_extra, prezzo_extra)
+	VALUES (NEW.id_resoconto, NEW.anno, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NEW.prezzo_extra, NEW.costo_extra);
 END
+//
+delimiter ;
 
+DROP TRIGGER IF EXISTS trg_afterReportGroupUpdate; 
+delimiter //
+CREATE TRIGGER `trg_afterReportGroupUpdate` AFTER UPDATE ON `resoconto` FOR EACH ROW 
+BEGIN	
+	CALL sp_ariesReportGroupTotalsRefresh(NEW.id_resoconto, NEW.anno);
+END
 //
 delimiter ;
 

@@ -17738,7 +17738,9 @@ BEGIN
 		`inviato`,
 		`nota_fine`,
 		`stm`,
-		`fat_SpeseRap`
+		`fat_SpeseRap`,
+		resoconto.costo_extra,
+		resoconto.prezzo_extra
 	FROM resoconto
 	WHERE fattura = invoice_id
 		AND anno_fattura = invoice_year;
@@ -17771,7 +17773,9 @@ BEGIN
 		`inviato`,
 		`nota_fine`,
 		`stm`,
-		`fat_SpeseRap`
+		`fat_SpeseRap`,
+		resoconto.costo_extra,
+		resoconto.prezzo_extra
 	FROM resoconto
 	WHERE id_resoconto = enter_id
 		AND anno = enter_year;
@@ -22418,20 +22422,25 @@ CREATE PROCEDURE `sp_ariesReportGroupTotalsRefreshByReport`(
 	IN report_year INT(11)
 )
 BEGIN
+	DECLARE done INT DEFAULT 0;
 	DECLARE report_group_id INT(11);
 	DECLARE report_group_year INT(11);
-
-	SELECT id_resoconto, anno_reso
-	INTO report_group_id, report_group_year
-	FROM resoconto_rapporto
-	WHERE id_rapporto = report_id
-		AND anno = report_year;
-
-
-	IF report_group_id IS NOT NULL THEN
+	DECLARE V_curA CURSOR FOR SELECT id_resoconto, anno_reso
+		FROM resoconto_rapporto
+		WHERE id_rapporto = report_id
+			AND anno = report_year;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+	
+	OPEN V_curA;
+	loopA: LOOP
+		FETCH V_curA INTO report_group_id, report_group_year;
+		IF done = 1 THEN 
+			LEAVE loopA;
+		END IF;
+		
 		CALL sp_ariesReportGroupTotalsRefresh(report_group_id, report_group_year);
-	END IF;
-
+	END LOOP;
+	CLOSE V_curA;
 END //
 DELIMITER ;
 
@@ -22455,6 +22464,8 @@ BEGIN
 	DECLARE total_maintenance_cost DECIMAL(11,2);
 	DECLARE right_of_call_cost DECIMAL(11,2);
 	DECLARE right_of_call_price DECIMAL(11,2);
+	DECLARE total_extra_price DECIMAL(11,2);
+	DECLARE total_extra_cost DECIMAL(11,2);
 
 	
 	SELECT
@@ -22487,6 +22498,15 @@ BEGIN
 		LEFT JOIN rapporto_totali ON resoconto_rapporto.id_rapporto = rapporto_totali.id_rapporto and resoconto_rapporto.anno = rapporto_totali.anno
 	WHERE resoconto_rapporto.id_resoconto = report_group_id AND anno_reso = report_group_year;
 
+	SELECT 
+		costo_extra,
+		prezzo_extra
+	INTO 
+		total_extra_cost,
+		total_extra_price
+	FROM resoconto
+	WHERE id_resoconto = report_group_id AND anno = report_group_year;
+
 
 
 	SET total_maintenance_price = IFNULL(total_maintenance_price, 0);
@@ -22514,12 +22534,46 @@ BEGIN
 		prezzo_viaggio = total_trip_price,
 		costo_materiale = total_products_cost,
 		prezzo_materiale = total_products_price,
-		costo_totale = total_cost,
-		prezzo_totale = total_price
+		costo_extra = total_extra_cost,
+		prezzo_extra = total_extra_price,
+		costo_totale = total_cost + total_extra_cost,
+		prezzo_totale = total_price + total_extra_price
 	WHERE resoconto_totali.id_resoconto = report_group_id AND resoconto_totali.anno = report_group_year;
 
 END //
 DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesReportGroupTotalsGetByReportGroup;
+DELIMITER //
+CREATE PROCEDURE `sp_ariesReportGroupTotalsGetByReportGroup`(
+	IN report_group_id INT(11),
+	IN report_group_year INT(11)
+)
+BEGIN
+	SELECT id,
+		id_resoconto,
+		anno,
+		prezzo_manutenzione,
+		costo_manutenzione,
+		costo_diritto_chiamata,
+		prezzo_diritto_chiamata,
+		costo_lavoro,
+		prezzo_lavoro,
+		costo_viaggio,
+		prezzo_viaggio,
+		costo_materiale,
+		prezzo_materiale,
+		costo_extra,
+		prezzo_extra,
+		costo_totale,
+		prezzo_totale
+	FROM resoconto_totali
+	WHERE resoconto_totali.id_resoconto = report_group_id AND resoconto_totali.anno = report_group_year;
+
+END //
+DELIMITER ;
+
 
 DROP PROCEDURE IF EXISTS sp_ariesReportRestoreStatus;
 DELIMITER //
@@ -22687,8 +22741,8 @@ BEGIN
 	SET right_of_call_price = IFNULL(right_of_call_price, 0);
 	SET total_maintenance_price = IFNULL(total_maintenance_price, 0);
 	SET total_maintenance_cost = IFNULL(total_maintenance_cost, 0);
-	SET total_cost = total_work_cost + total_trip_cost + total_products_cost + right_of_call_cost * total_maintenance_cost;
-	SET total_price = total_work_price + total_trip_price + total_products_price + right_of_call_price + total_maintenance_price;
+	SET total_cost = total_products_cost  + IF(total_maintenance_cost > 0 AND total_work_cost + total_trip_cost = 0, total_maintenance_cost, total_work_cost + total_trip_cost + right_of_call_cost);
+	SET total_price = total_products_price + IF(total_maintenance_price > 0, total_maintenance_price, total_trip_price + total_work_price  + right_of_call_price);
 
 	UPDATE rapporto_totali
 	SET 
@@ -24226,4 +24280,94 @@ BEGIN
 	FROM rapporto_allegati
 	WHERE id = in_id;
 END; //
+DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS sp_ariesSystemsExpirationsUpdateStatus;
+DELIMITER //
+CREATE PROCEDURE sp_ariesSystemsExpirationsUpdateStatus (
+	IN reference_id INT,
+	IN entity_type VARCHAR(100),
+	IN system_id INT,
+	IN reminder_status_ref VARCHAR(50)
+)
+BEGIN
+	DECLARE product_code VARCHAR(100);
+	DECLARE expiration_date DATE;
+	DECLARE new_status_id INT;
+
+	SELECT id
+	INTO new_status_id
+	FROM stato_promemoria_cliente
+	WHERE rif_applicazioni = reminder_status_ref;
+
+	if entity_type = 'ticket_expiration' THEN
+		
+		UPDATE Ticket
+		SET id_stato_promemoria = new_status_id
+		WHERE Id = reference_id;
+
+	ELSEIF entity_type = 'system_sim_expiration' THEN
+		
+		UPDATE impianto_ricarica_tipo
+		SET id_stato_promemoria = new_status_id
+		WHERE id = reference_id;
+
+	ELSEIF entity_type = 'system_sim_renew' THEN
+			
+		UPDATE impianto_ricarica_tipo
+		SET id_stato_promemoria = new_status_id
+		WHERE id = reference_id;
+
+	ELSEIF entity_type = 'system_maintenance_month' THEN
+			
+		UPDATE impianto_abbonamenti_mesi
+		SET id_stato_promemoria = new_status_id
+		WHERE id = reference_id;
+
+	ELSEIF entity_type = 'system_warrantzy' THEN
+			
+		UPDATE impianto
+		SET id_stato_promemoria_garanzia = new_status_id,
+			data_promemoria_garanzia = reminder_send_date
+		WHERE id_impianto = reference_id;
+
+	ELSEIF entity_type = 'systems_components' THEN	
+		
+		SELECT Id_articolo, Data_scadenza
+			INTO product_code, expiration_date
+		FROM impianto_componenti
+		WHERE id_impianto = system_id
+			AND id_impianto_componenti = reference_id;
+
+		UPDATE impianto_componenti
+		SET id_stato_promemoria = new_status_id
+		WHERE id_impianto = system_id
+			AND Id_articolo = product_code
+			AND Data_scadenza = expiration_date;
+
+	END IF;
+
+
+END; //
+DELIMITER ;
+
+
+-- Dump della struttura di procedura emmebi.sp_ariesReportGroupTypeGetById
+DROP PROCEDURE IF EXISTS sp_ariesReportGroupTypeGetById;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesReportGroupTypeGetById`(
+	type_id INT(11)
+)
+BEGIN
+
+	SELECT `id_tipo`,
+		`Nome`,
+		economia,
+		ghost
+	FROM tipo_resoconto
+	WHERE id_tipo = type_id; 
+			
+END//
 DELIMITER ;
