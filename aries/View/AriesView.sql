@@ -1132,6 +1132,7 @@ DROP VIEW IF EXISTS vw_ticket_details;
 CREATE VIEW vw_ticket_details AS
 	
 	SELECT Id_ticket,
+		ticket.anno,
 		ticket.`Id_impianto`,
 		ticket.Id_cliente,
 		clienti.ragione_sociale as cliente,
@@ -1140,6 +1141,8 @@ CREATE VIEW vw_ticket_details AS
 		ticket.`Descrizione` as descrizione,
 		stato_ticket.id_stato AS id_stato_ticket,
 		stato_ticket.nome AS stato_ticket,
+		stato_ticket.colore AS colore_stato_ticket,
+		stato_ticket.aperto AS stato_ticket_aperto,
 		causale_ticket.Nome as Causale,
 		IF(`Urgenza`= 0, 'BASSA', IF(Urgenza = 1, 'NORMALE', 'ALTA')) AS Urgenza,
 		tipo_intervento.Nome as tipo_intervento,

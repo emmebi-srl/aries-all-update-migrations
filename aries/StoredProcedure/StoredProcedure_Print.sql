@@ -2568,3 +2568,25 @@ BEGIN
 END $$
 DELIMITER ;
 
+
+
+DROP PROCEDURE IF EXISTS sp_printReportOpenedTickets; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printReportOpenedTickets`(
+	IN `system_id` INT(11)
+)
+BEGIN
+	SELECT id_ticket,
+		anno,
+		stato_ticket,
+		colore_stato_ticket,
+		causale, urgenza,
+		tipo_intervento,
+		data_ticket,
+		scadenza,
+		descrizione,
+		tempo_minuti
+	FROM vw_ticket_details
+	WHERE stato_ticket_aperto = 1 AND id_impianto = system_id;
+END $$
+DELIMITER ;

@@ -8134,7 +8134,8 @@ BEGIN
 		ROUND(fattura.importo_imponibile/a.mesi, 2) AS "importo_rata_imponibile", 
 		ROUND(IF(iva_collectability <> 'S', fattura.importo_iva/a.mesi, 0), 2) AS "importo_rata_iva",  
 		if (iva_collectability = 'S', 1, 0)  AS "split_payment", -- in questo caso l'iva non va a fare parte dell'importo della rata
-		IFNULL(fattura_pagamenti.`data`, LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY) AS "data"
+		fattura_pagamenti.`data` AS "data",
+		LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY AS "data_prevista"
 		
 	FROM fattura
 		INNER JOIN fattura_articoli AS c ON c.id_fattura = fattura.id_fattura AND c.anno=fattura.anno
@@ -8183,7 +8184,8 @@ BEGIN
 		ROUND(fattura.importo_imponibile/a.mesi, 2) AS "importo_rata_imponibile", 
 		ROUND(IF(iva_collectability <> 'S', fattura.importo_iva/a.mesi, 0), 2) AS "importo_rata_iva",  
 		if (iva_collectability = 'S', 1, 0)  AS "split_payment", -- in questo caso l'iva non va a fare parte dell'importo della rata
-		IFNULL(fattura_pagamenti.`data`, LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY) AS "data"
+		fattura_pagamenti.`data` AS "data",
+		LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY AS "data_prevista"
 		
 	FROM fattura
 		INNER JOIN condizione_pagamento AS a ON cond_pagamento = a.id_condizione
@@ -13790,8 +13792,8 @@ BEGIN
 		ROUND(totiva +(((trasporto/100)*(100+IFNULL(tipo_iva_BTI.aliquota, 0))) + ((bollo/100)*(100+if(iva_bollo=0, 0,
 			  	IFNULL(tipo_iva_BTI.aliquota, 0)))) + ((incasso/100)*(100+if(iva_incasso=0, 0,
 				IFNULL(tipo_iva_BTI.aliquota, 0)))) ), 2)/a.mesi  AS "importo_rata", 
-
-		IFNULL(fornfattura_pagamenti.`data`, LAST_DAY(fornfattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY) AS "data"
+		fornfattura_pagamenti.`data` AS "data",
+		LAST_DAY(fornfattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY AS "data_prevista"
 		
 	FROM fornfattura
 		LEFT JOIN Tipo_iva AS tipo_iva_BTI ON tipo_iva_BTI.id_iva = aliquota_iva_BTI
@@ -22466,6 +22468,7 @@ BEGIN
 	DECLARE right_of_call_price DECIMAL(11,2);
 	DECLARE total_extra_price DECIMAL(11,2);
 	DECLARE total_extra_cost DECIMAL(11,2);
+	DECLARE include_trips BIT(1);
 
 	
 	SELECT
@@ -22500,10 +22503,12 @@ BEGIN
 
 	SELECT 
 		costo_extra,
-		prezzo_extra
+		prezzo_extra,
+		IF(fat_SpeseRap = 0, 0, 1)
 	INTO 
 		total_extra_cost,
-		total_extra_price
+		total_extra_price,
+		include_trips
 	FROM resoconto
 	WHERE id_resoconto = report_group_id AND anno = report_group_year;
 
@@ -22531,13 +22536,13 @@ BEGIN
 		costo_lavoro = total_work_cost,
 		prezzo_lavoro = total_work_price,
 		costo_viaggio = total_trip_cost,
-		prezzo_viaggio = total_trip_price,
+		prezzo_viaggio = IF(include_trips, total_trip_price, 0),
 		costo_materiale = total_products_cost,
 		prezzo_materiale = total_products_price,
 		costo_extra = total_extra_cost,
 		prezzo_extra = total_extra_price,
 		costo_totale = total_cost + total_extra_cost,
-		prezzo_totale = total_price + total_extra_price
+		prezzo_totale = total_price + total_extra_price - IF(include_trips, 0, total_trip_price)
 	WHERE resoconto_totali.id_resoconto = report_group_id AND resoconto_totali.anno = report_group_year;
 
 END //
