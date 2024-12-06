@@ -10072,7 +10072,7 @@ BEGIN
 		IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
 		Stato_articolo, 
 		Data_inserimento, 
-		uso_consumo,
+		id_tipo_costo_produzione,
 		IFNULL(umidità, 0) as umidità, 
 		IFNULL(min, 0) as min, 
 		IFNULL(max, 0) AS max,
@@ -10126,7 +10126,7 @@ BEGIN
 		IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
 		Stato_articolo, 
 		Data_inserimento, 
-		uso_consumo,
+		id_tipo_costo_produzione,
 		IFNULL(umidità, 0) as umidità, 
 		IFNULL(min, 0) as min, 
 		IFNULL(max, 0) AS max,
@@ -10182,7 +10182,7 @@ BEGIN
 		IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
 		Stato_articolo, 
 		Data_inserimento, 
-		uso_consumo,
+		id_tipo_costo_produzione,
 		IFNULL(umidità, 0) as umidità, 
 		IFNULL(min, 0) as min, 
 		IFNULL(max, 0) AS max,
@@ -10237,7 +10237,7 @@ BEGIN
 		IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
 		Stato_articolo, 
 		Data_inserimento, 
-		uso_consumo,
+		id_tipo_costo_produzione,
 		IFNULL(umidità, 0) as umidità, 
 		IFNULL(min, 0) as min, 
 		IFNULL(max, 0) AS max,
@@ -10368,7 +10368,7 @@ BEGIN
 		IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
 		Stato_articolo, 
 		Data_inserimento, 
-		uso_consumo,
+		id_tipo_costo_produzione,
 		IFNULL(umidità, 0) as umidità, 
 		IFNULL(min, 0) as min, 
 		IFNULL(max, 0) AS max,
@@ -10424,7 +10424,7 @@ BEGIN
 		IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
 		Stato_articolo, 
 		Data_inserimento, 
-		uso_consumo,
+		id_tipo_costo_produzione,
 		IFNULL(umidità, 0) as umidità, 
 		IFNULL(min, 0) as min, 
 		IFNULL(max, 0) AS max,
@@ -10480,7 +10480,7 @@ BEGIN
 		IFNULL(Minuti_Manutenzione, 0) AS Minuti_Manutenzione,
 		Stato_articolo, 
 		Data_inserimento, 
-		uso_consumo,
+		id_tipo_costo_produzione,
 		IFNULL(umidità, 0) as umidità, 
 		IFNULL(min, 0) as min, 
 		IFNULL(max, 0) AS max,
@@ -11468,25 +11468,6 @@ BEGIN
 END//
 DELIMITER ;
 
--- Dump della struttura di procedura sp_ariesInvoiceDelete
-DROP PROCEDURE IF EXISTS sp_ariesInvoiceDelete;
-DELIMITER //
-CREATE  PROCEDURE `sp_ariesInvoiceDelete`(
-	IN enter_id INT(11),
-	IN enter_year INT(11),
-	OUT result  TINYINT
-)
-BEGIN
-	DECLARE `_rollback` BOOL DEFAULT 0;
-	DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET `_rollback` = 1;	
-		
-	START TRANSACTION;
-
-  UPDATE rapporto
-	SET stato=1,
-		Fattura = NULL,
-		Anno_fattura = NULL
-	WHERE anno_fattura = enter_year AND Fattura = enter_id;
 
 
 
@@ -17238,8 +17219,6 @@ BEGIN
 		`totiva`,
 		`scan`,
 		`modifica`,
-		`costo_cavi`,
-		`uso_consumo`,
 		`id_attività`,
 		`iva_incasso`,
 		`iva_bollo`,
@@ -17293,8 +17272,6 @@ BEGIN
 		`totiva`,
 		`scan`,
 		`modifica`,
-		`costo_cavi`,
-		`uso_consumo`,
 		`id_attività`,
 		`iva_incasso`,
 		`iva_bollo`,
@@ -17349,8 +17326,6 @@ BEGIN
 		`totiva`,
 		`scan`,
 		`modifica`,
-		`costo_cavi`,
-		`uso_consumo`,
 		`id_attività`,
 		`iva_incasso`,
 		`iva_bollo`,
@@ -19916,16 +19891,17 @@ CREATE PROCEDURE sp_ariesDepotsScaleByReport(
 BEGIN
 	DECLARE done INT DEFAULT 0;
 	DECLARE V_id_tab INT;
-	DECLARE V_id_materiale INT;
+	DECLARE V_id_materiale VARCHAR(11);
+	DECLARE V_quantity DECIMAL(11,2);
 	DECLARE allow_insert BIT(1);
-	DECLARE V_curA CURSOR FOR SELECT Id_tab, id_materiale
+	DECLARE V_curA CURSOR FOR SELECT Id_tab, id_materiale, quantità
 		FROM rapporto_materiale
 		WHERE id_rapporto = report_id AND anno = report_year;
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 	
 	OPEN V_curA;
 	loopA: LOOP
-		FETCH V_curA INTO V_id_tab, V_id_materiale;
+		FETCH V_curA INTO V_id_tab, V_id_materiale, V_quantity;
 		IF done = 1 THEN 
 			LEAVE loopA;
 		END IF;
@@ -19935,7 +19911,7 @@ BEGIN
 				INTO allow_insert;
 
 			IF allow_insert THEN
-				CALL sp_ariesDepotsScaleByReportProduct(report_id, report_year, V_id_tab);
+				CALL sp_ariesDepotsScaleByReportProduct(report_id, report_year, V_id_tab, V_quantity, V_id_materiale);
 			END IF;
 		END IF;
 	END LOOP;
