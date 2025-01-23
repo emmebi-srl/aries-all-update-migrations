@@ -1341,3 +1341,45 @@ BEGIN
 END
 //
 delimiter ;
+
+
+
+-- ############################# FATTURA ##################################################################### 
+
+DROP TRIGGER IF EXISTS trg_beforeInvoiceInsert; 
+delimiter //
+CREATE TRIGGER `trg_beforeInvoiceInsert` BEFORE INSERT ON `fattura` FOR EACH ROW 
+BEGIN
+	DECLARE allow_insert INT(11);
+
+	CALL sp_ariesInvoiceCheckAllowedIdAndDate(NEW.id_fattura, NEW.anno, NEW.data, allow_insert);
+
+	IF not allow_insert THEN
+		SIGNAL SQLSTATE '45000'
+     	SET MESSAGE_TEXT = 'Cannot insert the invoice because the date and id are not correctly set.';
+	END IF;
+
+END
+//
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_beforeInvoiceUpdate; 
+delimiter //
+CREATE TRIGGER `trg_beforeInvoiceUpdate` BEFORE UPDATE ON `fattura` FOR EACH ROW 
+BEGIN
+	DECLARE allow_update INT(11);
+
+	IF NEW.data != OLD.data OR NEW.anno != OLD.anno THEN
+		CALL sp_ariesInvoiceCheckAllowedIdAndDate(NEW.id_fattura, NEW.anno, NEW.data, allow_update);
+
+		IF not allow_update THEN
+			SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT = 'Cannot update the invoice because the date and id are not correctly set.';
+		END IF;
+	END IF;
+
+END
+//
+
+delimiter ; 
+

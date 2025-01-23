@@ -1562,12 +1562,16 @@ BEGIN
 		dc.Km_sede AS "km_viaggio",
 		dc.Tempo_strada AS "tempo_viaggio",
 		IFNULL(riferimento_principale.mail, '') AS "email_cliente",
-		IFNULL(riferimento_principale.altro_telefono, "") AS "telefono_cliente"
+		IFNULL(riferimento_principale.altro_telefono, "") AS "telefono_cliente", 
+		stato_clienti.nome AS "stato_cliente",
+		tipo_cliente.nome AS "tipo_cliente"
 	FROM tmp_ddtsList AS tmp_ddts
 		INNER jOIN Ddt 
 			ON Ddt.Id_ddt = tmp_ddts.Id_ddt AND Ddt.Anno = tmp_ddts.Anno
 		LEFT JOIN causale_trasporto ON ddt.causale=id_causale
-		INNER JOIN clienti ON clienti.id_cliente = ddt.id_cliente 
+		INNER JOIN clienti ON clienti.id_cliente = ddt.id_cliente
+		INNER JOIN stato_clienti ON stato_clienti.Id_stato = clienti.Stato_cliente
+		INNER JOIN tipo_cliente ON tipo_cliente.Id_tipo = clienti.Tipo_Cliente
 		LEFT JOIN destinazione_cliente AS dc ON dc.id_cliente=ddt.id_cliente AND dc.id_destinazione=ddt.id_destinazione
 		LEFT JOIN comune AS c ON c.id_comune=dc.comune
 		LEFT JOIN impianto ON id_impianto = ddt.impianto

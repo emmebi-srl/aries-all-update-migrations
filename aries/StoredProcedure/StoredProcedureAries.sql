@@ -8803,7 +8803,7 @@ CREATE  PROCEDURE `sp_ariesJobProductInsert`(
 	IN lot_id INT,
 	IN row_id INT(11), 
 	IN product_code VARCHAR(16), 
-	IN supplier_product_code VARCHAR(40), 
+	IN supplier_product_code VARCHAR(45), 
 	IN description TEXT,
 	IN measure_unit VARCHAR(5), 
 	IN quantity DECIMAL(11,2), 
@@ -8878,7 +8878,7 @@ CREATE  PROCEDURE `sp_ariesJobProductUpdate`(
 	IN lot_id INT, 
 	IN row_id INT(11), 
 	IN product_code VARCHAR(16), 
-	IN supplier_product_code VARCHAR(40), 
+	IN supplier_product_code VARCHAR(45), 
 	IN description TEXT,
 	IN measure_unit VARCHAR(5), 
 	IN quantity DECIMAL(11,2), 
@@ -18367,6 +18367,62 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Dump della struttura di procedura sp_ariesInvoiceCheckAllowedIDAndDate
+DROP PROCEDURE IF EXISTS sp_ariesInvoiceCheckAllowedIdAndDate;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesInvoiceCheckAllowedIdAndDate`(
+	IN invoice_id INT(11),
+	IN invoice_year INT(11),
+	IN invoice_date DATE,
+	OUT result  BIT(1)
+)
+BEGIN
+	DECLARE prev_invoice_date DATE;
+	DECLARE next_invoice_date DATE;
+	
+	IF invoice_year != 0 THEN
+		SELECT data
+		INTO prev_invoice_date
+		FROM fattura
+		WHERE anno = invoice_year AND id_fattura < invoice_id
+		ORDER BY id_fattura DESC
+		LIMIT 1;
+		
+		IF prev_invoice_date IS NULL THEN
+			SELECT data
+			INTO prev_invoice_date
+			FROM fattura
+			WHERE anno < invoice_year AND anno != 0
+			ORDER BY anno DESC, id_fattura DESC
+			LIMIT 1;
+		END IF;
+
+
+		SELECT data
+		INTO next_invoice_date
+		FROM fattura
+		WHERE anno = invoice_year AND id_fattura > invoice_id
+		ORDER BY id_fattura ASC
+		LIMIT 1;
+		
+		IF next_invoice_date IS NULL THEN
+			SELECT data
+			INTO next_invoice_date
+			FROM fattura
+			WHERE anno > invoice_year AND anno != 0
+			ORDER BY anno ASC, id_fattura ASC
+			LIMIT 1;
+		END IF;
+
+
+		SET result = (prev_invoice_date IS NULL OR invoice_date >= prev_invoice_date)
+			AND (next_invoice_date IS NULL OR invoice_date <= next_invoice_date);
+	ELSE
+		SET result = 1;
+	END IF;
+END//
+DELIMITER ;
+
 -- Dump della struttura di procedura sp_ariesSupplierInvoiceAttachsGetByInvoice
 DROP PROCEDURE IF EXISTS sp_ariesSupplierInvoiceAttachsGetByInvoice;
 DELIMITER //
@@ -22693,8 +22749,8 @@ BEGIN
 	GROUP BY id_rapporto, anno;
 
 
-	SELECT SUM(CAST(ROUND((km * IFNULL(costo_km, default_km_cost)) + autostrada + parcheggio + spesa_trasferta + altro + (Tempo_viaggio/ 60 * IFNULL(costo_h, default_hourly_cost)), 2) AS DECIMAL(11,2))) as costo_viaggio,
-		SUM(CAST(ROUND((km * IFNULL(IFNULL(prezzo_strada, costo_km), default_km_cost)) + autostrada + parcheggio + spesa_trasferta + altro + (Tempo_viaggio/ 60 *  IFNULL(IFNULL(abbonamento.ora_normale, prezzo), default_hourly_price)), 2) AS DECIMAL(11,2))) as prezzo_viaggio
+	SELECT SUM(CAST(ROUND((km * IFNULL(costo_km, default_km_cost)) + autostrada + parcheggio + spesa_trasferta + altro + (CAST(Tempo_viaggio/ 60 AS DECIMAL(11,2)) * IFNULL(costo_h, default_hourly_cost)), 2) AS DECIMAL(11,2))) as costo_viaggio,
+		SUM(CAST(ROUND((km * IFNULL(IFNULL(prezzo_strada, costo_km), default_km_cost)) + autostrada + parcheggio + spesa_trasferta + altro + (CAST(Tempo_viaggio/ 60 AS DECIMAL(11,2)) *  IFNULL(IFNULL(abbonamento.ora_normale, prezzo), default_hourly_price)), 2) AS DECIMAL(11,2))) as prezzo_viaggio
 		INTO total_trip_cost, total_trip_price
 	FROM rapporto_tecnico
 		INNER JOIN operaio ON operaio.Id_operaio = rapporto_tecnico.tecnico

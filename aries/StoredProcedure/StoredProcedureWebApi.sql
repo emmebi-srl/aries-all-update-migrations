@@ -883,16 +883,27 @@ BEGIN
 END; //
 DELIMITER ;
 
+
 DROP PROCEDURE IF EXISTS sp_apiProductUpdate;
 DELIMITER //
 CREATE PROCEDURE sp_apiProductUpdate (
 	IN product_code VARCHAR(11), 
 	IN my_barcode VARCHAR(50), 
-	IN allow_my_barcode BIT(1)
+	IN allow_my_barcode BIT(1),
+	IN depot_shelf VARCHAR(50), 
+	IN allow_depot_shelf BIT(1),
+	IN depot_shelf_tier VARCHAR(50), 
+	IN allow_depot_shelf_tier BIT(1),
+	IN depot_position_description VARCHAR(255), 
+	IN allow_depot_position_description BIT(1)
 )
 BEGIN
 	UPDATE Articolo 
-	SET barcode = IF(IFNULL(allow_my_barcode, FALSE), my_barcode, barcode)
+	SET
+		barcode = IF(IFNULL(allow_my_barcode, FALSE), my_barcode, barcode),
+		scaffaliera_magazzino = IF(IFNULL(allow_depot_shelf, FALSE), depot_shelf, scaffaliera_magazzino),
+		ripiano_magazzino = IF(IFNULL(allow_depot_shelf_tier, FALSE), depot_shelf_tier, ripiano_magazzino),
+		descrizione_posizione_magazzino = IF(IFNULL(allow_depot_position_description, FALSE), depot_position_description, descrizione_posizione_magazzino)
 	WHERE codice_articolo = product_code;
 END; //
 DELIMITER ;
