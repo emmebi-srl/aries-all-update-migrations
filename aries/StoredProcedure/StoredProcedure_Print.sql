@@ -2594,3 +2594,73 @@ BEGIN
 	WHERE stato_ticket_aperto = 1 AND id_impianto = system_id;
 END $$
 DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS sp_printSoldProdutsList; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printSoldProdutsList`(
+	IN `from_date` DATE,
+	IN `to_date` DATE,
+	IN `customer_id` INT(11)
+)
+BEGIN 
+
+	SELECT id_materiale AS codice_articolo,
+		articolo.Codice_fornitore,
+		articolo.Desc_brev AS "descrizione",
+		SUM(quantità) quantita,
+		magazzino.giacenza as giacenza_magazzino,
+		IF (fattura.anno = 0, 'PREFATTURA', 'FATTURA') AS tipo_entita,
+		articolo_stato.Nome AS stato_articolo,
+		marca.Nome as marca,
+		categoria_merciologica.Nome as categoria_merciologica,
+		sottocategoria.Nome as sottocategoria_merciologica,
+		articolo.tempo_installazione as tempo_installazione,
+		articolo.scadenza as scadenza_mesi,
+		IFNULL(listino_prezzo.Prezzo, 0) AS prezzo_listino,
+		IFNULL(listino_costo.Prezzo, 0) AS costo_listino
+	FROM fattura_articoli
+		INNER JOIN fattura ON fattura.id_fattura = fattura_articoli.id_fattura AND fattura.anno = fattura_articoli.anno
+		INNER JOIN magazzino ON tipo_magazzino = 1 AND id_articolo = id_materiale
+		INNER JOIN articolo ON articolo.Codice_articolo = id_materiale
+		INNER JOIN articolo_stato ON articolo.Stato_articolo = articolo_stato.Id_stato
+		LEFT JOIN marca ON articolo.Marca = marca.Id_marca
+		LEFT JOIN categoria_merciologica ON categoria_merciologica.Id_categoria = articolo.categoria
+		LEFT JOIN sottocategoria ON sottocategoria.Id_sottocategoria = articolo.sottocategoria AND sottocategoria.Id_categoria = articolo.categoria
+		LEFT JOIN articolo_listino AS listino_prezzo ON listino_prezzo.Id_articolo = articolo.Codice_articolo AND listino_prezzo.id_listino = fnc_productInternalPriceId()
+		LEFT JOIN articolo_listino AS listino_costo ON listino_costo.Id_articolo = articolo.Codice_articolo AND listino_costo.id_listino = fnc_productInternalCostId()
+	WHERE id_materiale IS NOT NULL AND fattura.data BETWEEN from_date AND to_date AND IFNULL(customer_id, fattura.id_cliente) = id_cliente
+	GROUP BY id_materiale, fattura.anno = 0
+
+	UNION ALL
+	SELECT articoli_ddt.id_articolo,
+		articolo.Codice_fornitore,
+		desc_breve,
+		SUM(quantità),
+		magazzino.giacenza as giacenza_magazzino,
+		'DDT',
+		articolo_stato.Nome AS stato_articolo,
+		marca.Nome as marca,
+		categoria_merciologica.Nome as categoria_merciologica,
+		sottocategoria.Nome as sottocategoria_merciologica,
+		articolo.tempo_installazione as tempo_installazione,
+		articolo.scadenza as scadenza_mesi,
+		IFNULL(listino_prezzo.Prezzo, 0) AS prezzo_listino,
+		IFNULL(listino_costo.Prezzo, 0) AS costo_listino
+	FROM articoli_ddt
+		INNER JOIN ddt ON ddt.Id_ddt = articoli_ddt.id_ddt AND ddt.anno = articoli_ddt.anno AND ddt.Fattura IS NULL
+		INNER JOIN magazzino ON tipo_magazzino = 1 AND magazzino.id_articolo = articoli_ddt.id_articolo
+		INNER JOIN articolo ON articolo.Codice_articolo = articoli_ddt.id_articolo
+		INNER JOIN articolo_stato ON articolo.Stato_articolo = articolo_stato.Id_stato
+		LEFT JOIN marca ON articolo.Marca = marca.Id_marca
+		LEFT JOIN categoria_merciologica ON categoria_merciologica.Id_categoria = articolo.categoria
+		LEFT JOIN sottocategoria ON sottocategoria.Id_sottocategoria = articolo.sottocategoria AND sottocategoria.Id_categoria = articolo.categoria
+		LEFT JOIN articolo_listino AS listino_prezzo ON listino_prezzo.Id_articolo = articolo.Codice_articolo AND listino_prezzo.id_listino = fnc_productInternalPriceId()
+		LEFT JOIN articolo_listino AS listino_costo ON listino_costo.Id_articolo = articolo.Codice_articolo AND listino_costo.id_listino = fnc_productInternalCostId()
+	WHERE articoli_ddt.id_articolo IS NOT NULL AND ddt.data_documento BETWEEN from_date AND to_date AND IFNULL(customer_id, ddt.id_cliente) = id_cliente
+	GROUP BY id_articolo
+	ORDER BY codice_articolo;
+
+END $$
+DELIMITER ;

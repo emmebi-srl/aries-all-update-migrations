@@ -21413,11 +21413,11 @@ CREATE  PROCEDURE `sp_ariesCustomerMarkAsVaried`(
 )
 BEGIN
 
-  DECLARE `_rollback` BOOL DEFAULT 0;
-  DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET `_rollback` = 1;
-	
+	DECLARE `_rollback` BOOL DEFAULT 0;
+	DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET `_rollback` = 1;
 
-  INSERT INTO clienti(
+
+	INSERT INTO clienti(
 		Ragione_Sociale, Ragione_sociale2, Partita_iva, Codice_Fiscale, e_codice_destinatario,
 		Cortese_attenzione, Data_inserimento, Stato_cliente, Tipo_Cliente, stato_economico,
 		condizione_pagamento, Sito_internet, password, Utente_sito, iva, modi, rc, posta, ex, tipo_rapporto,
@@ -21432,8 +21432,8 @@ BEGIN
 
 	SET new_customer_id = LAST_INSERT_ID();
 
- 
-  INSERT INTO destinazione_cliente(
+
+	INSERT INTO destinazione_cliente(
 		id_cliente, Id_destinazione, Provincia, Comune, Frazione, Indirizzo, numero_civico, Descrizione, 
 		scala, Altro, Km_sede, Pedaggio, Tempo_strada, attivo, ztl, Note, Autostrada, 
 		Sede_principale, dalle1, alle1, dalle2, alle2, piano, interno, id_autostrada, Data_ins, Utente_ins, Utente_mod
@@ -21445,7 +21445,7 @@ BEGIN
 	WHERE id_cliente = customer_id;
 
 
-  INSERT INTO riferimento_clienti(
+	INSERT INTO riferimento_clienti(
 		Id_cliente, Id_riferimento, Nome, figura, Telefono, altro_telefono,
 		fax, mail, centralino, Fatturazione, titolo, nota_cli, esterno, sito, skype, rif_esterno, sito_utente, sito_passwd,
 		mail_pec, riferimento_clienti.mod,idut
@@ -21456,33 +21456,39 @@ BEGIN
 	FROM riferimento_clienti
 	WHERE id_cliente = customer_id;
 
-  INSERT INTO clienti_banche (Id_cliente, Id_filiale, data_inizio, data_fine, Iban)
+	INSERT INTO clienti_banche (Id_cliente, Id_filiale, data_inizio, data_fine, Iban)
 	select new_customer_id, Id_filiale, data_inizio, data_fine, Iban
 	FROM clienti_banche
 	WHERE id_cliente = customer_id;
 
-  INSERT INTO cliente_nota (Id_cliente, Id_nota, Descrizione, data_ult_modifica)
+	INSERT INTO cliente_nota (Id_cliente, Id_nota, Descrizione, data_ult_modifica)
 	SELECT new_customer_id, Id_nota, Descrizione, data_ult_modifica
 	FROM cliente_nota
 	WHERE id_cliente = customer_id;
 
-  UPDATE impianto SET id_cliente = new_customer_id WHERE id_cliente = customer_id;
-  UPDATE impianto SET id_occupante = new_customer_id WHERE id_occupante = customer_id;
-  UPDATE impianto SET id_gestore = new_customer_id WHERE id_gestore = customer_id;
+	INSERT INTO cliente_tag
+	SELECT new_customer_id, id_tag, @USER_ID, NOW()
+	FROM cliente_tag
+	WHERE id_cliente = customer_id;
+	
+
+	UPDATE impianto SET id_cliente = new_customer_id WHERE id_cliente = customer_id;
+	UPDATE impianto SET id_occupante = new_customer_id WHERE id_occupante = customer_id;
+	UPDATE impianto SET id_gestore = new_customer_id WHERE id_gestore = customer_id;
 
 
-  UPDATE ticket SET id_cliente = new_customer_id WHERE id_cliente = customer_id;
+	UPDATE ticket SET id_cliente = new_customer_id WHERE id_cliente = customer_id;
 
 
-  UPDATE clienti
+	UPDATE clienti
 	SET stato_cliente=(SELECT id_stato FROM stato_clienti WHERE nome="VARIATO")
 	WHERE id_cliente = customer_id;
 
 		
-	
+
 	IF `_rollback` THEN
-	  ROLLBACK;
-	  SET new_customer_id = 0; 
+		ROLLBACK;
+		SET new_customer_id = 0; 
 	ELSE
 		COMMIT; 
 	END IF;
