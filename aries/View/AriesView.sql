@@ -1027,6 +1027,9 @@ CREATE VIEW vw_depots_all_products AS
 		IFNULL(magazzino.giacenza, 0) AS Giacenza,
 		marca.Nome as 'Marca',
 		categoria_merciologica.Nome as 'Categoria Merceologica',
+		subvw_depots_types_products.scaffaliera_magazzino AS 'Scaffale',
+		subvw_depots_types_products.ripiano_magazzino AS 'Ripiano',
+		subvw_depots_types_products.barcode AS 'Barcode',
 		listino_prezzo.Prezzo AS Prezzo,
 		listino_costo.Prezzo AS Costo
 	FROM subvw_depots_types_products

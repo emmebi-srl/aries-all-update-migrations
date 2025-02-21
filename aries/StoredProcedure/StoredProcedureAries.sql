@@ -3578,12 +3578,68 @@ BEGIN
 		cd.id_sottocommessa,
 		cd.anno_commessa
 	FROM ddt
-		INNER JOIN commessa_ddt cd
+		LEFT JOIN commessa_ddt cd
 			ON ddt.id_ddt = cd.Id_ddt AND ddt.anno = cd.Anno_ddt 
 	WHERE Fattura = enter_id AND Anno_fattura = enter_year; 
 
 END//
 DELIMITER ;
+
+-- Dump della struttura di procedura emmebi.sp_ariesDdtGetByReportId
+DROP PROCEDURE IF EXISTS sp_ariesDdtGetByReportId;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesDdtGetByReportId`( 
+enter_id INT, 
+enter_year INT
+)
+BEGIN
+        
+	SELECT 
+		ddt.`Id_ddt`,
+		ddt.`anno` ,
+		IFNULL(`id_cliente`, 0) id_cliente,
+		IFNULL(`id_fornitore`, 0) id_fornitore,
+		IFNULL(`Id_destinazione`, 0) Id_destinazione,
+		IFNULL(`condizione_pagamento`, 0) Condizione_pagamento,
+		IFNULL(`Porto_resa`, 0) Porto_resa,
+		CAST(IFNULL(data_documento ,'1970-01-01') AS DATE) `data_documento`,
+		IFNULL(`Vettore`, 0) Vettore,
+		CAST(IFNULL(data_ora_ritiro ,'1970-01-01') AS DATETIME) `data_ora_ritiro`,
+		CAST(IFNULL(data_ora_inizio ,'1970-01-01') AS DATETIME) `data_ora_inizio`,
+		`trasport_a_cura`,
+		ddt.Causale,
+		IFNULL(`Fattura`, 0) Fattura,
+		IFNULL(`Anno_fattura`, 0) Anno_fattura,
+		IFNULL(`colli`, 0)  colli,
+		IFNULL(`Peso`, 0) Peso,
+		ddt.`Nota`,
+		ddt.`Descrizione`,
+		IFNULL(`id_principale`, 0) id_principale,
+		IFNULL(ddt.`impianto`, 0) Impianto,
+		ddt.`STAMPA`,
+		IFNULL(`destinazione_forn`, 0) destinazione_forn,
+		IFNULL(`principale_forn`, 0) principale_forn,
+		IFNULL(`id_utente`, 0) id_utente,
+		ddt.`data_modifica`,
+		IFNULL(`stampa_ora`, 0) stampa_ora,
+		IFNULL(`fatturaf`, 0) fatturaf,
+		IFNULL(`anno_fatturaf`, 0) anno_fatturaf,
+		ddt.`stato`, 
+		filename_firma_destinatario, 
+		filename_firma_conducente,
+		cd.Id_commessa,
+		cd.id_sottocommessa,
+		cd.anno_commessa
+	FROM ddt
+		INNER JOIN ddt_rapporto dr
+			ON ddt.id_ddt = dr.Id_ddt AND ddt.anno = dr.Anno_ddt 
+		LEFT JOIN commessa_ddt cd
+			ON ddt.id_ddt = cd.Id_ddt AND ddt.anno = cd.Anno_ddt 
+	WHERE dr.id_rapporto = enter_id AND dr.anno_rapporto = enter_year; 
+
+END//
+DELIMITER ;
+
 
 
 -- Dump della struttura di procedura emmebi.sp_ariesDdtProductDeleteByDdt
