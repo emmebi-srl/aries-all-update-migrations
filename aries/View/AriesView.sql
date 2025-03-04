@@ -1565,8 +1565,8 @@ CREATE VIEW vw_supplier_invoices_payments_details AS
 		)) AS "importo_fattura",
 		LAST_DAY(fornfattura.data + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY AS "data_pagamento_prevista",
 		fornfattura_pagamenti.`data` AS "data_pagamento_effettiva",
-		if(id_pagamento IS NOT NULL,"1","0") AS pagato, 
-		if(id_pagamento IS NOT NULL, CONCAT("Pagato con ", tipopag.nome," il ", DATE_FORMAT(fornfattura_pagamenti.data,"%m/%d/%Y")),"") AS "nota_pagamento_effettuato"
+		if(fornfattura_pagamenti.`data` IS NOT NULL,"1","0") AS pagato, 
+		if(fornfattura_pagamenti.data IS NOT NULL, CONCAT("Pagato con ", tipopag.nome," il ", DATE_FORMAT(fornfattura_pagamenti.data,"%m/%d/%Y")),"") AS "nota_pagamento_effettuato"
 	FROM fornfattura
 		INNER JOIN condizione_pagamento AS a ON cond_pagamento = a.id_condizione
 		LEFT JOIN condizioni_giorno AS g ON g.id_condizione = a.id_condizione
@@ -1575,4 +1575,41 @@ CREATE VIEW vw_supplier_invoices_payments_details AS
 		LEFT JOIN fornfattura_pagamenti ON fornfattura.id_fattura = fornfattura_pagamenti.id_fattura AND fornfattura.anno = fornfattura_pagamenti.anno AND DATE_FORMAT(LAST_DAY(fornfattura.data + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY, "%Y%m%d")=id_pagamento
 		LEFT JOIN tipo_pagamento AS tipopag ON fornfattura_pagamenti.tipo_pagamento = tipopag.id_tipo AND id_pagamento = DATE_FORMAT(LAST_DAY(fornfattura.data + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY, '%Y%m%d')
 	GROUP BY fornfattura.fattura_fornitore, data_pagamento_prevista;
+
+
+
+DROP VIEW IF EXISTS vw_invoices_payments_details;
+CREATE VIEW vw_invoices_payments_details AS	
+	SELECT
+		fattura.id_fattura,
+		fattura.anno,
+		fattura.data AS "data_fattura",
+		id_pagamento, 
+		clienti.id_cliente,
+		ragione_sociale,
+		a.nome AS "condizione_pagamento",
+			IFNULL(tipopag.id_tipo, tipo_pagamento.id_tipo) AS "id_tipo_pagamento",
+			IFNULL(tipopag.nome, tipo_pagamento.nome) AS "tipo_pagamento",
+		fattura.importo_totale AS importo_fattura,
+		ROUND(fattura.importo_totale/a.mesi, 2) AS "importo_pagamento", 
+		(SELECT IF(SUM(importo) IS NULL,0, SUM(importo))
+			FROM fattura_acconto
+			WHERE fattura_acconto.id_fattura=fattura.id_fattura
+				AND fattura_acconto.anno=fattura.anno
+				AND fattura_acconto.id_pagamento= DATE_FORMAT(LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY,'%Y%m%d')) as "totale_acconti",
+		a.mesi as "numero_rate",
+		LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY  as data_pagamento_prevista,
+		fattura_pagamenti.data AS data_pagamento_effettiva,
+		if(fattura_pagamenti.data IS NOT NULL,1, 0) AS pagato,
+		IF(fattura_pagamenti.data IS NOT NULL, CONCAT("Pagato con ", tipopag.nome, " il ", DATE_FORMAT(fattura_pagamenti.data,"%m/%d/%Y")),"") AS "descrizione_pagamento"
+	FROM fattura
+		INNER JOIN condizione_pagamento AS a ON cond_pagamento = a.id_condizione
+		LEFT JOIN condizioni_giorno AS g ON g.id_condizione = a.id_condizione
+		INNER JOIN clienti ON fattura.id_cliente=clienti.id_cliente
+		LEFT JOIN tipo_pagamento ON a.tipo=tipo_pagamento.id_tipo
+		LEFT JOIN fattura_pagamenti ON fattura.id_fattura = fattura_pagamenti.id_fattura
+			AND fattura.anno = fattura_pagamenti.anno
+			AND id_pagamento = DATE_FORMAT(LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY, "%Y%m%d")
+		LEFT JOIN tipo_pagamento AS tipopag ON fattura_pagamenti.tipo_pagamento = tipopag.id_tipo
+	GROUP BY id_fattura, fattura.anno, data_pagamento_prevista;
 

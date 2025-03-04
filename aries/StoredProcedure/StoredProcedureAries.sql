@@ -5305,14 +5305,6 @@ BEGIN
 		
 		END IF;
 		
-		if DocumentType = 'sollecito_fattura' AND (DocumentId IS NOT NULL) THEN
-
-			UPDATE fattura
-			SET data_invio_promemoria=NOW() 
-			WHERE id_cliente = DocumentId;	 
-		
-		END IF;
-		
 		
 		IF DocumentType = 'rapporto_mobile_intervento' THEN
 
@@ -5332,6 +5324,22 @@ BEGIN
 
 		
 		END IF;
+
+		
+		
+		if DocumentType = 'cliente_estratto_conto' AND (DocumentId IS NOT NULL) THEN
+		
+			UPDATE fattura
+			SET data_invio_promemoria=NOW() 
+			WHERE id_cliente = DocumentId;	 
+
+			INSERT INTO cliente_estratto_conto 
+				(id_cliente, id_email, utente_ins)
+			VALUES
+				(DocumentId, email_id, @USER_ID);
+		END IF;
+		
+		
 	
 	END IF; 		
 
@@ -21344,36 +21352,6 @@ END//
 DELIMITER ;
 
 
-DROP PROCEDURE IF EXISTS sp_ariesDepotTypeDelete;
-DELIMITER //
-CREATE  PROCEDURE `sp_ariesDepotTypeDelete`(
-	IN `depot_id` INT(11),
-	OUT result INT(11)
-)
-BEGIN
-	DECLARE `_rollback` BOOL DEFAULT 0;
-	DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET `_rollback` = 1;
-	
-	START TRANSACTION;
-	
-	DELETE FROM magazzino_azzera WHERE id_tipo_magazzino = depot_id;
-	DELETE FROM magazzino_operazione WHERE id_magazzino = depot_id;
-	DELETE FROM magazzino_stored WHERE tipo_magazzino = depot_id;
-	DELETE FROM causale_magazzino WHERE tipo_magazzino = depot_id;
-	DELETE FROM magazzino WHERE tipo_magazzino = depot_id;
-	DELETE FROM tipo_magazzino WHERE Id_tipo = depot_id;
-	
-	SET Result = 1;
-	
-	IF `_rollback` THEN
-	  ROLLBACK;
-	  SET Result = 0; 
-	ELSE
-		COMMIT; 
-	END IF;
-END//
-DELIMITER ;
-
 
 
 DROP PROCEDURE IF EXISTS sp_ariesDepotTypeDelete;
@@ -24468,5 +24446,20 @@ BEGIN
 	FROM tipo_resoconto
 	WHERE id_tipo = type_id; 
 			
+END//
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesDepotTypeUpdateDisbaled;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesDepotTypeUpdateDisbaled`(
+	IN `depot_id` INT(11),
+	IN depot_disabled BIT(1),
+	OUT result INT(11)
+)
+BEGIN
+	UPDATE tipo_magazzino SET disabilitato = depot_disabled WHERE Id_tipo = depot_id;
+	
+	SET Result = 1;
 END//
 DELIMITER ;

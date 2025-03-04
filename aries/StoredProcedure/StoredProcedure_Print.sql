@@ -2664,3 +2664,94 @@ BEGIN
 
 END $$
 DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_printInvoicesStatementTotals; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printInvoicesStatementTotals`(
+	IN `customer_id` INT(11)
+)
+BEGIN
+	SELECT SUM(importo_pagamento - totale_acconti) as importo,
+		data_pagamento_prevista,
+		DATE_FORMAT(data_pagamento_prevista, '%d/%m/%Y') as data_pagamento_prevista_str 
+	FROM vw_invoices_payments_details
+	WHERE anno <> 0 and id_cliente = customer_id AND pagato = 0
+	GROUP BY data_pagamento_prevista
+	ORDER BY data_pagamento_prevista DESC;
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_printInvoicesStatementExpiredDeposit; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printInvoicesStatementExpiredDeposit`(
+	IN `customer_id` INT(11)
+)
+BEGIN
+	SELECT fattura_acconto.id_fattura,
+		fattura_acconto.anno,
+		CONCAT(fattura_acconto.id_pagamento,"") AS "id_pagamento",
+		fattura_acconto.data,
+		fattura_acconto.importo
+	FROM fattura_acconto
+	INNER JOIN vw_invoices_payments_details pagamenti
+		ON fattura_acconto.id_fattura = pagamenti.id_fattura
+		AND fattura_acconto.anno = pagamenti.anno 
+		AND fattura_acconto.id_pagamento = pagamenti.id_pagamento 
+	WHERE fattura_acconto.anno <> 0 AND id_cliente = customer_id AND  pagato = 0 AND data_pagamento_prevista < CURRENT_DATE;	
+		
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_printInvoicesStatementExpiringDeposit; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printInvoicesStatementExpiredDeposit`(
+	IN `customer_id` INT(11)
+)
+BEGIN
+	SELECT fattura_acconto.id_fattura,
+		fattura_acconto.anno,
+		CONCAT(fattura_acconto.id_pagamento,"") AS "id_pagamento",
+		fattura_acconto.data,
+		fattura_acconto.importo
+	FROM fattura_acconto
+	INNER JOIN vw_invoices_payments_details pagamenti
+		ON fattura_acconto.id_fattura = pagamenti.id_fattura
+		AND fattura_acconto.anno = pagamenti.anno 
+		AND fattura_acconto.id_pagamento = pagamenti.id_pagamento 
+	WHERE fattura_acconto.anno <> 0 AND id_cliente = customer_id AND pagato = 0 AND data_pagamento_prevista >= CURRENT_DATE;	
+		
+END $$
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_printInvoicesStatementExpiredPayments; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printInvoicesStatementExpiredPayments`(
+	IN `customer_id` INT(11)
+)
+BEGIN
+	SELECT id_fattura, anno, id_pagamento, data_pagamento_prevista, (importo_pagamento - totale_acconti) as importo_pagamento,
+		DATEDIFF(CURRENT_DATE, data_pagamento_prevista) AS "giorni", tipo_pagamento, condizione_pagamento
+	FROM vw_invoices_payments_details 
+	WHERE id_cliente = customer_id AND pagato = 0 AND data_pagamento_prevista < CURRENT_DATE AND anno != 0
+	ORDER BY data_pagamento_prevista desc;
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_printInvoicesStatementExpiringPayments; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printInvoicesStatementExpiringPayments`(
+	IN `customer_id` INT(11)
+)
+BEGIN
+	SELECT id_fattura, anno, id_pagamento, data_pagamento_prevista, (importo_pagamento - totale_acconti) as importo_pagamento,
+		DATEDIFF(CURRENT_DATE, data_pagamento_prevista) AS "giorni", tipo_pagamento, condizione_pagamento
+	FROM vw_invoices_payments_details 
+	WHERE id_cliente = customer_id AND pagato = 0 AND data_pagamento_prevista >= CURRENT_DATE AND anno != 0
+	ORDER BY data_pagamento_prevista desc;
+END $$
+DELIMITER ;
+
+
+
