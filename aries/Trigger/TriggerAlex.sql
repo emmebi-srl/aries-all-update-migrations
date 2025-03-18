@@ -523,9 +523,7 @@ DELIMITER //
 DROP TRIGGER IF EXISTS paga_update; 
 CREATE TRIGGER `paga_update` AFTER UPDATE ON `fattura_pagamenti` FOR EACH ROW 
 BEGIN
-
 	CALL sp_ariesInvoiceEvaluateStatus(new.Id_fattura, new.anno); 
-
 END
 //
 DELIMITER ;
@@ -534,9 +532,7 @@ DELIMITER //
 DROP TRIGGER IF EXISTS paga_insert; 
 CREATE TRIGGER `paga_insert` AFTER INSERT ON `fattura_pagamenti` FOR EACH ROW 
 BEGIN
-
 	CALL sp_ariesInvoiceEvaluateStatus(new.Id_fattura, new.anno); 
-	
 END
 //
 DELIMITER ;
@@ -1383,3 +1379,53 @@ END
 
 delimiter ; 
 
+
+
+-- ############################# CLIENTE ESTRATTO CONTO ##################################################################### 
+DROP TRIGGER IF EXISTS trg_afterCustomerInvoicesStatementInsert; 
+delimiter //
+CREATE TRIGGER `trg_afterCustomerInvoicesStatementInsert` AFTER INSERT ON `cliente_estratto_conto` FOR EACH ROW 
+BEGIN
+	DROP TEMPORARY TABLE IF EXISTS invoices_statement_tmp;
+	CREATE TEMPORARY TABLE invoices_statement_tmp
+	SELECT id_fattura,
+		anno,
+		CAST(DATE_FORMAT(data_pagamento_prevista, '%Y%m%d') AS UNSIGNED) AS id_pagamento,
+		id_tipo_pagamento,
+		(id_pagamento IS NOT NULL) AS pagamento_esistente
+	FROM vw_invoices_payments_details
+	WHERE pagato = 0 AND id_cliente = NEW.id_cliente AND anno <> 0;
+
+	INSERT INTO fattura_pagamenti (id_fattura, anno, id_pagamento, tipo_pagamento, data, nota)
+	SELECT id_fattura,
+		anno,
+		id_pagamento,
+		id_tipo_pagamento,
+		NULL,
+		''
+	FROM invoices_statement_tmp
+	WHERE NOT pagamento_esistente;
+	
+	
+	INSERT INTO fattura_pagamenti_comunicazione (id_fattura, anno, id_pagamento, id_comunicazione, tipo, mail, data, stato, nota)
+	SELECT id_fattura,
+		anno,
+		id_pagamento,
+		IFNULL(
+			(
+			SELECT
+			MAX(id_comunicazione) + 1
+			FROM fattura_pagamenti_comunicazione fpc
+			WHERE fpc.id_fattura = payments.id_fattura AND fpc.anno = payments.anno AND fpc.id_pagamento = payments.id_pagamento
+			), 1),
+		2,
+		new.id_email,
+		CURRENT_DATE,
+		1,
+		'INVIO ESTRATTO CONTO'
+	FROM invoices_statement_tmp payments;
+	
+END
+//
+
+delimiter ; 

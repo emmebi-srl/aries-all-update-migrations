@@ -2666,6 +2666,21 @@ END $$
 DELIMITER ;
 
 
+DROP PROCEDURE IF EXISTS sp_printInvoicesStatementSplit; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printInvoicesStatementSplit`(
+	IN `customer_id` INT(11)
+)
+BEGIN
+	SELECT DATE_FORMAT(data_pagamento_prevista, '%d/%m/%Y') as data_pagamento_prevista_str 
+	FROM vw_invoices_payments_details
+	WHERE anno <> 0 and id_cliente = customer_id AND pagato = 0
+	GROUP BY data_pagamento_prevista
+	ORDER BY data_pagamento_prevista ASC;
+END $$
+DELIMITER ;
+
+
 DROP PROCEDURE IF EXISTS sp_printInvoicesStatementTotals; 
 DELIMITER $$
 CREATE PROCEDURE `sp_printInvoicesStatementTotals`(
@@ -2678,7 +2693,7 @@ BEGIN
 	FROM vw_invoices_payments_details
 	WHERE anno <> 0 and id_cliente = customer_id AND pagato = 0
 	GROUP BY data_pagamento_prevista
-	ORDER BY data_pagamento_prevista DESC;
+	ORDER BY data_pagamento_prevista ASC;
 END $$
 DELIMITER ;
 
@@ -2705,7 +2720,7 @@ DELIMITER ;
 
 DROP PROCEDURE IF EXISTS sp_printInvoicesStatementExpiringDeposit; 
 DELIMITER $$
-CREATE PROCEDURE `sp_printInvoicesStatementExpiredDeposit`(
+CREATE PROCEDURE `sp_printInvoicesStatementExpiringDeposit`(
 	IN `customer_id` INT(11)
 )
 BEGIN
@@ -2731,11 +2746,19 @@ CREATE PROCEDURE `sp_printInvoicesStatementExpiredPayments`(
 	IN `customer_id` INT(11)
 )
 BEGIN
-	SELECT id_fattura, anno, id_pagamento, data_pagamento_prevista, (importo_pagamento - totale_acconti) as importo_pagamento,
-		DATEDIFF(CURRENT_DATE, data_pagamento_prevista) AS "giorni", tipo_pagamento, condizione_pagamento
+	SELECT id_fattura,
+		anno,
+		id_pagamento,
+		data_pagamento_prevista,
+		DATE_FORMAT(data_pagamento_prevista, '%d/%m/%Y') as data_pagamento_prevista_str,
+		(importo_pagamento - totale_acconti) as importo_pagamento,
+		DATEDIFF(CURRENT_DATE, data_pagamento_prevista) AS "giorni",
+		tipo_pagamento,
+		condizione_pagamento,
+		data_fattura
 	FROM vw_invoices_payments_details 
 	WHERE id_cliente = customer_id AND pagato = 0 AND data_pagamento_prevista < CURRENT_DATE AND anno != 0
-	ORDER BY data_pagamento_prevista desc;
+	ORDER BY data_pagamento_prevista ASC, anno ASC, id_fattura ASC;
 END $$
 DELIMITER ;
 
@@ -2745,13 +2768,38 @@ CREATE PROCEDURE `sp_printInvoicesStatementExpiringPayments`(
 	IN `customer_id` INT(11)
 )
 BEGIN
-	SELECT id_fattura, anno, id_pagamento, data_pagamento_prevista, (importo_pagamento - totale_acconti) as importo_pagamento,
-		DATEDIFF(CURRENT_DATE, data_pagamento_prevista) AS "giorni", tipo_pagamento, condizione_pagamento
+	SELECT id_fattura,
+		anno,
+		id_pagamento,
+		data_pagamento_prevista,
+		DATE_FORMAT(data_pagamento_prevista, '%d/%m/%Y') as data_pagamento_prevista_str,
+		(importo_pagamento - totale_acconti) as importo_pagamento,
+		DATEDIFF(CURRENT_DATE, data_pagamento_prevista) AS "giorni",
+		tipo_pagamento,
+		condizione_pagamento,
+		data_fattura
 	FROM vw_invoices_payments_details 
 	WHERE id_cliente = customer_id AND pagato = 0 AND data_pagamento_prevista >= CURRENT_DATE AND anno != 0
-	ORDER BY data_pagamento_prevista desc;
+	ORDER BY data_pagamento_prevista ASC, anno ASC, id_fattura ASC;
 END $$
 DELIMITER ;
 
-
+DROP PROCEDURE IF EXISTS sp_printInvoicesStatementCustomer; 
+DELIMITER $$
+CREATE PROCEDURE `sp_printInvoicesStatementCustomer`(
+	IN `customer_id` INT(11)
+)
+BEGIN
+	SELECT ragione_sociale,
+		CONCAT(indirizzo, ", ", numero_civico) as "indirizzo",
+		IF(frazione.nome IS NULL OR frazione.nome='', CONCAT(comune.cap," - ", comune.nome, " (", comune.provincia,")"), CONCAT(comune.cap," - ", frazione.nome," di ", comune.nome, " (", comune.provincia,")")) AS "comune"
+	FROM clienti
+	INNER JOIN destinazione_cliente ON destinazione_cliente.id_cliente=clienti.id_cliente
+	LEFT JOIN comune ON id_comune=destinazione_cliente.comune
+	LEFT JOIN frazione ON id_frazione=destinazione_cliente.frazione
+	WHERE clienti.id_cliente = customer_id
+	ORDER BY destinazione_cliente.Sede_principale DESC, destinazione_cliente.id_destinazione ASC
+	LIMIT 1;
+END $$
+DELIMITER ;
 

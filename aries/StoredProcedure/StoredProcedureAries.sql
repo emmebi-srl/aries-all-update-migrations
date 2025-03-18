@@ -5329,14 +5329,8 @@ BEGIN
 		
 		if DocumentType = 'cliente_estratto_conto' AND (DocumentId IS NOT NULL) THEN
 		
-			UPDATE fattura
-			SET data_invio_promemoria=NOW() 
-			WHERE id_cliente = DocumentId;	 
+			CALL sp_ariesCustomerInvoicesStatementInsert (email_id, DocumentId);
 
-			INSERT INTO cliente_estratto_conto 
-				(id_cliente, id_email, utente_ins)
-			VALUES
-				(DocumentId, email_id, @USER_ID);
 		END IF;
 		
 		
@@ -7828,7 +7822,8 @@ BEGIN
 
 	DECLARE totals_payments_to_do TINYINT; 
 	DECLARE totals_payments_done TINYINT; 
-	DECLARE new_status INT(11); 
+	DECLARE new_status INT(11);
+	DECLARE current_status INT(11);
 
 	
 	SELECT COUNT(IFNULL(Insoluto,1))
@@ -7838,9 +7833,9 @@ BEGIN
 	WHERE id_fattura=invoice_id AND anno=invoice_year AND data IS NOT NULL; 
 
 	
-	SELECT IFNULL(mesi, 0) 
+	SELECT IFNULL(mesi, 0) , stato
 		INTO
-		totals_payments_to_do
+		totals_payments_to_do, current_status
 	FROM fattura 
 		INNER JOIN condizione_pagamento 
 			ON fattura.cond_pagamento = condizione_pagamento.id_condizione
@@ -7854,11 +7849,13 @@ BEGIN
 		SET new_status = 1; 
 	END IF; 
 	
-	UPDATE fattura 
-	SET stato = new_status
-	WHERE id_fattura= invoice_id
-		AND anno= invoice_year 
-		AND stato <> new_status; 
+	IF new_status <> current_status THEN
+		UPDATE fattura 
+		SET stato = new_status
+		WHERE id_fattura= invoice_id
+			AND anno= invoice_year 
+			AND stato <> new_status; 
+	END IF;
 END//
 DELIMITER ;
 
@@ -16981,6 +16978,7 @@ BEGIN
 		`impianto`,
 		`id_certificato_firma`,
 		`email_sdi`,
+		`estratto_conto_testo_mail`,
 		`utente_mod`,
 		`data_mod`
 	FROM fattura_configurazione
@@ -24463,3 +24461,34 @@ BEGIN
 	SET Result = 1;
 END//
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesCustomerInvoicesStatementInsert; 
+delimiter //
+CREATE  PROCEDURE `sp_ariesCustomerInvoicesStatementInsert`(
+	IN `email_id` INT(11),
+	IN `customer_id` INT(11)
+)
+BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+   BEGIN
+        ROLLBACK;  -- rollback any changes made in the transaction
+        RESIGNAL;  -- raise again the sql exception to the caller
+   END;
+
+	START TRANSACTION;
+	
+	UPDATE fattura
+	SET data_invio_promemoria=NOW() 
+	WHERE id_cliente = customer_id;	 
+
+	INSERT INTO cliente_estratto_conto 
+		(id_cliente, id_email, utente_ins)
+	VALUES
+		(customer_id, email_id, @USER_ID);
+		
+	COMMIT;
+END
+//
+
+delimiter ; 
+
