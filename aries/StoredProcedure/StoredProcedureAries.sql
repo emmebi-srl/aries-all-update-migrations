@@ -8596,6 +8596,36 @@ BEGIN
 END//
 DELIMITER ;
 
+
+-- Dump della struttura di procedura emmebi.sp_ariesInvoiceSetReminderCheck
+DROP PROCEDURE IF EXISTS sp_ariesInvoiceSetReminderCheck;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesInvoiceSetReminderCheck`(
+	IN `invoice_id` INT(11),
+	IN invoice_year INT(11),
+	IN reminder_check BIT(1)
+)
+BEGIN
+	UPDATE fattura
+	SET controllo_promemoria = reminder_check
+	WHERE id_fattura = invoice_id AND anno = invoice_year;		
+END//
+DELIMITER ;
+
+-- Dump della struttura di procedura emmebi.sp_ariesInvoiceCancelReminder
+DROP PROCEDURE IF EXISTS sp_ariesInvoiceCancelReminder;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesInvoiceCancelReminder`(
+	IN `invoice_id` INT(11),
+	IN invoice_year INT(11)
+)
+BEGIN
+	UPDATE fattura
+	SET data_annullamento_promemoria = CURRENT_DATE
+	WHERE id_fattura = invoice_id AND anno = invoice_year;		
+END//
+DELIMITER ;
+	
 	
 
 
@@ -24055,15 +24085,16 @@ BEGIN
 			90 as giorni_scaduto,
 			0 as bold
 		FROM (
-			SELECT concat (fattura.id_fattura," ",fattura.anno) AS "gruppa"
-			FROM fattura 
-				INNER JOIN condizione_pagamento AS a ON cond_pagamento = a.id_condizione 
-				LEFT JOIN condizioni_giorno AS g ON g.id_condizione = a.id_condizione 
-			WHERE DATE_FORMAT(LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY, "%Y%m%d") >=  DATE_FORMAT(CURRENT_DATE - INTERVAL 0  day, "%Y%m%d")
-				AND DATE_FORMAT(LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY, "%Y%m%d") <= DATE_FORMAT(CURRENT_DATE + INTERVAL days_reminder_payment_invoices  day, "%Y%m%d")
-				AND fattura.stato IN (1, 4) 
-				AND (fattura.data_invio_promemoria IS NULL OR data_invio_promemoria="0002-02-02")
-			GROUP BY gruppa) AS app
+			SELECT p.*
+			FROM vw_invoices_payments_details p
+			INNER join fattura f ON f.id_fattura = p.id_fattura AND f.anno = p.anno
+			WHERE p.anno <> 0 AND pagato = 0
+				AND data_pagamento_prevista >=  CURRENT_DATE - INTERVAL 0 DAY 
+				AND data_pagamento_prevista <= CURRENT_DATE + INTERVAL days_reminder_payment_invoices DAY
+				AND (LAST_DAY(CURRENT_DATE - INTERVAL 1 MONTH) > data_ultimo_promemoria OR data_ultimo_promemoria IS NULL)
+				AND (LAST_DAY(CURRENT_DATE - INTERVAL 1 MONTH) > data_annullamento_promemoria OR data_annullamento_promemoria IS NULL)
+			GROUP BY p.id_fattura, p.anno
+		) AS app
 		HAVING count(*)>0;
 	END IF;
 
@@ -24469,26 +24500,138 @@ CREATE  PROCEDURE `sp_ariesCustomerInvoicesStatementInsert`(
 	IN `customer_id` INT(11)
 )
 BEGIN
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION
-   BEGIN
-        ROLLBACK;  -- rollback any changes made in the transaction
-        RESIGNAL;  -- raise again the sql exception to the caller
-   END;
-
-	START TRANSACTION;
-	
-	UPDATE fattura
-	SET data_invio_promemoria=NOW() 
-	WHERE id_cliente = customer_id;	 
-
 	INSERT INTO cliente_estratto_conto 
 		(id_cliente, id_email, utente_ins)
 	VALUES
-		(customer_id, email_id, @USER_ID);
-		
-	COMMIT;
+		(customer_id, email_id, @USER_ID);	
 END
 //
 
 delimiter ; 
 
+
+DROP PROCEDURE IF EXISTS sp_ariesInvoicesReminderListTotals; 
+DELIMITER $$
+CREATE PROCEDURE `sp_ariesInvoicesReminderListTotals`()
+BEGIN
+
+	DECLARE days_reminder_payment_invoices INT(11) DEFAULT 30;
+
+	SELECT
+		IFNULL(giorni_promemoria, 30)
+	INTO 
+		days_reminder_payment_invoices
+	FROM Azienda
+	ORDER BY id_azienda DESC
+	LIMIT 1;
+
+	
+	SELECT SUM(importo_pagamento - totale_acconti) as totale_da_pagare,
+		IFNULL(SUM(importo_pagamento - totale_acconti) * f.controllo_promemoria, 0) as totale_da_pagare_selezionato
+	FROM vw_invoices_payments_details p
+	INNER JOIN fattura f ON p.id_fattura = f.id_fattura and p.anno = f.anno
+	WHERE p.anno <> 0 AND pagato = 0
+		AND data_pagamento_prevista >=  CURRENT_DATE - INTERVAL 0 DAY 
+		AND data_pagamento_prevista <= CURRENT_DATE + INTERVAL days_reminder_payment_invoices DAY
+		AND (LAST_DAY(CURRENT_DATE - INTERVAL 1 MONTH) > data_ultimo_promemoria OR data_ultimo_promemoria IS NULL)
+		AND (LAST_DAY(CURRENT_DATE - INTERVAL 1 MONTH) > data_annullamento_promemoria OR data_annullamento_promemoria IS NULL);
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesInvoicesReminderList; 
+DELIMITER $$
+CREATE PROCEDURE `sp_ariesInvoicesReminderList`()
+BEGIN
+
+	DECLARE days_reminder_payment_invoices INT(11) DEFAULT 30;
+
+	SELECT
+		IFNULL(giorni_promemoria, 30)
+	INTO 
+		days_reminder_payment_invoices
+	FROM Azienda
+	ORDER BY id_azienda DESC
+	LIMIT 1;
+
+	SELECT f.controllo_promemoria,
+		p.id_fattura,
+		p.anno,
+		p.id_cliente,
+		p.ragione_sociale,
+		p.data_fattura,
+		p.data_pagamento_prevista,
+		(importo_pagamento - totale_acconti) as importo_rata,
+		p.condizione_pagamento,
+		GROUP_CONCAT(rc.mail) AS email_fatturazione
+	FROM vw_invoices_payments_details p
+		INNER JOIN fattura f ON p.id_fattura = f.id_fattura and p.anno = f.anno
+		INNER JOIN riferimento_clienti rc ON rc.id_cliente = p.id_cliente AND rc.Fatturazione = 1
+	WHERE p.anno <> 0 AND pagato = 0
+		AND data_pagamento_prevista >=  CURRENT_DATE - INTERVAL 0 DAY 
+		AND data_pagamento_prevista <= CURRENT_DATE + INTERVAL days_reminder_payment_invoices DAY
+		AND (LAST_DAY(CURRENT_DATE - INTERVAL 1 MONTH) > data_ultimo_promemoria OR data_ultimo_promemoria IS NULL)
+		AND (LAST_DAY(CURRENT_DATE - INTERVAL 1 MONTH) > data_annullamento_promemoria OR data_annullamento_promemoria IS NULL)
+	GROUP BY p.id_fattura, p.anno, p.data_pagamento_prevista;
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesInvoicesReminderSelectedToSend; 
+DELIMITER $$
+CREATE PROCEDURE `sp_ariesInvoicesReminderSelectedToSend`()
+BEGIN
+
+	DECLARE days_reminder_payment_invoices INT(11) DEFAULT 30;
+
+	SELECT
+		IFNULL(giorni_promemoria, 30)
+	INTO 
+		days_reminder_payment_invoices
+	FROM Azienda
+	ORDER BY id_azienda DESC
+	LIMIT 1;
+
+	SELECT p.id_cliente,
+		GROUP_CONCAT(rc.mail) AS email_fatturazione
+	FROM vw_invoices_payments_details p
+		INNER JOIN fattura f ON p.id_fattura = f.id_fattura and p.anno = f.anno
+		INNER JOIN riferimento_clienti rc ON rc.id_cliente = p.id_cliente AND rc.Fatturazione = 1
+	WHERE p.anno <> 0 AND pagato = 0
+		AND data_pagamento_prevista >=  CURRENT_DATE - INTERVAL 0 DAY 
+		AND data_pagamento_prevista <= CURRENT_DATE + INTERVAL days_reminder_payment_invoices DAY
+		AND (LAST_DAY(CURRENT_DATE - INTERVAL 1 MONTH) > data_ultimo_promemoria OR data_ultimo_promemoria IS NULL)
+		AND (LAST_DAY(CURRENT_DATE - INTERVAL 1 MONTH) > data_annullamento_promemoria OR data_annullamento_promemoria IS NULL)
+		AND controllo_promemoria = 1
+	GROUP BY p.id_cliente;
+END $$
+DELIMITER ;
+
+
+
+-- Dump della struttura di procedura emmebi.sp_ariesInvoicesReminderCancelSelected
+DROP PROCEDURE IF EXISTS sp_ariesInvoicesReminderCancelSelected;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesInvoicesReminderCancelSelected`()
+BEGIN
+	DECLARE days_reminder_payment_invoices INT(11) DEFAULT 30;
+
+	SELECT
+		IFNULL(giorni_promemoria, 30)
+	INTO 
+		days_reminder_payment_invoices
+	FROM Azienda
+	ORDER BY id_azienda DESC
+	LIMIT 1;
+
+	UPDATE fattura f
+	INNER JOIN vw_invoices_payments_details p ON p.id_fattura = f.id_fattura and p.anno = f.anno
+	SET f.data_annullamento_promemoria = CURRENT_DATE,
+		f.controllo_promemoria = 0
+	WHERE p.anno <> 0 AND pagato = 0
+		AND data_pagamento_prevista >=  CURRENT_DATE - INTERVAL 0 DAY 
+		AND data_pagamento_prevista <= CURRENT_DATE + INTERVAL days_reminder_payment_invoices DAY
+		AND (LAST_DAY(CURRENT_DATE - INTERVAL 1 MONTH) > data_ultimo_promemoria OR data_ultimo_promemoria IS NULL)
+		AND (LAST_DAY(CURRENT_DATE - INTERVAL 1 MONTH) > data_annullamento_promemoria OR data_annullamento_promemoria IS NULL)
+		AND controllo_promemoria = 1;		
+END//
+DELIMITER ;
+	

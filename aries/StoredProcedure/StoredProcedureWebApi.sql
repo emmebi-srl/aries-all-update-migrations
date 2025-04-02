@@ -832,16 +832,16 @@ BEGIN
 		unità_misura unita_misura, 
 		marca.nome as 'marca', 
 		marca.id_marca,
-		listino_prezzo.prezzo as "prezzo_interno",
-		listino_costo.prezzo as "costo_interno",
+		IFNULL(listino_prezzo.prezzo, 0) as "prezzo_interno",
+		IFNULL(listino_costo.prezzo, 0) as "costo_interno",
 		articolo.scaffaliera_magazzino,
 		articolo.ripiano_magazzino,
 		articolo.descrizione_posizione_magazzino
 	 FROM articolo 
 		LEFT JOIN marca ON marca.id_marca = articolo.marca
 		LEFT JOIN articolo_codice ON articolo.codice_articolo = articolo_codice.id_articolo
-		INNER JOIN articolo_listino AS listino_prezzo ON listino_prezzo.id_articolo = articolo.codice_articolo AND listino_prezzo.id_listino = fnc_productInternalPriceId()
-		INNER JOIN articolo_listino AS listino_costo ON listino_costo.id_articolo = articolo.codice_articolo AND listino_costo.id_listino = fnc_productInternalCostId()
+		LEFT JOIN articolo_listino AS listino_prezzo ON listino_prezzo.id_articolo = articolo.codice_articolo AND listino_prezzo.id_listino = fnc_productInternalPriceId()
+		LEFT JOIN articolo_listino AS listino_costo ON listino_costo.id_articolo = articolo.codice_articolo AND listino_costo.id_listino = fnc_productInternalCostId()
 	 WHERE (product_code IS NOT NULL AND codice_articolo LIKE CONCAT("%", product_code, "%"))
 		OR (supplier_product_code IS NOT NULL AND Codice_fornitore LIKE CONCAT("%", supplier_product_code, "%"))
 		OR (description IS NOT NULL AND Desc_brev LIKE CONCAT("%", description, "%"))
@@ -3270,6 +3270,7 @@ BEGIN
 		 FROM magazzino,tipo_magazzino 
 		 WHERE (IF(product_code IS NULL, True, Id_articolo) = IFNULL(product_code, True))
 			AND (IF(warehouse_id IS NULL, True, tipo_magazzino.id_tipo) = IFNULL(warehouse_id, True))
+			AND tipo_magazzino.disabilitato = 0
 		 ORDER BY Id DESC
 	) AS p1
 	GROUP BY id_articolo, tipo_magazzino

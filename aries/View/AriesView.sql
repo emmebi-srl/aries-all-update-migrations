@@ -1588,8 +1588,8 @@ CREATE VIEW vw_invoices_payments_details AS
 		clienti.id_cliente,
 		ragione_sociale,
 		a.nome AS "condizione_pagamento",
-			IFNULL(tipopag.id_tipo, tipo_pagamento.id_tipo) AS "id_tipo_pagamento",
-			IFNULL(tipopag.nome, tipo_pagamento.nome) AS "tipo_pagamento",
+		IFNULL(tipopag.id_tipo, tipo_pagamento.id_tipo) AS "id_tipo_pagamento",
+		IFNULL(tipopag.nome, tipo_pagamento.nome) AS "tipo_pagamento",
 		fattura.importo_totale AS importo_fattura,
 		ROUND(fattura.importo_totale/a.mesi, 2) AS "importo_pagamento", 
 		(SELECT IF(SUM(importo) IS NULL,0, SUM(importo))
@@ -1601,7 +1601,8 @@ CREATE VIEW vw_invoices_payments_details AS
 		LAST_DAY(fattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY  as data_pagamento_prevista,
 		fattura_pagamenti.data AS data_pagamento_effettiva,
 		if(fattura_pagamenti.data IS NOT NULL,1, 0) AS pagato,
-		IF(fattura_pagamenti.data IS NOT NULL, CONCAT("Pagato con ", tipopag.nome, " il ", DATE_FORMAT(fattura_pagamenti.data,"%m/%d/%Y")),"") AS "descrizione_pagamento"
+		IF(fattura_pagamenti.data IS NOT NULL, CONCAT("Pagato con ", tipopag.nome, " il ", DATE_FORMAT(fattura_pagamenti.data,"%m/%d/%Y")),"") AS "descrizione_pagamento",
+		fattura.data_invio_promemoria AS data_ultimo_promemoria
 	FROM fattura
 		INNER JOIN condizione_pagamento AS a ON cond_pagamento = a.id_condizione
 		LEFT JOIN condizioni_giorno AS g ON g.id_condizione = a.id_condizione

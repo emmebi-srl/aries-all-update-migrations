@@ -1425,6 +1425,12 @@ BEGIN
 		'INVIO ESTRATTO CONTO'
 	FROM invoices_statement_tmp payments;
 	
+	
+	UPDATE fattura
+    INNER JOIN invoices_statement_tmp payments
+		ON payments.id_fattura = fattura.id_fattura AND payments.anno = fattura.anno
+	SET fattura.data_invio_promemoria = NOW(),
+		fattura.controllo_promemoria = 0;	 
 END
 //
 
