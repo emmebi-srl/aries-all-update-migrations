@@ -21351,6 +21351,7 @@ BEGIN
 	SELECT `id_tipo_natura_iva`,
 		`nome`,
 		`descrizione`,
+		nota_fattura,
 		`tipo_PA`,
 		`abilitato`,
 		`data_mod`
@@ -21370,6 +21371,7 @@ BEGIN
 	SELECT `id_tipo_natura_iva`,
 		`nome`,
 		`descrizione`,
+		nota_fattura,
 		`tipo_PA`,
 		`abilitato`,
 		`data_mod`
@@ -21380,6 +21382,65 @@ END//
 DELIMITER ;
 
 
+DROP PROCEDURE IF EXISTS sp_ariesVatNatureTypeInsert;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesVatNatureTypeInsert`(
+	IN in_name VARCHAR(100),
+	IN in_description VARCHAR(350),
+	IN in_nature_type VARCHAR(10),
+	IN in_invoice_note TEXT,
+	IN in_enabled BIT(1),
+	OUT result INT(11)
+)
+BEGIN
+	INSERT INTO tipo_natura_iva
+	(
+		`nome`,
+		`descrizione`,
+		`tipo_PA`,
+		nota_fattura,
+		`abilitato`
+	)
+	VALUES
+	(
+		in_name,
+		in_description,
+		in_nature_type,
+		in_invoice_note,
+		in_enabled
+	);
+
+	
+	SET result = LAST_INSERT_ID();
+END//
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesVatNatureTypeUpdate;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesVatNatureTypeUpdate`(
+	IN in_vat_nature_type_id INT(11),
+	IN in_name VARCHAR(100),
+	IN in_description VARCHAR(350),
+	IN in_nature_type VARCHAR(10),
+	IN in_invoice_note TEXT,
+	IN in_enabled BIT(1),
+	OUT result INT(11)
+)
+BEGIN
+
+	UPDATE tipo_natura_iva
+	SET
+		`nome` = in_name,
+		`descrizione` = in_description,
+		nota_fattura = in_invoice_note,
+		`tipo_PA` = in_nature_type,
+		`abilitato` = in_enabled
+	WHERE id_tipo_natura_iva = in_vat_nature_type_id;
+
+	
+	SET result = 1;
+END//
+DELIMITER ;
 
 
 DROP PROCEDURE IF EXISTS sp_ariesDepotTypeDelete;
