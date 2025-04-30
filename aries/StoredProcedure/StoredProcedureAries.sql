@@ -7860,6 +7860,54 @@ END//
 DELIMITER ;
 
 
+
+-- Dump della struttura di procedura emmebi.sp_ariesCheckFutureInvoicesStatementReminder
+DROP PROCEDURE IF EXISTS sp_ariesCheckFutureInvoicesStatementReminder;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesCheckFutureInvoicesStatementReminder`(
+	invoice_id INT(11), 
+	invoice_year INT(11)
+)
+BEGIN
+	DECLARE customer_id INT(11);
+	DECLARE reminder_event_id INT(11);
+	DECLARE reminder_event_date DATE;
+	DECLARE reminder_event_delete_result INT(11);
+	DECLARE has_opened_payments BIT(1);
+
+
+	SELECT id_cliente
+	INTO customer_id
+	FROM fattura
+	WHERE id_fattura = invoice_id
+		and anno = invoice_year;
+
+	SELECT id, data_esecuzione
+	INTO reminder_event_id, reminder_event_date
+	FROM Evento
+	WHERE Id_riferimento = customer_id
+		AND id_tipo_evento = 3
+		AND oggetto LIKE "%ESTRATTO CONTO%"
+		AND data_esecuzione >= NOW()
+	LIMIT 1;
+
+	IF reminder_event_id IS NOT NULL THEN
+		SELECT count(*) > 0
+		INTO has_opened_payments
+		FROM vw_invoices_payments_details
+		WHERE pagato = 0
+			AND id_cliente = customer_id
+			AND data_pagamento_prevista IS NOT NULL
+			AND data_pagamento_prevista < reminder_event_date
+			AND anno <> 0;
+
+		IF has_opened_payments = 0 THEN
+			CALL sp_ariesEventDelete(reminder_event_id, reminder_event_delete_result);
+		END IF;
+	END IF;
+END//
+DELIMITER ;
+
 -- Dump della struttura di procedura emmebi.sp_ariesInvoiceGet
 DROP PROCEDURE IF EXISTS sp_ariesInvoiceGet;
 DELIMITER //
@@ -24696,3 +24744,100 @@ BEGIN
 END//
 DELIMITER ;
 	
+
+	
+DROP PROCEDURE IF EXISTS sp_ariesCustomerInvoicesStatementCreateReminder;
+DELIMITER //
+CREATE PROCEDURE sp_ariesCustomerInvoicesStatementCreateReminder (
+	IN statement_id INT(11),
+	OUT event_id INT(11)
+)
+BEGIN
+	DECLARE customer_id INT(11);
+	DECLARE send_date DATETIME;
+	DECLARE email_id INT(11);
+	DECLARE event_group_id INT(11);
+	DECLARE company_name VARCHAR(200);
+	DECLARE phone VARCHAR(20);
+	DECLARE mobile_phone VARCHAR(20);
+	DECLARE email VARCHAR(200);
+	DECLARE event_subject TEXT;
+	DECLARE event_description TEXT;
+	DECLARE event_date DATE;
+	
+
+	SELECT
+		id_cliente,
+		id_email,
+		data_ins
+	INTO
+		customer_id,
+		email_id,
+		send_date
+	FROM cliente_estratto_conto
+	WHERE id = statement_id;
+
+	SELECT
+		ragione_sociale
+	INTO
+		company_name
+	FROM clienti
+	WHERE clienti.id_cliente = customer_id;
+
+	SELECT
+		telefono, altro_telefono, mail
+	INTO
+		phone, mobile_phone, email
+	FROM riferimento_clienti rc
+	WHERE (rc.Promemoria_cliente = 1 OR rc.Id_riferimento = 1) AND id_cliente = customer_id
+	ORDER BY rc.Promemoria_cliente DESC
+	LIMIT 1;
+
+
+	SET event_subject = CONCAT(company_name, ' - PROMEMORIA ESTRATTO CONTO');
+	SET event_description = CONCAT(
+		'CLIENTE: ', company_name, '\n',
+		'TELEFONO: ', phone, '\n',
+		'CELLULARE: ', mobile_phone, '\n',
+		'MAIL: ', email, '\n',
+		'DATA INVIO ESTRATTO CONTO: ', DATE_FORMAT(send_date, '%d/%m/%Y %H:%i'), '\n'
+	);
+	SET event_date = DATE_ADD(send_date, INTERVAL 20 DAY);
+
+	INSERT INTO evento_gruppo
+	SET
+		oggetto = event_subject,
+		descrizione = event_description,
+		data_ora_inizio = CONCAT(event_date, ' ', '08:00:00'),
+		data_ora_fine = CONCAT(event_date, ' ', '20:00:00'),
+		Data_ins = NOW(),
+		Data_mod = NOW(),
+		Utente_ins = @USER_ID,
+		Utente_mod = @USER_ID;
+	
+	SELECT LAST_INSERT_ID() INTO event_group_id;
+
+
+	INSERT INTO Evento
+	SET 
+		Oggetto = event_subject, 
+		Descrizione = event_description, 
+		Id_riferimento = customer_id, 
+		id_tipo_evento = 3, 
+		Eseguito = 0, 
+		Ricorrente = 0,
+		giorni_ricorrenza = 0,
+		Data_esecuzione = event_date, 
+		Sveglia = 0, 
+		Data_sveglia = '1970-01-01 00:00:00',
+		Ora_inizio_esecuzione = '09:00:00',
+		ora_fine_esecuzione = '10:00:00',
+		Data_mod = CURRENT_TIMESTAMP, 
+		Utente_ins = @USER_ID;
+		
+	SELECT LAST_INSERT_ID() INTO event_id;
+	
+	INSERT INTO Evento_gruppo_evento (Id_evento, Id_gruppo_evento, Tipo_associazione, Timestamp)
+		VALUES (event_id, event_group_id, 1, CURRENT_TIMESTAMP);
+END; //
+DELIMITER ;

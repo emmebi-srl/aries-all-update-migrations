@@ -524,6 +524,10 @@ DROP TRIGGER IF EXISTS paga_update;
 CREATE TRIGGER `paga_update` AFTER UPDATE ON `fattura_pagamenti` FOR EACH ROW 
 BEGIN
 	CALL sp_ariesInvoiceEvaluateStatus(new.Id_fattura, new.anno); 
+	
+	IF old.data IS NULL AND new.data IS NOT NULL THEN
+		CALL sp_ariesCheckFutureInvoicesStatementReminder(new.Id_fattura, new.anno);
+	END IF; 
 END
 //
 DELIMITER ;
@@ -533,6 +537,20 @@ DROP TRIGGER IF EXISTS paga_insert;
 CREATE TRIGGER `paga_insert` AFTER INSERT ON `fattura_pagamenti` FOR EACH ROW 
 BEGIN
 	CALL sp_ariesInvoiceEvaluateStatus(new.Id_fattura, new.anno); 
+	
+	IF new.data IS NOT NULL THEN
+		CALL sp_ariesCheckFutureInvoicesStatementReminder(new.Id_fattura, new.anno); 
+	END IF;
+END
+//
+DELIMITER ;
+
+
+DELIMITER //
+DROP TRIGGER IF EXISTS trg_afterInvoicePaymentDelete; 
+CREATE TRIGGER `trg_afterInvoicePaymentDelete` AFTER DELETE ON `fattura_pagamenti` FOR EACH ROW 
+BEGIN
+	CALL sp_ariesInvoiceEvaluateStatus(old.Id_fattura, old.anno);  
 END
 //
 DELIMITER ;
@@ -1386,6 +1404,8 @@ DROP TRIGGER IF EXISTS trg_afterCustomerInvoicesStatementInsert;
 delimiter //
 CREATE TRIGGER `trg_afterCustomerInvoicesStatementInsert` AFTER INSERT ON `cliente_estratto_conto` FOR EACH ROW 
 BEGIN
+	DECLARE statement_event_id INT(11);
+	
 	DROP TEMPORARY TABLE IF EXISTS invoices_statement_tmp;
 	CREATE TEMPORARY TABLE invoices_statement_tmp
 	SELECT id_fattura,
@@ -1431,6 +1451,35 @@ BEGIN
 		ON payments.id_fattura = fattura.id_fattura AND payments.anno = fattura.anno
 	SET fattura.data_invio_promemoria = NOW(),
 		fattura.controllo_promemoria = 0;	 
+
+	CALL sp_ariesCustomerInvoicesStatementCreateReminder(MEW.id, statement_event_id);
+END
+//
+
+delimiter ; 
+
+
+
+-- ############################# RIFERIMENTO FIGURA ##################################################################### 
+DROP TRIGGER IF EXISTS trg_beforeContactFigureInsert; 
+delimiter //
+CREATE TRIGGER `trg_beforeContactFigureInsert` BEFORE INSERT ON `riferimento_figura` FOR EACH ROW 
+BEGIN
+	IF NEW.Abbreviazione = '' OR NEW.Abbreviazione IS NULL THEN
+		SET NEW.Abbreviazione = UPPER(TRIM(SUBSTRING(NEW.Figura, 1, 3)));
+	END IF;
+END
+//
+
+delimiter ; 
+
+DROP TRIGGER IF EXISTS trg_beforeContactFigureUpdate; 
+delimiter //
+CREATE TRIGGER `trg_beforeContactFigureUpdate` BEFORE UPDATE ON `riferimento_figura` FOR EACH ROW 
+BEGIN
+	IF OLD.Figura <> NEW.Figura AND OLD.Abbreviazione = NEW.Abbreviazione THEN
+		SET NEW.Abbreviazione = UPPER(TRIM(SUBSTRING(NEW.Figura, 1, 3)));
+	END IF;
 END
 //
 

@@ -780,6 +780,7 @@ CREATE VIEW `vw_contatsExport` AS
    rc.nome, -- nome rif cliente
    sc.nome AS status, 
    rfg.figura,
+   rfg.abbreviazione as abbreviazione_figura,
    rc.telefono,
    rc.altro_telefono,
    rc.fax,
@@ -809,6 +810,7 @@ CREATE VIEW `vw_contatsExport` AS
    rf.nome,
    sf.nome AS status, 
    rfg.figura,
+   rfg.abbreviazione as abbreviazione_figura,
    telefono,
    altro_telefono,
    fax,
@@ -828,32 +830,7 @@ CREATE VIEW `vw_contatsExport` AS
    OR rf.altro_telefono <> "")
  
  UNION ALL 
- 
- SELECT TRIM(cl.ragione_sociale) AS "ragione_sociale", 
-   IF(frazione IS NULL, c.nome, CONCAT(c.nome, " - ", f.nome)) AS paese,
-   c.cap, 
-   dc.provincia,
-   IF(numero_civico IS NULL OR indirizzo = "", indirizzo, CONCAT(indirizzo, ", ", numero_civico)) AS indirizzo,
-   cl.data_inserimento,
-   i.descrizione,
-   sc.nome AS status, 
-   "impianto",
-   "",
-   "",
-   "",
-   "",
-   "",
-   i.id_impianto AS "id",
-   'system_address' AS record_type
- FROM impianto i
-   INNER JOIN clienti cl ON cl.id_cliente = i.id_cliente 
-   LEFT JOIN destinazione_cliente dc ON dc.id_cliente = cl.id_cliente 
-     AND dc.id_destinazione = i.destinazione 
-   LEFT JOIN comune c ON c.id_comune = dc.comune
-   LEFT JOIN frazione f ON f.id_frazione = dc.frazione
-   LEFT JOIN stato_clienti sc ON sc.id_stato = cl.stato_cliente 
- 
- UNION ALL 
+
  
  SELECT TRIM(o.ragione_sociale) AS "ragione_sociale", 
    IF(frazione IS NULL, c.nome, CONCAT(c.nome, " - ", f.nome)) AS paese,
@@ -864,6 +841,7 @@ CREATE VIEW `vw_contatsExport` AS
    "ATTIVO",
    "", 
    "Dipendente",
+   "DIP",
    o.Telefono_abitazione,
    o.altro_telefono,
    "",
