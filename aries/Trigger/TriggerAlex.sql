@@ -1452,7 +1452,7 @@ BEGIN
 	SET fattura.data_invio_promemoria = NOW(),
 		fattura.controllo_promemoria = 0;	 
 
-	CALL sp_ariesCustomerInvoicesStatementCreateReminder(MEW.id, statement_event_id);
+	CALL sp_ariesCustomerInvoicesStatementCreateReminder(NEW.id, statement_event_id);
 END
 //
 
