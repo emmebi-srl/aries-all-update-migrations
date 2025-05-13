@@ -21537,6 +21537,14 @@ BEGIN
 
 	DECLARE quoted_quantity DECIMAL(11,2);
 
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		ROLLBACK;
+		RESIGNAL;
+	END;
+		
+	START TRANSACTION;
+	
 	SELECT preventivati INTO quoted_quantity
 	FROM commessa_articoli
 	WHERE Id_commessa = job_id
@@ -21568,8 +21576,9 @@ BEGIN
 			AND id_lotto = lot_id
 			AND id_tab = tab_id;
 			
-	END IF; 
-
+	END IF;
+	
+	COMMIT;
 END//
 DELIMITER ;
 
@@ -22121,7 +22130,8 @@ CREATE  PROCEDURE `sp_ariesJobProductHistoryCreate`(
 	IN job_year INT(11),
 	IN subjob_id INT(11),
 	IN lot_id INT(11),
-	IN tab_id INT(11)
+	IN tab_id INT(11),
+	IN operation VARCHAR(10)
 )
 BEGIN
 
@@ -22158,6 +22168,7 @@ BEGIN
 		`Lunghezza`,
 		`iva`,
 		`id_utente`,
+		`operazione`,
 		`timestamp`
 	) SELECT `id_commessa`,
 		`anno`,
@@ -22180,6 +22191,7 @@ BEGIN
 		`portati`,
 		`Lunghezza`,
 		`iva`,
+		operation,
 		user_id,
 		NOW()
 	FROM commessa_articoli
@@ -23323,6 +23335,7 @@ CREATE PROCEDURE sp_ariesTicketEnsureReminderEvent (
 	IN expiration_date DATE,
 	IN expiration_event_id INT,
 	IN ticket_description TEXT,
+	IN user_id INT,
 	OUT event_id INT(11)
 )
 BEGIN
@@ -23388,8 +23401,8 @@ BEGIN
 			data_ora_fine = CONCAT(GREATEST(reminder_date, expiration_date), ' ', '20:00:00'),
 			Data_ins = NOW(),
 			Data_mod = NOW(),
-			Utente_ins = @USER_ID,
-			Utente_mod = @USER_ID;
+			Utente_ins = user_id,
+			Utente_mod = user_id;
 		
  		SELECT LAST_INSERT_ID() INTO event_group_id;
 
@@ -23404,7 +23417,7 @@ BEGIN
 			),
 			data_ora_inizio = CONCAT(LEAST(reminder_date, expiration_date), ' ', '08:00:00'),
 			Data_mod = NOW(),
-			Utente_mod = @USER_ID
+			Utente_mod = user_id
 		WHERE id = event_group_id;
 
 	END IF;
@@ -23436,7 +23449,7 @@ BEGIN
 			Ora_inizio_esecuzione = '09:00:00',
 			ora_fine_esecuzione = '10:00:00',
 			Data_mod = CURRENT_TIMESTAMP, 
-			Utente_ins = @USER_ID;
+			Utente_ins = user_id;
 			
  		SELECT LAST_INSERT_ID() INTO event_id;
 		
@@ -23449,7 +23462,7 @@ BEGIN
 			Descrizione = event_description, 
 			Data_esecuzione = reminder_date, 
 			Data_mod = CURRENT_TIMESTAMP, 
-			Utente_mod = @USER_ID
+			Utente_mod = user_id
 		WHERE Id = event_id; 
 	END IF;
 
@@ -23470,6 +23483,7 @@ CREATE PROCEDURE sp_ariesTicketEnsureExpirationEvent (
 	IN expiration_date DATE,
 	IN expiration_event_id INT,
 	IN ticket_description TEXT,
+	IN user_id INT,
 	OUT event_id INT(11)
 )
 BEGIN
@@ -23535,8 +23549,8 @@ BEGIN
 			data_ora_fine = CONCAT(GREATEST(reminder_date, expiration_date), ' ', '20:00:00'),
 			Data_ins = NOW(),
 			Data_mod = NOW(),
-			Utente_ins = @USER_ID,
-			Utente_mod = @USER_ID;
+			Utente_ins = user_id,
+			Utente_mod = user_id;
 		
  		SELECT LAST_INSERT_ID() INTO event_group_id;
 
@@ -23551,7 +23565,7 @@ BEGIN
 			),
 			data_ora_inizio = CONCAT(LEAST(reminder_date, expiration_date), ' ', '08:00:00'),
 			Data_mod = NOW(),
-			Utente_mod = @USER_ID
+			Utente_mod = user_id
 		WHERE id = event_group_id;
 
 	END IF;
@@ -23583,7 +23597,7 @@ BEGIN
 			Ora_inizio_esecuzione = '09:00:00',
 			ora_fine_esecuzione = '10:00:00',
 			Data_mod = CURRENT_TIMESTAMP, 
-			Utente_ins = @USER_ID;
+			Utente_ins = user_id;
 			
  		SELECT LAST_INSERT_ID() INTO event_id;
 		
@@ -23596,7 +23610,7 @@ BEGIN
 			Descrizione = event_description, 
 			Data_esecuzione = expiration_date, 
 			Data_mod = CURRENT_TIMESTAMP, 
-			Utente_mod = @USER_ID
+			Utente_mod = user_id
 		WHERE Id = event_id; 
 	END IF;
 
@@ -23607,7 +23621,8 @@ DROP PROCEDURE IF EXISTS sp_ariesTicketDeleteReminderEvent;
 DELIMITER //
 CREATE PROCEDURE sp_ariesTicketDeleteReminderEvent (
 	IN ticket_id INT,
-	IN ticket_year INT
+	IN ticket_year INT,
+	IN user_id INT
 )
 BEGIN
 	DECLARE reminder_event_id INT(11);
@@ -23628,13 +23643,13 @@ BEGIN
 
 		UPDATE evento
 		SET Eliminato = 1,
-			Utente_mod = @USER_ID
+			Utente_mod = user_id
 		WHERE id = reminder_event_id;
 
 		IF expiration_event_id IS NULL THEN
 			UPDATE evento_gruppo
 			SET Eliminato = 1,
-				Utente_mod = @USER_ID
+				Utente_mod = user_id
 			WHERE id = event_group_id;
 		END IF;
 	END IF;

@@ -386,6 +386,40 @@ BEGIN
 END; //
 DELIMITER ;
 
+
+DROP PROCEDURE IF EXISTS sp_apiTicketGetById;
+DELIMITER //
+CREATE PROCEDURE sp_apiTicketGetById (ticket_id INT)
+BEGIN
+	SELECT `ticket`.`id`                       AS `id`,
+		`ticket`.`Id_ticket`                       AS `id_ticket`,
+		`ticket`.`anno`                       AS `anno`,
+		`ticket`.`Id_impianto`                       AS `id_impianto`,
+		`ticket`.`Id_cliente`                       AS `id_cliente`,
+		ticket.id_destinazione,
+		`ticket`.`Urgenza`                       AS `urgenza`,
+		`ticket`.`Descrizione`                       AS `ticket_descrizione`,
+		IFNULL(ticket.Data_ticket, ticket.data_ora) AS "data_ticket", 
+		ticket.scadenza AS Data_scadenza, 
+		ticket.data_ora,
+		ticket.data_soluzione, 
+		ticket.Causale, 
+		ticket.intervento,
+		ticket.Comunicazione, 
+		ticket.Stato_ticket,
+		ticket.tempo, 
+		ticket.id_utente, 
+		ticket.stampato, 
+		ticket.inviato, 
+		ticket.data_promemoria,
+		ticket.id_stato_promemoria,
+		stato_promemoria_cliente.rif_applicazioni as rif_stato_promemoria
+	FROM ticket
+		INNER JOIN stato_promemoria_cliente ON ticket.id_stato_promemoria = stato_promemoria_cliente.id
+	WHERE ticket.id = ticket_id; 
+END; //
+DELIMITER ;
+
 DROP PROCEDURE IF EXISTS sp_apiTicketGetBySystems;
 DELIMITER //
 CREATE PROCEDURE sp_apiTicketGetBySystems (
@@ -420,6 +454,22 @@ BEGIN
 	WHERE ((`ticket`.`Stato_ticket`                       = '1' OR `ticket`.`Stato_ticket`                       = '2') AND  FIND_IN_SET(`ticket`.`Id_impianto`, system_ids)); 
 END; //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_apiTicketUpdate;
+DELIMITER //
+CREATE PROCEDURE sp_apiTicketUpdate (
+	IN ticket_id INT, 
+	IN status_id VARCHAR(50), 
+	IN allow_status_id BIT(1)
+)
+BEGIN
+	UPDATE Ticket 
+	SET
+		stato_ticket = IF(IFNULL(allow_status_id, FALSE), status_id, stato_ticket)
+	WHERE id = ticket_id;
+END; //
+DELIMITER ;
+
 
 DROP PROCEDURE IF EXISTS sp_apiSystemGet;
 DELIMITER //
@@ -4518,6 +4568,7 @@ CREATE PROCEDURE sp_apiReportAttachmentInsert
 	`file_name`                       VARCHAR(250), 
 	file_path MEDIUMTEXT,
 	send_to_customer BIT(1),
+	generate_ticket BIT(1),
 	`timestamp`                       TIMESTAMP,
 	`user_id`                       INT(11)
 )
@@ -4530,7 +4581,8 @@ BEGIN
 		`file_name`                       = file_name,
 		`timestamp`                       = timestamp,
 		`utente_ins`                       = user_id,
-		invia_a_cliente = send_to_customer
+		invia_a_cliente = send_to_customer,
+		genera_ticket = generate_ticket
 		;
 	
 END; //
@@ -5049,3 +5101,17 @@ $$
 
 DELIMITER ;
 
+
+DROP PROCEDURE IF EXISTS sp_apiTicketStatusGet;
+DELIMITER //
+CREATE PROCEDURE sp_apiTicketStatusGet (
+)
+BEGIN
+	SELECT Id_stato,
+		nome,
+		descrizione,
+		colore,
+		aperto
+	FROM Stato_ticket;
+END; //
+DELIMITER ;

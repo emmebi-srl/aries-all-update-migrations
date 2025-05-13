@@ -629,8 +629,9 @@ DELIMITER ;
 
 -- ############################# JOB PRODUCTS ############################################################################## 
 DROP TRIGGER IF EXISTS trg_afterJobProductsUpdate; 
+DROP TRIGGER IF EXISTS trg_beforeJobProductsUpdate; 
 DELIMITER //
-CREATE TRIGGER `trg_afterJobProductsUpdate` BEFORE UPDATE ON commessa_articoli FOR EACH ROW 
+CREATE TRIGGER `trg_beforeJobProductsUpdate` BEFORE UPDATE ON commessa_articoli FOR EACH ROW 
 BEGIN
 	IF (NEW.preventivati <> OLD.preventivati)
 		OR (NEW.`quantità` <> OLD.`quantità`)
@@ -642,8 +643,17 @@ BEGIN
 		OR (NEW.`sconto` <> OLD.`sconto`)
 		OR (NEW.`portati` <> OLD.`portati`)
 	THEN
-		CALL sp_ariesJobProductHistoryCreate(NEW.id_commessa, NEW.anno, NEW.id_sottocommessa, NEW.id_lotto, NEW.id_tab);
+		CALL sp_ariesJobProductHistoryCreate(NEW.id_commessa, NEW.anno, NEW.id_sottocommessa, NEW.id_lotto, NEW.id_tab, 'UPDATE');
 	END IF;
+END
+//
+DELIMITER ; 
+
+DROP TRIGGER IF EXISTS trg_beforeJobProductsDelete; 
+DELIMITER //
+CREATE TRIGGER `trg_beforeJobProductsDelete` BEFORE DELETE ON commessa_articoli FOR EACH ROW 
+BEGIN
+	CALL sp_ariesJobProductHistoryCreate(OLD.id_commessa, OLD.anno, OLD.id_sottocommessa, OLD.id_lotto, OLD.id_tab, 'DELETE');
 END
 //
 DELIMITER ; 
@@ -1021,6 +1031,8 @@ BEGIN
 	DECLARE reminder_event_id INT(11);
 	DECLARE expiration_event_id INT(11);
 
+	SET NEW.id_utente = IFNULL(NEW.id_utente, @USER_ID);
+
 	IF NEW.data_promemoria IS NOT NULL THEN
 		CALL sp_ariesTicketEnsureReminderEvent(
 			NEW.id_ticket,
@@ -1033,6 +1045,7 @@ BEGIN
 			NEW.scadenza,
 			NEW.id_evento_scadenza,
 			NEW.descrizione,
+			NEW.id_utente,
 			reminder_event_id
 		);
 		SET NEW.id_evento_promemoria = reminder_event_id;
@@ -1051,6 +1064,7 @@ BEGIN
 			NEW.scadenza,
 			NEW.id_evento_scadenza,
 			NEW.descrizione,
+			NEW.id_utente,
 			expiration_event_id
 		);
 		SET NEW.id_evento_scadenza = expiration_event_id;
@@ -1065,16 +1079,22 @@ CREATE TRIGGER `trg_beforeTicketUpdate` BEFORE UPDATE ON `ticket` FOR EACH ROW
 BEGIN
 	DECLARE reminder_event_id INT(11);
 	DECLARE expiration_event_id INT(11);
+	DECLARE user_id INT(11);
+
+	
+
+	SET user_id = IFNULL(@USER_ID, NEW.id_utente);
+
 
 	IF NEW.stato_ticket != OLD.stato_ticket AND NEW.stato_ticket IN (3, 4) THEN
-		CALL sp_ariesTicketDeleteReminderEvent(NEW.id_ticket, NEW.anno);
-		CALL sp_ariesTicketDeleteExpirationEvent(NEW.id_ticket, NEW.anno);
+		CALL sp_ariesTicketDeleteReminderEvent(NEW.id_ticket, NEW.anno, user_id);
+		CALL sp_ariesTicketDeleteExpirationEvent(NEW.id_ticket, NEW.anno, user_id);
 
 		SET NEW.id_evento_promemoria = NULL;
 		SET NEW.id_evento_scadenza = NULL;
 	ELSE
 		IF NEW.data_promemoria IS NULL THEN
-			CALL sp_ariesTicketDeleteReminderEvent(NEW.id_ticket, NEW.anno);
+			CALL sp_ariesTicketDeleteReminderEvent(NEW.id_ticket, NEW.anno, user_id);
 			SET NEW.id_evento_promemoria = NULL;
 		ELSE
 			CALL sp_ariesTicketEnsureReminderEvent(
@@ -1088,13 +1108,14 @@ BEGIN
 				NEW.scadenza,
 				NEW.id_evento_scadenza,
 				NEW.descrizione,
+				user_id,
 				reminder_event_id
 			);
 			SET NEW.id_evento_promemoria = reminder_event_id;
 		END IF;
 		
 		IF NEW.scadenza IS NULL THEN
-			CALL sp_ariesTicketDeleteExpirationEvent(NEW.id_ticket, NEW.anno);
+			CALL sp_ariesTicketDeleteExpirationEvent(NEW.id_ticket, NEW.anno, user_id);
 			SET NEW.id_evento_scadenza = NULL;
 		ELSE
 			CALL sp_ariesTicketEnsureExpirationEvent(
@@ -1108,6 +1129,7 @@ BEGIN
 				NEW.scadenza,
 				NEW.id_evento_scadenza,
 				NEW.descrizione,
+				user_id,
 				expiration_event_id
 			);
 			SET NEW.id_evento_scadenza = expiration_event_id;
@@ -1121,14 +1143,14 @@ DROP TRIGGER IF EXISTS trg_beforeTicketDelete;
 delimiter //
 CREATE TRIGGER `trg_beforeTicketDelete` BEFORE DELETE ON `ticket` FOR EACH ROW 
 BEGIN	
-	CALL sp_ariesTicketDeleteReminderEvent(OLD.id_ticket, OLD.anno);
-	CALL sp_ariesTicketDeleteExpirationEvent(OLD.id_ticket, OLD.anno);
+	CALL sp_ariesTicketDeleteReminderEvent(OLD.id_ticket, OLD.anno, IFNULL(@USER_ID, OLD.id_utente));
+	CALL sp_ariesTicketDeleteExpirationEvent(OLD.id_ticket, OLD.anno, IFNULL(@USER_ID, OLD.id_utente));
 END
 //
-
+, 
 delimiter ; 
 
--- ############################# CONTRACTS ##################################################################### 
+-- ############################# CONTRACTS ################################################,##################### 
 DROP TRIGGER IF EXISTS trg_beforeContractInsert; 
 delimiter //
 CREATE TRIGGER `trg_beforeContractInsert` BEFORE INSERT ON `contratto` FOR EACH ROW 
