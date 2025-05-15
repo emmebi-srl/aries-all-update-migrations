@@ -23661,7 +23661,8 @@ DROP PROCEDURE IF EXISTS sp_ariesTicketDeleteExpirationEvent;
 DELIMITER //
 CREATE PROCEDURE sp_ariesTicketDeleteExpirationEvent (
 	IN ticket_id INT,
-	IN ticket_year INT
+	IN ticket_year INT,
+	IN user_id INT
 )
 BEGIN
 	DECLARE reminder_event_id INT(11);
@@ -23682,14 +23683,14 @@ BEGIN
 
 		UPDATE evento
 		SET Eliminato = 1,
-			Utente_mod = @USER_ID
+			Utente_mod = user_id
 		WHERE id = expiration_event_id;
 
 		IF reminder_event_id IS NULL THEN
 			
 			UPDATE evento_gruppo
 			SET Eliminato = 1,
-				Utente_mod = @USER_ID
+				Utente_mod = user_id
 			WHERE id = event_group_id;
 
 		END IF;
