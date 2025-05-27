@@ -5115,3 +5115,19 @@ BEGIN
 	FROM Stato_ticket;
 END; //
 DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_apiTicketAttachmentGetByTicketIds;
+DELIMITER //
+CREATE PROCEDURE sp_apiTicketAttachmentGetByTicketIds (
+	IN ticket_ids MEDIUMTEXT
+)
+BEGIN
+	SELECT ticket_allegati.*
+	FROM ticket_allegati
+		INNER JOIN ticket ON ticket_allegati.id_ticket = ticket.id_ticket AND ticket_allegati.anno_ticket = ticket.anno
+	WHERE FIND_IN_SET(`ticket`.`id`, ticket_ids)
+	GROUP BY ticket_allegati.id_ticket, ticket_allegati.anno_ticket
+	ORDER BY ticket_allegati.timestamp;
+END; //
+DELIMITER ;

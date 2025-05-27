@@ -24514,6 +24514,65 @@ END; //
 DELIMITER ;
 
 
+DROP PROCEDURE IF EXISTS sp_ariesTicketAttachmentGetByTicket;
+DELIMITER //
+CREATE PROCEDURE sp_ariesTicketAttachmentGetByTicket (IN ticket_id INT(11), IN ticket_year INT(11))
+BEGIN
+	SELECT *
+	FROM ticket_allegati
+	WHERE id_ticket = ticket_id AND anno_ticket = ticket_year;
+END; //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesTicketAttachmentRename;
+DELIMITER //
+CREATE PROCEDURE sp_ariesTicketAttachmentRename (IN in_id INT(11), IN in_file_name VARCHAR(500), IN in_file_path VARCHAR(500))
+BEGIN
+	UPDATE ticket_allegati
+	SET file_name = in_file_name,
+		file_path = in_file_path
+	WHERE id = in_id;
+END; //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesTicketAttachmentInsert;
+DELIMITER //
+CREATE PROCEDURE sp_ariesTicketAttachmentInsert (IN in_ticket_id INT(11), IN in_ticket_year INT(11), IN in_file_name VARCHAR(500), IN in_file_path VARCHAR(500))
+BEGIN
+	INSERT INTO ticket_allegati
+	SET 
+		id_ticket = in_ticket_id,
+		anno_ticket = in_ticket_year,
+		file_name = in_file_name,
+		file_path = in_file_path,
+		utente_ins = @USER_ID;
+END; //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_ariesTicketAttachmentDelete;
+DELIMITER //
+CREATE PROCEDURE sp_ariesTicketAttachmentDelete (IN in_id INT(11))
+BEGIN
+	DELETE FROM ticket_allegati
+	WHERE id = in_id;
+END; //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_ariesTicketAttachmentGetById;
+DELIMITER //
+CREATE PROCEDURE sp_ariesTicketAttachmentGetById (IN in_id INT(11))
+BEGIN
+	SELECT *
+	FROM ticket_allegati
+	WHERE id = in_id;
+END; //
+DELIMITER ;
+
+
+
+
 
 DROP PROCEDURE IF EXISTS sp_ariesSystemsExpirationsUpdateStatus;
 DELIMITER //
