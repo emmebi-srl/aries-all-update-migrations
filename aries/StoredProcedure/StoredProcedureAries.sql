@@ -2334,6 +2334,7 @@ CREATE  PROCEDURE `sp_ariesCustomerContactsGet`()
 BEGIN
 	SELECT 
 		Id, 
+		Id_pubblico,
 		Id_cliente, 
 		Id_riferimento, 
 		Nome, 
@@ -2371,6 +2372,7 @@ CREATE  PROCEDURE `sp_ariesCustomerContactsGetByCustomerId`(
 BEGIN
 	SELECT 
 		Id, 
+		Id_pubblico,
 		Id_cliente, 
 		Id_riferimento, 
 		Nome, 
@@ -2410,6 +2412,7 @@ CREATE  PROCEDURE `sp_ariesCustomerContactsGetByCustomerIdAndContactsId`(
 BEGIN
 	SELECT 
 		Id, 
+		Id_pubblico,
 		Id_cliente, 
 		Id_riferimento, 
 		Nome, 
@@ -2449,6 +2452,7 @@ BEGIN
 
 	SELECT 
 		Id, 
+		Id_pubblico,
 		Id_cliente, 
 		Id_riferimento, 
 		Nome, 
@@ -2488,6 +2492,7 @@ BEGIN
 
 	SELECT 
 		Id, 
+		Id_pubblico,
 		riferimento_clienti.Id_cliente, 
 		riferimento_clienti.Id_riferimento, 
 		riferimento_clienti.Nome, 
@@ -5543,6 +5548,7 @@ CREATE  PROCEDURE `sp_ariesEmployeeGet`( )
 BEGIN
         
 	SELECT Id_operaio,
+		 Id_pubblico,
 		 IFNULL(Ragione_sociale, "" ) AS Ragione_sociale,
 		 IFNULL(Codice_Fiscale, "" ) AS Codice_Fiscale,
 		 IFNULL(Provincia, "" ) AS Provincia,
@@ -5594,6 +5600,7 @@ event_group_id INT
 BEGIN
         
 	SELECT DISTINCT Operaio.Id_operaio,
+		 Operaio.Id_pubblico,
 		 IFNULL(Operaio.Ragione_sociale, "" ) AS Ragione_sociale,
 		 IFNULL(Operaio.Codice_Fiscale, "" ) AS Codice_Fiscale,
 		 IFNULL(Operaio.Provincia, "" ) AS Provincia,
@@ -17075,6 +17082,7 @@ CREATE  PROCEDURE `sp_ariesSupplierContactsGet`()
 BEGIN
 	SELECT 
 		`Id_fornitore`,
+		Id_pubblico,
 		`Id_riferimento`,
 		`Nome`,
 		`figura`,
@@ -17109,6 +17117,7 @@ CREATE  PROCEDURE `sp_ariesSupplierContactsGetBySupplierId`(
 BEGIN
 	SELECT  
 		`Id_fornitore`,
+		Id_pubblico,
 		`Id_riferimento`,
 		`Nome`,
 		`figura`,
@@ -17145,6 +17154,7 @@ CREATE  PROCEDURE `sp_ariesSupplierContactsGetBySupplierIdAndContactsId`(
 BEGIN
 	SELECT  
 		`Id_fornitore`,
+		Id_pubblico,
 		`Id_riferimento`,
 		`Nome`,
 		`figura`,
@@ -17181,6 +17191,7 @@ BEGIN
 
 	SELECT 
 		`Id_fornitore`,
+		Id_pubblico,
 		`Id_riferimento`,
 		`Nome`,
 		`figura`,

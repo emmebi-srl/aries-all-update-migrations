@@ -1506,3 +1506,48 @@ END
 //
 
 delimiter ; 
+
+
+
+
+-- ############################# RIFERIMENTO CLIENTI ##################################################################### 
+
+DROP TRIGGER IF EXISTS trg_beforeCustomerContactInsert; 
+delimiter //
+CREATE TRIGGER `trg_beforeCustomerContactInsert` BEFORE INSERT ON `riferimento_clienti` FOR EACH ROW 
+BEGIN
+	IF NEW.id_pubblico IS NULL THEN
+		SET NEW.id_pubblico = UUID();
+	END IF;
+END
+//
+delimiter ; 
+
+
+
+-- ############################# RIFERIMENTO FORNITORI ##################################################################### 
+
+DROP TRIGGER IF EXISTS trg_beforeSupplierContactInsert; 
+delimiter //
+CREATE TRIGGER `trg_beforeSupplierContactInsert` BEFORE INSERT ON `riferimento_fornitore` FOR EACH ROW 
+BEGIN
+	IF NEW.id_pubblico IS NULL THEN
+		SET NEW.id_pubblico = UUID();
+	END IF;
+END
+//
+delimiter ; 
+
+
+-- ############################# OPERAIO ##################################################################### 
+
+DROP TRIGGER IF EXISTS trg_beforeEmployeeInsert; 
+delimiter //
+CREATE TRIGGER `trg_beforeEmployeeInsert` BEFORE INSERT ON `operaio` FOR EACH ROW 
+BEGIN
+	IF NEW.id_pubblico IS NULL THEN
+		SET NEW.id_pubblico = UUID();
+	END IF;
+END
+//
+delimiter ; 

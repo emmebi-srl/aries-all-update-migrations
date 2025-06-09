@@ -787,7 +787,8 @@ CREATE VIEW `vw_contatsExport` AS
    rc.centralino,
    rc.mail,
    cl.id_cliente AS "id",
-   IF(tipo_cliente = 6, 'customer_private', 'customer_company') AS record_type -- check if tipo cliente is PRIVATO
+   IF(tipo_cliente = 6, 'customer_private', 'customer_company') AS record_type, -- check if tipo cliente is PRIVATO,
+   rc.id_pubblico
  FROM clienti cl 
    INNER JOIN riferimento_clienti rc ON cl.id_cliente = rc.id_cliente 
    LEFT JOIN destinazione_cliente dc ON dc.id_cliente = cl.id_cliente 
@@ -817,7 +818,8 @@ CREATE VIEW `vw_contatsExport` AS
    rf.centralino,
    rf.mail,
    fr.id_fornitore AS "id",
-   'supplier' AS record_type
+   'supplier' AS record_type,
+   rf.id_pubblico
  FROM fornitore fr 
    INNER JOIN riferimento_fornitore rf ON rf.id_fornitore = fr.id_fornitore 
    LEFT JOIN destinazione_fornitore df ON df.id_fornitore = fr.id_fornitore 
@@ -848,7 +850,8 @@ CREATE VIEW `vw_contatsExport` AS
    "",
    o.E_mail,
    o.Id_operaio AS "id",
-   "employee" AS record_type
+   "employee" AS record_type,
+   o.id_pubblico
  FROM operaio o 
    LEFT JOIN comune c ON c.Id_comune = o.Comune
    LEFT JOIN frazione f ON f.Id_frazione = o.Frazione

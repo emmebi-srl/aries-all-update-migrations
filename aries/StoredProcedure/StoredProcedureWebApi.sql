@@ -3442,6 +3442,7 @@ CREATE PROCEDURE sp_apiSupplierContactGetBySupplier (
 BEGIN
 	SELECT 
 		`Id_fornitore`,
+		Id_pubblico,
 		`Id_riferimento`,
 		`Nome`,
 		`figura`,
