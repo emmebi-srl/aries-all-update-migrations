@@ -76,7 +76,7 @@ BEGIN
 		LEFT JOIN Tipo_impianto ON Tipo_impianto.Id_tipo = tipo_impianto
 		LEFT JOIN rapporto_mobile_intervento_rif_tipo_intervento 
 			ON rapporto_mobile.Tipo_intervento = rapporto_mobile_intervento_rif_tipo_intervento.Id_tipo_intervento
-	WHERE inviato=0 AND Data IS NOT NULL; 
+	WHERE inviato=0 AND Data IS NOT NULL AND rapporto_mobile.timestamp_invio < DATE_SUB(NOW(), INTERVAL 1 MINUTE);  
 	
 END; //
 DELIMITER ;
@@ -244,7 +244,7 @@ BEGIN
 			AND impianto.destinazione = dc.Id_destinazione
 		INNER JOIN comune AS c ON c.id_comune=dc.Comune
 		LEFT JOIN frazione AS f ON f.id_frazione=dc.frazione
-	WHERE Inviato = 0; 
+	WHERE Inviato = 0 AND rapporto_mobile_collaudo.timestamp_invio < DATE_SUB(NOW(), INTERVAL 1 MINUTE);   
 	
 END; //
 DELIMITER ;
