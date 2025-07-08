@@ -155,7 +155,8 @@ DROP PROCEDURE IF EXISTS sp_searchReportsLight;
 DELIMITER $$
 CREATE PROCEDURE `sp_searchReportsLight`(
 	IN `search_text` TEXT,
-	IN customer_id INT(11)
+	IN customer_id INT(11),
+	IN has_customer_signature BIT(1)
 )
 BEGIN
 	
@@ -166,18 +167,24 @@ BEGIN
 		clienti.ragione_sociale, 
 		rapporto.id_impianto,
 		stato_rapporto.colore,
-		rapporto.data_esecuzione
+		rapporto.data_esecuzione,
+		IFNULL(tipo_rapporto.nome, 'Cartaceo') AS tipo_rapporto,
+		rapporto.responsabile,
+		IF(rapporto.filename_firma_cliente IS NOT NULL, True, False)  AS firma_cliente
 	FROM rapporto
 		INNER JOIN clienti ON clienti.id_cliente = rapporto.id_cliente
 		INNER JOIN stato_rapporto ON stato_rapporto.id_stato = rapporto.Stato
+		INNER JOIN tipo_rapporto ON tipo_rapporto.id = rapporto.id_tipo_rapporto
 	WHERE (ragione_sociale LIKE CONCAT('%', search_text, '%') 
-		OR rapporto.id_rapporto LIKE CONCAT('%', search_text, '%')
-		OR rapporto.anno LIKE CONCAT('%', search_text, '%')
-		OR rapporto.relazione LIKE CONCAT('%', search_text, '%'))
-			AND IF(customer_id = -1, True, rapporto.id_cliente = customer_id)
+			OR rapporto.id_rapporto LIKE CONCAT('%', search_text, '%')
+			OR rapporto.anno LIKE CONCAT('%', search_text, '%')
+			OR rapporto.relazione LIKE CONCAT('%', search_text, '%')
+			OR rapporto.responsabile LIKE CONCAT('%', search_text, '%')
+		)
+		AND IF(customer_id = -1, True, rapporto.id_cliente = customer_id)
+		AND IF(has_customer_signature IS NULL, True, has_customer_signature = IF(rapporto.filename_firma_cliente IS NOT NULL, True, False))
 	ORDER BY rapporto.anno desc, rapporto.id_rapporto desc
 	LIMIT 100;
-
 END $$
 DELIMITER ;
 
