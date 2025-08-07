@@ -984,7 +984,8 @@ BEGIN
 		CONCAT(IFNULL(relazione, ""), "\nNOTE IN EVIDENZA: ", IFNULL(note_generali, ""),
 			"\nAPPUNTI: ", IFNULL(appunti, "")) relazione,
 		IFNULL(note_generali, "") note_generali,
-		stato_rapporto.fatturato
+		stato_rapporto.fatturato,
+		rapporto.numero_allegati
 	FROM  rapporto
 		INNER JOIN stato_rapporto ON stato_rapporto.Id_stato = rapporto.stato
 	WHERE id_impianto IS NOT NULL;
@@ -5130,5 +5131,19 @@ BEGIN
 	WHERE FIND_IN_SET(`ticket`.`id`, ticket_ids)
 	GROUP BY ticket_allegati.id_ticket, ticket_allegati.anno_ticket
 	ORDER BY ticket_allegati.timestamp;
+END; //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_apiReportAttachmentGetByReport;
+DELIMITER //
+CREATE PROCEDURE sp_apiReportAttachmentGetByReport (
+	IN report_id INT,
+	IN report_year INT
+)
+BEGIN
+	SELECT rapporto_allegati.*
+	FROM rapporto_allegati
+	WHERE rapporto_allegati.id_rapporto = report_id and rapporto_allegati.anno_rapporto = report_year
+	ORDER BY rapporto_allegati.timestamp;
 END; //
 DELIMITER ;
