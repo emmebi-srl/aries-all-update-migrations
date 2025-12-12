@@ -128,14 +128,39 @@ DELIMITER //
 CREATE PROCEDURE sp_apiCustomerGet ()
 BEGIN
 
-	SELECT DISTINCT clienti.id_cliente, 
-		ragione_sociale,
-		IFNULL(partita_iva , "") 'partita_iva', 
-		IFNULL(codice_fiscale, "") 'codice_fiscale', 
-		IFNULL(Insolvente, false) 'Insolvente'
-	FROM clienti 
+	SELECT DISTINCT
+		c.Id_cliente,
+		c.Ragione_Sociale,
+		c.Ragione_sociale2,
+		IFNULL(c.Partita_iva, '') AS partita_iva,
+		IFNULL(c.Codice_Fiscale, '') AS codice_fiscale,
+		c.Cortese_attenzione,
+		c.Data_inserimento,
+		c.Stato_cliente,
+		c.Tipo_Cliente,
+		c.stato_economico,
+		c.condizione_pagamento,
+		c.Sito_internet,
+		c.password,
+		c.Utente_sito,
+		c.iva,
+		c.modi,
+		c.rc,
+		c.posta,
+		c.ex,
+		c.tipo_rapporto,
+		c.id_utente,
+		c.id_agente,
+		c.id_abbona,
+		c.id_attività as id_attivita,
+		c.pec,
+		c.codice_univoco,
+		c.e_codice_destinatario,
+		IFNULL(c.Insolvente, FALSE) AS Insolvente,
+		c.data_ultima_modifica
+	FROM clienti c
 		INNER JOIN impianto ON 
-			clienti.Id_cliente IN (impianto.Id_cliente, impianto.Id_gestore, impianto.Id_occupante);
+			c.Id_cliente IN (impianto.Id_cliente, impianto.Id_gestore, impianto.Id_occupante);
 			
 END; //
 DELIMITER ;
@@ -148,13 +173,38 @@ CREATE PROCEDURE sp_apiCustomerGetByIds (
 )
 BEGIN
 
-	SELECT DISTINCT clienti.id_cliente, 
-		ragione_sociale,
-		IFNULL(partita_iva , "") 'partita_iva', 
-		IFNULL(codice_fiscale, "") 'codice_fiscale', 
-		IF(Insolvente = TRUE, TRUE, FALSE) Insolvente
-	FROM clienti 
-	WHERE FIND_IN_SET(`clienti`.`id_cliente`, customer_ids);
+	SELECT DISTINCT 
+		c.Id_cliente,
+		c.Ragione_Sociale,
+		c.Ragione_sociale2,
+		IFNULL(c.Partita_iva, '') AS partita_iva,
+		IFNULL(c.Codice_Fiscale, '') AS codice_fiscale,
+		c.Cortese_attenzione,
+		c.Data_inserimento,
+		c.Stato_cliente,
+		c.Tipo_Cliente,
+		c.stato_economico,
+		c.condizione_pagamento,
+		c.Sito_internet,
+		c.password,
+		c.Utente_sito,
+		c.iva,
+		c.modi,
+		c.rc,
+		c.posta,
+		c.ex,
+		c.tipo_rapporto,
+		c.id_utente,
+		c.id_agente,
+		c.id_abbona,
+		c.id_attività as id_attivita,
+		c.pec,
+		c.codice_univoco,
+		c.e_codice_destinatario,
+		IFNULL(c.Insolvente, FALSE) AS Insolvente,
+		c.data_ultima_modifica
+	FROM clienti c
+	WHERE FIND_IN_SET(`c`.`id_cliente`, customer_ids);
 			
 END; //
 DELIMITER ;

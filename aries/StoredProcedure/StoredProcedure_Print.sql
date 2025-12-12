@@ -2461,7 +2461,7 @@ BEGIN
 		SELECT file_path,
 			file_name
 		FROM rapporto_allegati
-		WHERE (file_name LIKE '%.jpg' OR file_name LIKE '%.bmp' OR file_name LIKE '%.jpeg')
+		WHERE (file_name LIKE '%.jpg' OR file_name LIKE '%.bmp' OR file_name LIKE '%.jpeg' OR file_name LIKE '%.png')
 			AND id_rapporto = report_id AND anno_rapporto = report_year;
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
