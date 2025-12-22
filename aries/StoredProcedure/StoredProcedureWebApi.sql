@@ -278,7 +278,8 @@ BEGIN
 		km_sede, 
 		tempo_strada,
 		longitudine,
-		latitudine
+		latitudine,
+		destinazione_cliente.sede_principale
 	FROM destinazione_cliente  
 		LEFT JOIN comune ON
 			destinazione_cliente.comune = id_comune
@@ -309,7 +310,8 @@ BEGIN
 		km_sede, 
 		tempo_strada,
 		longitudine,
-		latitudine
+		latitudine,
+		destinazione_cliente.sede_principale
 	FROM destinazione_cliente  
 		LEFT JOIN comune ON
 			destinazione_cliente.comune = id_comune
@@ -340,7 +342,8 @@ BEGIN
 		km_sede, 
 		tempo_strada,
 		longitudine,
-		latitudine
+		latitudine,
+		destinazione_cliente.sede_principale
 	FROM destinazione_cliente  
 		LEFT JOIN comune ON
 			destinazione_cliente.comune = id_comune
@@ -368,7 +371,8 @@ BEGIN
 		km_sede, 
 		tempo_strada,
 		longitudine,
-		latitudine
+		latitudine,
+		destinazione_cliente.sede_principale
 	FROM impianto
 		INNER JOIN destinazione_cliente ON destinazione_cliente.id_cliente = impianto.id_cliente
 			AND destinazione_cliente.id_destinazione = impianto.destinazione
@@ -4967,11 +4971,67 @@ BEGIN
 		`costo_materiale`,
 		`prezzo_materiale`,
 		`costo_totale`,
-		`prezzo_totale`
+		`prezzo_totale`,
+		promemoria_inviato,
+		data_invio_promemoria
 	FROM resoconto
 		INNER JOIN resoconto_totali ON resoconto.id_resoconto = resoconto_totali.id_resoconto AND resoconto.anno = resoconto_totali.anno
 		INNER JOIN stato_resoconto ON resoconto.stato = stato_resoconto.id_stato
 		INNER JOIN tipo_resoconto ON resoconto.tipo_resoconto = tipo_resoconto.id_tipo;
+END//
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_apiReportGroupGetToRemind;
+DELIMITER //
+CREATE  PROCEDURE `sp_apiReportGroupGetToRemind`(
+	IN reminder_days INT(11)
+)
+BEGIN
+	SELECT 
+		resoconto.`id_resoconto`,
+		resoconto.`anno`,
+		`data`,
+		resoconto.`Descrizione`,
+		`Numero_ordine`,
+		`Id_cliente`,
+		stato_resoconto.Id_stato AS id_stato_resoconto,
+		stato_resoconto.nome AS stato_resoconto,
+		`Nota`,
+		`fattura`,
+		`anno_fattura`,
+		`id_utente`,
+		tipo_resoconto.id_tipo AS id_tipo_resoconto,
+		tipo_resoconto.nome AS tipo_resoconto,
+		IFNULL(inviato, 0) AS inviato,
+		`nota_fine`,
+		IFNULL(stm, 0) as stm,
+		`fat_SpeseRap`,
+		`prezzo_manutenzione`,
+		`resoconto_totali`.costo_manutenzione,
+		`costo_diritto_chiamata`,
+		`prezzo_diritto_chiamata`,
+		`costo_lavoro`,
+		`prezzo_lavoro`,
+		`costo_viaggio`,
+		`prezzo_viaggio`,
+		`costo_materiale`,
+		`prezzo_materiale`,
+		`costo_totale`,
+		`prezzo_totale`,
+		promemoria_inviato,
+		data_invio_promemoria
+	FROM resoconto
+		INNER JOIN resoconto_totali ON resoconto.id_resoconto = resoconto_totali.id_resoconto AND resoconto.anno = resoconto_totali.anno
+		INNER JOIN stato_resoconto ON resoconto.stato = stato_resoconto.id_stato
+		INNER JOIN tipo_resoconto ON resoconto.tipo_resoconto = tipo_resoconto.id_tipo
+		INNER JOIN (
+			SELECT CAST(id_documento AS UNSIGNED) AS id_resoconto, CAST(anno_documento AS UNSIGNED) AS anno_resoconto
+			FROM mail
+			WHERE tipo_documento = 'reso' AND id_documento IS NOT NULL AND anno_documento IS NOT NULL AND DATE(DATA_invio) = DATE_SUB(CURRENT_DATE, INTERVAL reminder_days DAY)
+		) AS tmp_reso_email ON tmp_reso_email.id_resoconto = resoconto.id_resoconto AND tmp_reso_email.anno_resoconto = resoconto.anno
+		
+	WHERE resoconto.inviato = 1 AND resoconto.promemoria_inviato = 0 AND resoconto.stato IN (1, 3);
 END//
 DELIMITER ;
 
