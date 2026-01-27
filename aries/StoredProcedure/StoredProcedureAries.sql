@@ -12996,8 +12996,9 @@ BEGIN
 	      quantita,       
 	      posizione,      
 	      id_rapporto,       
-	      anno_rapporto       
-	
+	      anno_rapporto,
+		  prezzo,
+		  id_nota
 	FROM rapporto_mobile_materiale       
 	WHERE Id_rapporto = report_id AND anno_rapporto = report_year;
 
@@ -13650,6 +13651,7 @@ BEGIN
 	SELECT 
 		Id_rapporto,
 		Id_materiale,
+		id_nota,
 		anno,
 		IFNULL(quantità, 0) quantità,
 		IFNULL(Prezzo, 0) Prezzo,
