@@ -16903,6 +16903,28 @@ END; //
 DELIMITER ;
 
 
+-- Dump della struttura di procedura emmebi.sp_ariesDdtSetInvoiceData
+DROP PROCEDURE IF EXISTS sp_ariesDdtSetInvoiceData;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesDdtSetInvoiceData`(
+	IN ddt_id INT(11),
+	IN ddt_year INT(11), 
+	IN invoice_id INT(11),
+	IN invoice_year INT(11), 
+	OUT result  TINYINT
+)
+BEGIN
+	SET result = 1; 
+
+	UPDATE ddt 
+	SET	
+		Fattura = invoice_id,
+		Anno_fattura = invoice_year
+	WHERE id_ddt = ddt_id AND anno = ddt_year;		
+END//
+DELIMITER ;
+
+
 DROP PROCEDURE IF EXISTS sp_ariesCertificateImportedGet;
 DELIMITER //
 CREATE PROCEDURE sp_ariesCertificateImportedGet
@@ -17950,6 +17972,29 @@ BEGIN
 	WHERE id_resoconto = enter_id
 		AND anno = enter_year;
 	
+END//
+DELIMITER ;
+
+
+
+-- Dump della struttura di procedura emmebi.sp_ariesReportGroupSetInvoiceData
+DROP PROCEDURE IF EXISTS sp_ariesReportGroupSetInvoiceData;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesReportGroupSetInvoiceData`(
+	IN report_group_id INT(11),
+	IN report_group_year INT(11), 
+	IN invoice_id INT(11),
+	IN invoice_year INT(11), 
+	OUT result  TINYINT
+)
+BEGIN
+	SET result = 1; 
+
+	UPDATE resoconto 
+	SET	
+		Fattura = invoice_id,
+		Anno_fattura = invoice_year
+	WHERE id_resoconto = report_group_id AND anno = report_group_year;		
 END//
 DELIMITER ;
 
@@ -20793,6 +20838,14 @@ BEGIN
 		WHERE Id_operazione_kit = kit_operation_id;
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		ROLLBACK;
+		RESIGNAL;
+	END;
+
+		
+	START TRANSACTION;
 	IF kit_source_id = 1 THEN -- WE WANT TO UNSCALE ONLY FOR MANUAL OPERATION
 		OPEN V_curA;
 		loopA: LOOP
@@ -20806,6 +20859,10 @@ BEGIN
 		END LOOP;
 		CLOSE V_curA;
 	END IF;
+	
+	
+	COMMIT; 
+
 END $$
 DELIMITER ; 
 
@@ -20829,6 +20886,16 @@ BEGIN
 	DECLARE product_expiration_months INT;
 	DECLARE product_warranty_months INT;
 	DECLARE customer_type_id INT;
+	
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		ROLLBACK;
+		RESIGNAL;
+	END;
+		
+
+	
+	START TRANSACTION;
 
 	-- Get ddt informations such as system id, customer type, etc
 	SELECT data_documento,
@@ -20899,7 +20966,8 @@ BEGIN
 
 		END WHILE;
 	END IF;		
-
+	
+	COMMIT;
 END $$
 DELIMITER ;
 
@@ -20912,6 +20980,14 @@ CREATE  PROCEDURE `sp_ariesSystemsDdtProductDelete`(
 	IN tab_id INT(11)
 )
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+	BEGIN
+		ROLLBACK;
+		RESIGNAL;
+	END;
+		
+	START TRANSACTION;
+
 	DELETE 	impianto_componenti 
 	FROM 		impianto_componenti 
 				INNER JOIN impianto_componenti_ddt ON
@@ -20927,6 +21003,8 @@ BEGIN
 	DELETE FROM impianto_componenti_ddt 
 	WHERE id_ddt=ddt_id and anno=ddt_year and id_tab=tab_id;
 
+	
+	COMMIT;
 END $$
 DELIMITER ;
 

@@ -237,12 +237,12 @@ BEGIN
 		IF(`Iva` = 0, "", CONCAT(Iva, "")) Iva,
 		IF(`Totale_prezzo` = 0, "", CONCAT(Totale_prezzo, "")) Totale_prezzo,
 		Utente_inserimento AS Id_utente,
-		CONCAT(CONCAT(dc.indirizzo,' n.', IFNULL(dc.numero_civico, ''), ' ',IFNULL(dc.altro, '')),' - ',concat(IF(f.nome IS NOT NULL AND f.nome <> '', concat(f.nome,' di '), ''), c.nome,' (',c.provincia,')')) AS 'Indirizzo_impianto'
+		IFNULL(CONCAT(CONCAT(dc.indirizzo,' n.', IFNULL(dc.numero_civico, ''), ' ',IFNULL(dc.altro, '')),' - ',concat(IF(f.nome IS NOT NULL AND f.nome <> '', concat(f.nome,' di '), ''), c.nome,' (',c.provincia,')')), rapporto_mobile_collaudo.indirizzo)  AS 'Indirizzo_impianto'
 	FROM rapporto_mobile_collaudo 
 	LEFT JOIN impianto ON impianto.id_impianto = rapporto_mobile_collaudo.id_impianto
-		INNER JOIN destinazione_cliente AS dc ON dc.id_cliente = rapporto_mobile_collaudo.id_cliente
+		LEFT JOIN destinazione_cliente AS dc ON dc.id_cliente = rapporto_mobile_collaudo.id_cliente
 			AND impianto.destinazione = dc.Id_destinazione
-		INNER JOIN comune AS c ON c.id_comune=dc.Comune
+		LEFT JOIN comune AS c ON c.id_comune=dc.Comune
 		LEFT JOIN frazione AS f ON f.id_frazione=dc.frazione
 	WHERE Inviato = 0 AND rapporto_mobile_collaudo.timestamp_invio < DATE_SUB(NOW(), INTERVAL 1 MINUTE);   
 	
