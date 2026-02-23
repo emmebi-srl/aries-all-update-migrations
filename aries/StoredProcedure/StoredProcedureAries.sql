@@ -20822,6 +20822,7 @@ BEGIN
 END $$
 DELIMITER ;
 
+
 DROP PROCEDURE IF EXISTS sp_ariesDepotOperationsUnscaleKitProducts;
 DELIMITER $$
 CREATE PROCEDURE sp_ariesDepotOperationsUnscaleKitProducts
@@ -20838,14 +20839,6 @@ BEGIN
 		WHERE Id_operazione_kit = kit_operation_id;
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION
-	BEGIN
-		ROLLBACK;
-		RESIGNAL;
-	END;
-
-		
-	START TRANSACTION;
 	IF kit_source_id = 1 THEN -- WE WANT TO UNSCALE ONLY FOR MANUAL OPERATION
 		OPEN V_curA;
 		loopA: LOOP
@@ -20859,10 +20852,6 @@ BEGIN
 		END LOOP;
 		CLOSE V_curA;
 	END IF;
-	
-	
-	COMMIT; 
-
 END $$
 DELIMITER ; 
 
@@ -20886,16 +20875,6 @@ BEGIN
 	DECLARE product_expiration_months INT;
 	DECLARE product_warranty_months INT;
 	DECLARE customer_type_id INT;
-	
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION
-	BEGIN
-		ROLLBACK;
-		RESIGNAL;
-	END;
-		
-
-	
-	START TRANSACTION;
 
 	-- Get ddt informations such as system id, customer type, etc
 	SELECT data_documento,
@@ -20966,8 +20945,7 @@ BEGIN
 
 		END WHILE;
 	END IF;		
-	
-	COMMIT;
+
 END $$
 DELIMITER ;
 
@@ -20980,14 +20958,6 @@ CREATE  PROCEDURE `sp_ariesSystemsDdtProductDelete`(
 	IN tab_id INT(11)
 )
 BEGIN
-	DECLARE EXIT HANDLER FOR SQLEXCEPTION
-	BEGIN
-		ROLLBACK;
-		RESIGNAL;
-	END;
-		
-	START TRANSACTION;
-
 	DELETE 	impianto_componenti 
 	FROM 		impianto_componenti 
 				INNER JOIN impianto_componenti_ddt ON
@@ -21003,11 +20973,8 @@ BEGIN
 	DELETE FROM impianto_componenti_ddt 
 	WHERE id_ddt=ddt_id and anno=ddt_year and id_tab=tab_id;
 
-	
-	COMMIT;
 END $$
 DELIMITER ;
-
 
 DROP PROCEDURE IF EXISTS sp_ariesDepotMovementInOutComing;
 DELIMITER $$
