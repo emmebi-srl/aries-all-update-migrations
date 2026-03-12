@@ -14606,6 +14606,36 @@ END//
 DELIMITER ;
 
 
+
+-- Dump della struttura di procedura emmebi.sp_ariesSystemPeriodicMonitoringGetBySystemAndYear
+DROP PROCEDURE IF EXISTS sp_ariesSystemPeriodicMonitoringGetBySystemAndYear;
+DELIMITER //
+CREATE  PROCEDURE `sp_ariesSystemPeriodicMonitoringGetBySystemAndYear`(
+	system_id INT,
+	subscription_year INT
+)
+BEGIN
+	SELECT Id,
+		impianto AS Id_impianto,
+		anno, 
+		abbonamenti AS id_abbonamento, 
+		mese, 
+		Eseguito_il, 
+		IFNULL(Id_rapp, 0) AS id_rapporto, 
+		IFNULL(anno_rapp, 0) AS anno_rapporto, 
+		da_eseguire,
+		IFNULL(prezzo, 0 ) AS prezzo, 
+		IFNULL(nota_mese, "") AS note,
+		IFNULL(modifica_mese, 0) AS modifica_mese,
+		IFNULL(modifica_anno, 0) AS modifica_anno
+	FROM Impianto_abbonamenti_mesi
+	WHERE impianto = system_id AND anno = subscription_year; 
+
+END//
+DELIMITER ;
+
+
+
 -- Dump della struttura di procedura emmebi.sp_ariesSystemPeriodicMonitoringGetNextToExecutedForEachSystem
 DROP PROCEDURE IF EXISTS sp_ariesSystemPeriodicMonitoringGetNextToExecutedForEachSystem;
 DELIMITER //
