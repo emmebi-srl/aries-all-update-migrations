@@ -5,7 +5,7 @@ CREATE TABLE `resource_access_code` (
 	`hash_codice` VARCHAR(255) NOT NULL COLLATE 'latin1_swedish_ci',
 	`attivo` BIT(1) NOT NULL DEFAULT b'1',
 	`data_scadenza` DATETIME NULL DEFAULT NULL,
-	`data_ins` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`data_ins` DATETIME NOT NULL,
 	`data_mod` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id`),
 	UNIQUE INDEX `UX_resource_access_code_hash_codice` (`hash_codice`) USING BTREE
