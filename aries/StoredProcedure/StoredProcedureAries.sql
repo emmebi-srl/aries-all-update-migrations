@@ -5368,6 +5368,15 @@ BEGIN
 
 		END IF;
 		
+				
+		
+		if DocumentType = 'campagna_aries_mail' AND (DocumentId IS NOT NULL) THEN
+			UPDATE campagna_aries_mail
+			SET inviato = 1,
+				data_invio = NOW()
+			WHERE id = DocumentId; 
+
+		END IF;
 		
 	
 	END IF; 		

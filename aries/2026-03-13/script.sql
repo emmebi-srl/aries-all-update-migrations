@@ -16,4 +16,7 @@ ENGINE=InnoDB;
 ALTER TABLE `campagna_aries_mail`
 	ADD COLUMN `letto` BIT(1) NOT NULL DEFAULT b'0' AFTER `processato`,
 	ADD COLUMN `interagito` BIT(1) NOT NULL DEFAULT b'0' AFTER `letto`,
-	ADD COLUMN `campagna_aries_mail` VARCHAR(150) NULL DEFAULT NULL COLLATE 'latin1_swedish_ci' AFTER `interagito`;
+	ADD COLUMN `esito` VARCHAR(150) NULL DEFAULT NULL COLLATE 'latin1_swedish_ci' AFTER `interagito`;
+
+ALTER TABLE `campagna_aries_mail`
+	DROP COLUMN `esito`;
