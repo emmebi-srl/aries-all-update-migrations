@@ -31,7 +31,7 @@ VALUES (UUID(), 'VISIONATA', 0, '$FFFFE0', NOW());
 
 
 INSERT INTO campagna_aries_mail_stato (uuid, nome, finale, colore, data_ins)
-VALUES (UUID(), 'APERTURA PAGINA', 0, '	$E6D8AD', NOW());
+VALUES (UUID(), 'APERTURA PAGINA', 0, '$E6D8AD', NOW());
 
 
 INSERT INTO campagna_aries_mail_stato (uuid, nome, finale, colore, data_ins)
