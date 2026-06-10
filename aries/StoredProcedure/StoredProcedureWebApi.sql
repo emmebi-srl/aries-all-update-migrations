@@ -5105,7 +5105,7 @@ BEGIN
 		stato_promemoria_cliente.rif_applicazioni as rif_stato_promemoria
 	FROM impianto_componenti
 		INNER JOIN stato_promemoria_cliente ON impianto_componenti.id_stato_promemoria = stato_promemoria_cliente.id
-	WHERE scadenza BETWEEN from_date AND to_date
+	WHERE Data_scadenza BETWEEN from_date AND to_date
 	GROUP BY id_impianto, id_articolo, Data_scadenza;
 END; //
 DELIMITER ;
