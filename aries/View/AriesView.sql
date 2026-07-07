@@ -1522,8 +1522,8 @@ CREATE VIEW vw_supplier_invoices_details AS
 	
 
 
-DROP VIEW IF EXISTS vw_supplier_invoices_payments_details;
-CREATE VIEW vw_supplier_invoices_payments_details AS	
+	DROP VIEW IF EXISTS vw_supplier_invoices_payments_details;
+	CREATE VIEW vw_supplier_invoices_payments_details AS
 	SELECT 
 		fornfattura.id_fattura AS "id_fattura",
 		fornfattura.anno AS "anno", 
@@ -1544,6 +1544,11 @@ CREATE VIEW vw_supplier_invoices_payments_details AS
 			((bollo/100)*(100+if(iva_bollo=0, 0, (SELECT aliquota FROM tipo_iva WHERE id_iva=aliquota_iva_BTI)))) + 
 			((incasso/100)*(100+if(iva_incasso=0, 0, (SELECT aliquota FROM tipo_iva WHERE id_iva=aliquota_iva_BTI))))
 		)) AS "importo_fattura",
+		(SELECT IF(SUM(importo) IS NULL,0, SUM(importo))
+			FROM fornfattura_acconto
+			WHERE fornfattura_acconto.id_fattura=fornfattura.id_fattura
+				AND fornfattura_acconto.anno=fornfattura.anno
+				AND fornfattura_acconto.id_pagamento= DATE_FORMAT(LAST_DAY(fornfattura.DATA + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY,'%Y%m%d')) as "totale_acconti",
 		LAST_DAY(fornfattura.data + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY AS "data_pagamento_prevista",
 		fornfattura_pagamenti.`data` AS "data_pagamento_effettiva",
 		if(fornfattura_pagamenti.`data` IS NOT NULL,"1","0") AS pagato, 
@@ -1556,7 +1561,6 @@ CREATE VIEW vw_supplier_invoices_payments_details AS
 		LEFT JOIN fornfattura_pagamenti ON fornfattura.id_fattura = fornfattura_pagamenti.id_fattura AND fornfattura.anno = fornfattura_pagamenti.anno AND DATE_FORMAT(LAST_DAY(fornfattura.data + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY, "%Y%m%d")=id_pagamento
 		LEFT JOIN tipo_pagamento AS tipopag ON fornfattura_pagamenti.tipo_pagamento = tipopag.id_tipo AND id_pagamento = DATE_FORMAT(LAST_DAY(fornfattura.data + INTERVAL g.mesi MONTH)+ INTERVAL g.giorni DAY, '%Y%m%d')
 	GROUP BY fornfattura.fattura_fornitore, data_pagamento_prevista;
-
 
 
 DROP VIEW IF EXISTS vw_invoices_payments_details;
