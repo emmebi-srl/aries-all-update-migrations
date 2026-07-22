@@ -1027,22 +1027,43 @@ DROP PROCEDURE IF EXISTS sp_apiReportGet;
 DELIMITER //
 CREATE PROCEDURE sp_apiReportGet ()
 BEGIN
-	SELECT Id_rapporto,
-		anno, 
-		Id_impianto, 
-		id_destinazione, 
-		id_cliente, 
-		Stato as id_stato,
+	SELECT rapporto.Id_rapporto,
+		rapporto.anno,
+		rapporto.Id_impianto,
+		rapporto.id_destinazione,
+		rapporto.id_cliente,
+		rapporto.Stato AS id_stato,
 		stato_rapporto.nome as stato,
-		CAST(Data_esecuzione AS DATETIME) Data_esecuzione, 
-		CONCAT(IFNULL(relazione, ""), "\nNOTE IN EVIDENZA: ", IFNULL(note_generali, ""),
-			"\nAPPUNTI: ", IFNULL(appunti, "")) relazione,
-		IFNULL(note_generali, "") note_generali,
+		CAST(rapporto.Data_esecuzione AS DATETIME) AS Data_esecuzione,
+		CONCAT(IFNULL(rapporto.relazione, ""), "\nNOTE IN EVIDENZA: ", IFNULL(rapporto.note_generali, ""),
+			"\nAPPUNTI: ", IFNULL(rapporto.appunti, "")) AS relazione,
+		IFNULL(rapporto.note_generali, "") AS note_generali,
 		stato_rapporto.fatturato,
-		rapporto.numero_allegati
+		rapporto.numero_allegati,
+		rapporto.numero,
+		rapporto.richiesto,
+		rapporto.mansione,
+		rapporto.responsabile,
+		rapporto.tipo_intervento,
+		rapporto.diritto_chiamata,
+		rapporto.tipo_diritto_chiamata,
+		rapporto.terminato,
+		rapporto.funzionante,
+		rapporto.abbonamento,
+		rapporto.totale,
+		rapporto.costo,
+		rapporto.cost_lav,
+		rapporto.prez_lav,
+		rapporto.appunti,
+		rapporto.Id_tipo_sorgente,
+		rapporto.Id_tipo_rapporto,
+		rapporto.data,
+		rapporto.scan
 	FROM  rapporto
 		INNER JOIN stato_rapporto ON stato_rapporto.Id_stato = rapporto.stato
-	WHERE id_impianto IS NOT NULL;
+	WHERE rapporto.id_impianto IS NOT NULL
+	ORDER BY anno DESC, id_rapporto DESC
+	LIMIT 10000;
 END; //
 DELIMITER ;
 
