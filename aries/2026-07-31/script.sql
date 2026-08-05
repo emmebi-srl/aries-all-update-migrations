@@ -324,7 +324,7 @@ BEGIN
 			'http://192.168.12.239:18890/v1/responses',
 			'openclaw/gestore-rapporti',
 			'gestore-rapporti',
-			'{"schema_version":"1.1","require_request_id":true,"retry_base_seconds":5,"request_options":{"stream":false}}',
+			'{"schema_version":"2.0","require_request_id":true,"retry_base_seconds":5,"request_options":{"stream":false}}',
 			'{}',
 			'["amministrazione@emmebi.tv.it","info@emmebi.tv.it","alex.gola93@gmail.com"]',
 			300,
