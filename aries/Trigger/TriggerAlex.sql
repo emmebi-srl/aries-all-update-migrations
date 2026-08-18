@@ -974,7 +974,7 @@ CREATE TRIGGER `trg_afterReportGroupInsert` AFTER INSERT ON `resoconto` FOR EACH
 BEGIN	
 	INSERT INTO  resoconto_totali (id_resoconto, anno, prezzo_manutenzione, costo_manutenzione, costo_diritto_chiamata, prezzo_diritto_chiamata, costo_lavoro, prezzo_lavoro,
 		costo_viaggio, prezzo_viaggio, costo_materiale, prezzo_materiale, costo_totale, prezzo_totale, costo_extra, prezzo_extra)
-	VALUES (NEW.id_resoconto, NEW.anno, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NEW.prezzo_extra, NEW.costo_extra);
+	VALUES (NEW.id_resoconto, NEW.anno, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NEW.costo_extra, NEW.prezzo_extra);
 END
 //
 delimiter ;
