@@ -16700,7 +16700,7 @@ BEGIN
 		AND IF(doc_year IS NULL, true, resoconto.anno) = IFNULL(doc_year, true) 
 		AND IF(customer_id IS NULL, true, resoconto.id_cliente) = IFNULL(customer_id, true) 
 		AND resoconto.descrizione LIKE CONCAT('%', IFNULL(description, ''), '%')
-		AND resoconto.nota LIKE CONCAT('%', IFNULL(notes, ''), '%') 
+		AND IFNULL(resoconto.nota, '') LIKE CONCAT('%', IFNULL(notes, ''), '%')
 		AND IF(status IS NULL, true, resoconto.stato) = IFNULL(status, true) 
 		AND IF(doc_date IS NULL, true, resoconto.data) = IFNULL(doc_date, true) 
 		AND IF(doc_type IS NULL, true, resoconto.tipo_resoconto) = IFNULL(doc_type, true) 
