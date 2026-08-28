@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS `richiesta_campagna_abbonamento` (
     `id_campagna_aries` INT(11) NULL DEFAULT NULL,
     `id_campagna_aries_mail` INT(11) NULL DEFAULT NULL,
     `data_notifica` DATETIME NULL DEFAULT NULL,
-    `data_ins` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `data_ins` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_richiesta_campagna_abbonamento_uuid` (`uuid`),
     UNIQUE KEY `uq_richiesta_campagna_abbonamento_sorgente`
