@@ -32106,6 +32106,7 @@ BEGIN
 	DECLARE right_of_call_price DECIMAL(11,2);
 	DECLARE is_under_warranty BIT(1);
 	DECLARE is_price_predefined BIT(1);
+	DECLARE materials_are_included BIT(1);
 
 	SELECT costo_h, straordinario_c, costo_km, prezzo
 		INTO default_hourly_cost, default_hourly_cost_extra, default_km_cost, default_hourly_price
@@ -32114,6 +32115,13 @@ BEGIN
 	LIMIT 1;
 
 	SELECT fnc_reportIsRightOfCallChargeable(report_id, report_year) INTO right_of_call_chargeable;
+
+	-- In the legacy subscription model, materiali_fatt = 1 means that materials are included.
+	SELECT IF(IFNULL(abbonamento.materiali_fatt, 0) = 1, b'1', b'0')
+		INTO materials_are_included
+	FROM rapporto
+		LEFT JOIN abbonamento ON rapporto.abbonamento = abbonamento.id_abbonamento
+	WHERE rapporto.id_rapporto = report_id AND rapporto.anno = report_year;
 
 	IF right_of_call_chargeable THEN
 		SELECT
@@ -32177,11 +32185,20 @@ BEGIN
 	SET total_trip_cost = IFNULL(total_trip_cost, 0);
 	SET total_trip_price = IFNULL(total_trip_price, 0);
 	SET total_products_cost = IFNULL(total_products_cost, 0);
-	SET total_products_price = IFNULL(total_products_price, 0);
+	SET total_products_price = IF(materials_are_included, 0, IFNULL(total_products_price, 0));
 	SET right_of_call_cost = IFNULL(right_of_call_cost, 0);
 	SET right_of_call_price = IFNULL(right_of_call_price, 0);
 	SET total_maintenance_price = IFNULL(total_maintenance_price, 0);
 	SET total_maintenance_cost = IFNULL(total_maintenance_cost, 0);
+
+	-- A fixed maintenance price absorbs work, trip and call-right prices.
+	-- Their real costs remain available for profitability reporting.
+	IF total_maintenance_price > 0 THEN
+		SET total_work_price = 0;
+		SET total_trip_price = 0;
+		SET right_of_call_price = 0;
+	END IF;
+
 	SET total_cost = total_products_cost  + IF(total_maintenance_cost > 0 AND total_work_cost + total_trip_cost = 0, total_maintenance_cost, total_work_cost + total_trip_cost + right_of_call_cost);
 	SET total_price = total_products_price + IF(total_maintenance_price > 0, total_maintenance_price, total_trip_price + total_work_price  + right_of_call_price);
 
