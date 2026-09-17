@@ -5226,6 +5226,7 @@ BEGIN
 	DECLARE DocumentYear VARCHAR(10); 
 	DECLARE DocumentReview VARCHAR(10); 
 	DECLARE StatusId INT(11);
+	DECLARE EmailSendDate DATETIME;
 	DECLARE SystemId INT(11); 
 	DECLARE ReminderNumber TINYINT;
 	
@@ -5233,13 +5234,15 @@ BEGIN
 		mail.Id_documento,
 		mail.anno_documento, 
 		mail.Revisione_documento, 
-		mail.Id_stato 
+		mail.Id_stato,
+		mail.Data_invio
 	INTO 
 		DocumentType, 
 		DocumentId, 
 		DocumentYear, 
 		DocumentReview, 
-		StatusId
+		StatusId,
+		EmailSendDate
 	FROM mail
 	WHERE Id = email_id; 
 	
@@ -5260,7 +5263,13 @@ BEGIN
 		
 		
 		
-		IF DocumentType = 'sollecito_preventivo' AND (DocumentId IS NOT NULL) THEN
+		IF DocumentType = 'sollecito_preventivo'
+			AND (DocumentId IS NOT NULL)
+			AND NOT EXISTS (
+				SELECT 1
+				FROM campagna_aries_mail
+				WHERE id_mail = email_id
+			) THEN
 			
 			UPDATE preventivo 
 			SET secondo_sollecito = NOW()
@@ -5308,7 +5317,8 @@ BEGIN
 		
 		IF DocumentType = 'reso' THEN
 			UPDATE resoconto 
-			SET inviato=1 
+			SET inviato = 1,
+				data_invio = COALESCE(EmailSendDate, NOW())
 			WHERE id_resoconto = DocumentId
 				AND anno = DocumentYear;
 		END IF;
@@ -5368,17 +5378,6 @@ BEGIN
 
 		END IF;
 		
-				
-		
-		if DocumentType = 'campagna_aries_mail' AND (DocumentId IS NOT NULL) THEN
-			UPDATE campagna_aries_mail
-			SET inviato = 1,
-				data_invio = NOW()
-			WHERE id = DocumentId; 
-
-		END IF;
-		
-	
 	END IF; 		
 
 		
@@ -21209,6 +21208,8 @@ CREATE  PROCEDURE `sp_ariesCustomerReminderConfigUpdate`(
 	IN sms_text TEXT,
 	IN sms_enabled BIT(1),
 	IN email_enabled BIT(1),
+	IN delivery_mode TINYINT,
+	IN campaign_id INT(11),
 	OUT result INTEGER
 )
 BEGIN
@@ -21221,7 +21222,9 @@ BEGIN
 		`Corpo_email` = email_body,
 		Testo_sms = sms_text,
 		abilita_sms = sms_enabled,
-		abilita_email = email_enabled
+		abilita_email = email_enabled,
+		modalita_consegna = delivery_mode,
+		id_campagna_aries = campaign_id
 	WHERE Id = service_id;
 	
 	SET result = 1; 
@@ -21245,6 +21248,8 @@ BEGIN
 		Testo_sms,
 		abilita_sms,
 		abilita_email,
+		modalita_consegna,
+		id_campagna_aries,
 		Data_ultima_esecuzione,
 		`Data_mod`,
 		`Utente_mod`

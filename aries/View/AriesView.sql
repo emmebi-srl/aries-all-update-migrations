@@ -1599,3 +1599,60 @@ CREATE VIEW vw_invoices_payments_details AS
 		LEFT JOIN tipo_pagamento AS tipopag ON fattura_pagamenti.tipo_pagamento = tipopag.id_tipo
 	GROUP BY id_fattura, fattura.anno, data_pagamento_prevista;
 
+
+-- Una riga per impianto e articolo centrale/registratore TVCC.
+-- Componenti presenti: stesso criterio di vw_systems_components.
+-- Classificazione euristica sulla descrizione: include i kit descritti come
+-- contenenti centrali/registratori; esclude schede, accessori e software.
+CREATE OR REPLACE VIEW `vw_system_central_data` AS
+SELECT
+    ic.`Id_impianto` AS `id_impianto`,
+    i.`Descrizione` AS `descrizione_impianto`,
+    i.`Tipo_impianto` AS `id_tipo_impianto`,
+    ti.`nome` AS `tipo_impianto`,
+    a.`Codice_articolo` AS `id_articolo`,
+    a.`Desc_brev` AS `desc_brev`,
+    a.`Codice_fornitore` AS `codice_fornitore`,
+    a.`Marca` AS `id_marca`,
+    m.`Nome` AS `marca`,
+    a.`Categoria` AS `id_categoria_merceologica`,
+    cm.`Nome` AS `categoria_merceologica`,
+    a.`Sottocategoria` AS `id_sottocategoria`,
+    sc.`Nome` AS `sottocategoria`,
+    COUNT(*) AS `quantita`
+FROM `impianto_componenti` AS ic
+INNER JOIN `articolo` AS a
+    ON a.`Codice_articolo` = ic.`Id_articolo`
+INNER JOIN `impianto` AS i
+    ON i.`Id_impianto` = ic.`Id_impianto`
+LEFT JOIN `tipo_impianto` AS ti
+    ON ti.`id_tipo` = i.`Tipo_impianto`
+LEFT JOIN `marca` AS m
+    ON m.`Id_marca` = a.`Marca`
+LEFT JOIN `categoria_merciologica` AS cm
+    ON cm.`Id_categoria` = a.`Categoria`
+LEFT JOIN `sottocategoria` AS sc
+    ON sc.`id_sottocategoria` = a.`Sottocategoria`
+WHERE ic.`data_dismesso` IS NULL
+    AND UPPER(COALESCE(a.`Desc_brev`, '')) REGEXP
+        '(^|[^A-Z0-9])(CENTRALE|CENTRALI|CENTRALINA|CENTRALINE|DVR|NVR|XVR|HCVR|HDVR|VIDEOREGISTRATORE|VIDEOREGISTRATORI|VIDEO[[:space:]]+RECORDER)([^A-Z0-9]|$)'
+    AND UPPER(COALESCE(a.`Desc_brev`, '')) NOT REGEXP
+        '^[[:space:]]*(SCHEDA|SCHEDE|MODULO|ESPANSIONE|TASTIERA|ALIMENTATORE|BATTERIA|TRASFORMATORE|CONTENITORE|SCATOLA|CASSETTA|CHASSIS|ARMADIO|LICENZA|SOFTWARE|APP|INTERFACCIA|TRASMETTITORE|RX|SINTETIZZATORE)([^A-Z0-9]|$)'
+    AND UPPER(COALESCE(a.`Desc_brev`, '')) NOT REGEXP
+        '^[[:space:]]*MONITOR.*[^A-Z0-9]PER([^A-Z0-9]|$)'
+    AND UPPER(COALESCE(a.`Desc_brev`, '')) NOT REGEXP
+        '^[[:space:]]*CENTRALINA[[:space:]]+(DI[[:space:]]+)?CONTROLLO[[:space:]]+CAMERA([^A-Z0-9]|$)'
+GROUP BY
+    ic.`Id_impianto`,
+    i.`Descrizione`,
+    i.`Tipo_impianto`,
+    ti.`nome`,
+    a.`Codice_articolo`,
+    a.`Desc_brev`,
+    a.`Codice_fornitore`,
+    a.`Marca`,
+    m.`Nome`,
+    a.`Categoria`,
+    cm.`Nome`,
+    a.`Sottocategoria`,
+    sc.`Nome`;

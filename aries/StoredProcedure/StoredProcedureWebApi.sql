@@ -4758,6 +4758,8 @@ BEGIN
 		Testo_sms,
 		abilita_sms,
 		abilita_email,
+		modalita_consegna,
+		id_campagna_aries,
 		Data_ultima_esecuzione,
 		`Data_mod`,
 		`Utente_mod`
@@ -4978,23 +4980,25 @@ BEGIN
 		tipo_resoconto.id_tipo AS id_tipo_resoconto,
 		tipo_resoconto.nome AS tipo_resoconto,
 		IFNULL(inviato, 0) AS inviato,
+		resoconto.data_invio,
 		`nota_fine`,
 		IFNULL(stm, 0) as stm,
 		`fat_SpeseRap`,
-		`prezzo_manutenzione`,
+		`resoconto_totali`.`prezzo_manutenzione`,
 		`resoconto_totali`.costo_manutenzione,
-		`costo_diritto_chiamata`,
-		`prezzo_diritto_chiamata`,
-		`costo_lavoro`,
-		`prezzo_lavoro`,
-		`costo_viaggio`,
-		`prezzo_viaggio`,
-		`costo_materiale`,
-		`prezzo_materiale`,
-		`costo_totale`,
-		`prezzo_totale`,
+		`resoconto_totali`.`costo_diritto_chiamata`,
+		`resoconto_totali`.`prezzo_diritto_chiamata`,
+		`resoconto_totali`.`costo_lavoro`,
+		`resoconto_totali`.`prezzo_lavoro`,
+		`resoconto_totali`.`costo_viaggio`,
+		`resoconto_totali`.`prezzo_viaggio`,
+		`resoconto_totali`.`costo_materiale`,
+		`resoconto_totali`.`prezzo_materiale`,
+		`resoconto_totali`.`costo_totale`,
+		`resoconto_totali`.`prezzo_totale`,
 		promemoria_inviato,
-		data_invio_promemoria
+		data_invio_promemoria,
+		COALESCE(numero_promemoria_inviati, 0) AS numero_promemoria_inviati
 	FROM resoconto
 		INNER JOIN resoconto_totali ON resoconto.id_resoconto = resoconto_totali.id_resoconto AND resoconto.anno = resoconto_totali.anno
 		INNER JOIN stato_resoconto ON resoconto.stato = stato_resoconto.id_stato
@@ -5006,7 +5010,8 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS sp_apiReportGroupGetToRemind;
 DELIMITER //
 CREATE  PROCEDURE `sp_apiReportGroupGetToRemind`(
-	IN reminder_days INT(11)
+	IN maximum_reminder_count INT(11),
+	IN reminder_window_days INT(11)
 )
 BEGIN
 	SELECT 
@@ -5025,34 +5030,49 @@ BEGIN
 		tipo_resoconto.id_tipo AS id_tipo_resoconto,
 		tipo_resoconto.nome AS tipo_resoconto,
 		IFNULL(inviato, 0) AS inviato,
+		resoconto.data_invio,
 		`nota_fine`,
 		IFNULL(stm, 0) as stm,
 		`fat_SpeseRap`,
-		`prezzo_manutenzione`,
-		`resoconto_totali`.costo_manutenzione,
-		`costo_diritto_chiamata`,
-		`prezzo_diritto_chiamata`,
-		`costo_lavoro`,
-		`prezzo_lavoro`,
-		`costo_viaggio`,
-		`prezzo_viaggio`,
-		`costo_materiale`,
-		`prezzo_materiale`,
-		`costo_totale`,
-		`prezzo_totale`,
+		`resoconto_totali`.`prezzo_manutenzione`,
+		`resoconto_totali`.`costo_manutenzione`,
+		`resoconto_totali`.`costo_diritto_chiamata`,
+		`resoconto_totali`.`prezzo_diritto_chiamata`,
+		`resoconto_totali`.`costo_lavoro`,
+		`resoconto_totali`.`prezzo_lavoro`,
+		`resoconto_totali`.`costo_viaggio`,
+		`resoconto_totali`.`prezzo_viaggio`,
+		`resoconto_totali`.`costo_materiale`,
+		`resoconto_totali`.`prezzo_materiale`,
+		`resoconto_totali`.`costo_totale`,
+		`resoconto_totali`.`prezzo_totale`,
 		promemoria_inviato,
-		data_invio_promemoria
+		data_invio_promemoria,
+		COALESCE(numero_promemoria_inviati, 0) AS numero_promemoria_inviati
 	FROM resoconto
 		INNER JOIN resoconto_totali ON resoconto.id_resoconto = resoconto_totali.id_resoconto AND resoconto.anno = resoconto_totali.anno
 		INNER JOIN stato_resoconto ON resoconto.stato = stato_resoconto.id_stato
 		INNER JOIN tipo_resoconto ON resoconto.tipo_resoconto = tipo_resoconto.id_tipo
-		INNER JOIN (
-			SELECT CAST(id_documento AS UNSIGNED) AS id_resoconto, CAST(anno_documento AS UNSIGNED) AS anno_resoconto
-			FROM mail
-			WHERE tipo_documento = 'reso' AND id_documento IS NOT NULL AND anno_documento IS NOT NULL AND DATE(DATA_invio) = DATE_SUB(CURRENT_DATE, INTERVAL reminder_days DAY)
-		) AS tmp_reso_email ON tmp_reso_email.id_resoconto = resoconto.id_resoconto AND tmp_reso_email.anno_resoconto = resoconto.anno
 		
-	WHERE resoconto.inviato = 1 AND resoconto.promemoria_inviato = 0 AND resoconto.stato IN (1, 3);
+	WHERE resoconto.inviato = 1
+		AND resoconto.data_invio IS NOT NULL
+		AND resoconto.stato NOT IN (2, 3, 5, 6, 7)
+		AND COALESCE(resoconto.numero_promemoria_inviati, 0) < maximum_reminder_count
+		AND CURRENT_DATE BETWEEN
+			DATE(TIMESTAMPADD(
+				MONTH,
+				COALESCE(resoconto.numero_promemoria_inviati, 0) + 1,
+				resoconto.data_invio
+			))
+			AND DATE(TIMESTAMPADD(
+				DAY,
+				reminder_window_days,
+				TIMESTAMPADD(
+					MONTH,
+					COALESCE(resoconto.numero_promemoria_inviati, 0) + 1,
+					resoconto.data_invio
+				)
+			));
 END//
 DELIMITER ;
 
