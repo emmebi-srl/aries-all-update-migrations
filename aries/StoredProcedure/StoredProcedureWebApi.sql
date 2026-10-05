@@ -635,6 +635,7 @@ BEGIN
 		`impianto`.`orario_prog`                       AS `orario_prog`, 
 		checklist_model_impianto.id_checklist,
 		abbonamento.nome as "abbonamento",
+		IFNULL(impianto.costo_manutenzione, 0) AS costo_manutenzione,
 		impianto.id_stato_promemoria_garanzia,
 		stato_promemoria_cliente.rif_applicazioni as rif_stato_promemoria_garanzia
 	FROM impianto
