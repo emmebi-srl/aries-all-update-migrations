@@ -1792,7 +1792,7 @@ DROP PROCEDURE IF EXISTS sp_apiEventSetNotificationStatus;
 DELIMITER $$
 
 CREATE PROCEDURE sp_apiEventSetNotificationStatus(
-IN idArray VARCHAR(1000),
+IN idArray MEDIUMTEXT,
 IN notificationStatus TINYINT)
 BEGIN
 
