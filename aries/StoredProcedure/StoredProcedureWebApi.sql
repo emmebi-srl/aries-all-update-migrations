@@ -335,16 +335,18 @@ BEGIN
 		IFNULL(destinazione_cliente.provincia, "") 'provincia',
 		IFNULL(comune.nome, "") 'comune',
 		IFNULL(frazione.nome, "") 'frazione',
-		IFNULL(indirizzo, "") 'indirizzo', 
-		IFNULL(numero_civico, 0) 'numero_civico', 
-		IFNULL(destinazione_cliente.altro, "") 'altro', 
+		destinazione_cliente.comune 'id_comune',
+		destinazione_cliente.frazione 'id_frazione',
+		IFNULL(indirizzo, "") 'indirizzo',
+		IFNULL(numero_civico, 0) 'numero_civico',
+		IFNULL(destinazione_cliente.altro, "") 'altro',
 		comune.cap,
-		km_sede, 
+		km_sede,
 		tempo_strada,
 		longitudine,
 		latitudine,
 		destinazione_cliente.sede_principale
-	FROM destinazione_cliente  
+	FROM destinazione_cliente
 		LEFT JOIN comune ON
 			destinazione_cliente.comune = id_comune
 		LEFT JOIN frazione ON
