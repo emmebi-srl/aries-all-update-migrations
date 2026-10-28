@@ -1562,11 +1562,11 @@ AFTER INSERT ON `impianto_accettazione_proposta_abbonamento`
 FOR EACH ROW
 BEGIN
 	IF NEW.`id_campagna_aries_mail` IS NOT NULL THEN
-		UPDATE `campagna_aries_mail` `campagnaMail`
-		INNER JOIN `stato_campagna_aries_mail` `statoCampagnaMail`
-			ON `statoCampagnaMail`.`rif_applicazione` = 'positive_outcome'
-		SET `campagnaMail`.`id_stato` = `statoCampagnaMail`.`id`
-		WHERE `campagnaMail`.`id` = NEW.`id_campagna_aries_mail`;
+		UPDATE `campagna_aries_dispatch` `campagnaDispatch`
+		INNER JOIN `stato_campagna_aries_dispatch` `statoCampagnaDispatch`
+			ON `statoCampagnaDispatch`.`rif_applicazione` = 'positive_outcome'
+		SET `campagnaDispatch`.`id_stato` = `statoCampagnaDispatch`.`id`
+		WHERE `campagnaDispatch`.`id` = NEW.`id_campagna_aries_mail`;
 	END IF;
 END$$
 
@@ -1575,8 +1575,11 @@ DELIMITER ;
 
 DROP TRIGGER IF EXISTS `trg_afterMailUpdate`;
 DROP TRIGGER IF EXISTS `trg_beforeCampaignMailUpdate`;
+DROP TRIGGER IF EXISTS `trg_beforeCampaignDispatchUpdate`;
 DELIMITER $$
 
+-- Email opened (tracking pixel): the email channel becomes "read" and the dispatch "viewed",
+-- unless the dispatch has already moved further (landing opened, outcome, ...).
 CREATE TRIGGER `trg_afterMailUpdate`
 AFTER UPDATE ON `mail`
 FOR EACH ROW
@@ -1584,41 +1587,42 @@ BEGIN
 	IF CAST(OLD.`Letto` AS UNSIGNED) <> CAST(NEW.`Letto` AS UNSIGNED)
 		AND CAST(NEW.`Letto` AS UNSIGNED) = 1 THEN
 		UPDATE `campagna_aries_mail` `campagnaMail`
-		INNER JOIN `stato_campagna_aries_mail` `statoCampagnaMail`
-			ON `statoCampagnaMail`.`rif_applicazione` = 'viewed'
+		INNER JOIN `stato_campagna_aries_canale` `statoCanale`
+			ON `statoCanale`.`rif_applicazione` = 'read'
 		SET
-			`campagnaMail`.`id_stato` = `statoCampagnaMail`.`id`
+			`campagnaMail`.`letto` = b'1',
+			`campagnaMail`.`id_stato` = `statoCanale`.`id`
 		WHERE `campagnaMail`.`id_mail` = NEW.`Id`;
+
+		UPDATE `campagna_aries_dispatch` `campagnaDispatch`
+		INNER JOIN `campagna_aries_mail` `campagnaMail`
+			ON `campagnaMail`.`id_campagna_aries_dispatch` = `campagnaDispatch`.`id`
+		INNER JOIN `stato_campagna_aries_dispatch` `statoAttuale`
+			ON `statoAttuale`.`id` = `campagnaDispatch`.`id_stato`
+		INNER JOIN `stato_campagna_aries_dispatch` `statoVisionata`
+			ON `statoVisionata`.`rif_applicazione` = 'viewed'
+		SET `campagnaDispatch`.`id_stato` = `statoVisionata`.`id`
+		WHERE `campagnaMail`.`id_mail` = NEW.`Id`
+			AND `statoAttuale`.`rif_applicazione` IN ('waiting_for_send', 'sent');
 	END IF;
 END
 $$
 
-CREATE TRIGGER `trg_beforeCampaignMailUpdate`
-BEFORE UPDATE ON `campagna_aries_mail`
+CREATE TRIGGER `trg_beforeCampaignDispatchUpdate`
+BEFORE UPDATE ON `campagna_aries_dispatch`
 FOR EACH ROW
 BEGIN
-	DECLARE viewed_status_id INT(11) DEFAULT NULL;
 	DECLARE landing_page_opened_status_id INT(11) DEFAULT NULL;
 
 	SELECT `id`
-	INTO viewed_status_id
-	FROM `stato_campagna_aries_mail`
-	WHERE `rif_applicazione` = 'viewed'
-	LIMIT 1;
-
-	SELECT `id`
 	INTO landing_page_opened_status_id
-	FROM `stato_campagna_aries_mail`
+	FROM `stato_campagna_aries_dispatch`
 	WHERE `rif_applicazione` = 'landing_page_opened'
 	LIMIT 1;
 
-	IF IFNULL(OLD.`id_stato`, 0) <> IFNULL(NEW.`id_stato`, 0) THEN
-		IF NEW.`id_stato` = viewed_status_id THEN
-			SET NEW.`letto` = b'1';
-		ELSEIF NEW.`id_stato` = landing_page_opened_status_id THEN
-			SET NEW.`letto` = b'1';
-			SET NEW.`interagito` = b'1';
-		END IF;
+	IF IFNULL(OLD.`id_stato`, 0) <> IFNULL(NEW.`id_stato`, 0)
+		AND NEW.`id_stato` = landing_page_opened_status_id THEN
+		SET NEW.`interagito` = b'1';
 	END IF;
 END
 $$
