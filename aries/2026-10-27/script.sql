@@ -114,7 +114,3 @@ WHERE `nome` = 'subscription_maintenace_number'
 -- 	(`uuid`, `descrizione`, `rif_applicazione`, `id_numero_telefono`, `id_account_business`, `access_token`, `app_secret`, `verify_token`, `versione_api`, `data_ins`)
 -- VALUES
 -- 	(UUID(), 'WhatsApp campagne Aries', 'campaign_aries', '<phone-number-id>', '<waba-id>', '<access-token>', '<app-secret>', '<verify-token>', NULL, NOW());
-UPDATE `campagna_aries_segnaposto`
-SET `nome` = 'subscription_maintenance_number'
-WHERE `nome` = 'subscription_maintenace_number'
-	AND `id_tipo_campagna` = (SELECT id FROM tipo_campagna_aries WHERE uuid = '83ddae04-d05b-4211-8df5-76791801a1e6');
