@@ -1603,7 +1603,8 @@ CREATE VIEW vw_invoices_payments_details AS
 -- Una riga per impianto e articolo centrale/registratore TVCC.
 -- Componenti presenti: stesso criterio di vw_systems_components.
 -- Classificazione euristica sulla descrizione: include i kit descritti come
--- contenenti centrali/registratori; esclude schede, accessori e software.
+-- contenenti centrali/registratori; esclude schede (tranne SCHEDA CENTRALE),
+-- accessori e software.
 CREATE OR REPLACE VIEW `vw_system_central_data` AS
 SELECT
     ic.`Id_impianto` AS `id_impianto`,
@@ -1636,8 +1637,12 @@ LEFT JOIN `sottocategoria` AS sc
 WHERE ic.`data_dismesso` IS NULL
     AND UPPER(COALESCE(a.`Desc_brev`, '')) REGEXP
         '(^|[^A-Z0-9])(CENTRALE|CENTRALI|CENTRALINA|CENTRALINE|DVR|NVR|XVR|HCVR|HDVR|VIDEOREGISTRATORE|VIDEOREGISTRATORI|VIDEO[[:space:]]+RECORDER)([^A-Z0-9]|$)'
-    AND UPPER(COALESCE(a.`Desc_brev`, '')) NOT REGEXP
-        '^[[:space:]]*(SCHEDA|SCHEDE|MODULO|ESPANSIONE|TASTIERA|ALIMENTATORE|BATTERIA|TRASFORMATORE|CONTENITORE|SCATOLA|CASSETTA|CHASSIS|ARMADIO|LICENZA|SOFTWARE|APP|INTERFACCIA|TRASMETTITORE|RX|SINTETIZZATORE)([^A-Z0-9]|$)'
+    AND (
+        UPPER(COALESCE(a.`Desc_brev`, '')) NOT REGEXP
+            '^[[:space:]]*(SCHEDA|SCHEDE|MODULO|ESPANSIONE|TASTIERA|ALIMENTATORE|BATTERIA|TRASFORMATORE|CONTENITORE|SCATOLA|CASSETTA|CHASSIS|ARMADIO|LICENZA|SOFTWARE|APP|INTERFACCIA|TRASMETTITORE|RX|SINTETIZZATORE)([^A-Z0-9]|$)'
+        OR UPPER(COALESCE(a.`Desc_brev`, '')) REGEXP
+            '^[[:space:]]*SCHEDA[[:space:]]+CENTRALE([^A-Z0-9]|$)'
+    )
     AND UPPER(COALESCE(a.`Desc_brev`, '')) NOT REGEXP
         '^[[:space:]]*MONITOR.*[^A-Z0-9]PER([^A-Z0-9]|$)'
     AND UPPER(COALESCE(a.`Desc_brev`, '')) NOT REGEXP
