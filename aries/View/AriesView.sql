@@ -1605,6 +1605,7 @@ CREATE VIEW vw_invoices_payments_details AS
 -- Classificazione euristica sulla descrizione: include i kit descritti come
 -- contenenti centrali/registratori; esclude schede (tranne SCHEDA CENTRALE),
 -- accessori e software.
+-- I kit la cui descrizione non cita la centrale/registratore sono elencati per codice.
 CREATE OR REPLACE VIEW `vw_system_central_data` AS
 SELECT
     ic.`Id_impianto` AS `id_impianto`,
@@ -1635,18 +1636,26 @@ LEFT JOIN `categoria_merciologica` AS cm
 LEFT JOIN `sottocategoria` AS sc
     ON sc.`id_sottocategoria` = a.`Sottocategoria`
 WHERE ic.`data_dismesso` IS NULL
-    AND UPPER(COALESCE(a.`Desc_brev`, '')) REGEXP
-        '(^|[^A-Z0-9])(CENTRALE|CENTRALI|CENTRALINA|CENTRALINE|DVR|NVR|XVR|HCVR|HDVR|VIDEOREGISTRATORE|VIDEOREGISTRATORI|VIDEO[[:space:]]+RECORDER)([^A-Z0-9]|$)'
     AND (
-        UPPER(COALESCE(a.`Desc_brev`, '')) NOT REGEXP
-            '^[[:space:]]*(SCHEDA|SCHEDE|MODULO|ESPANSIONE|TASTIERA|ALIMENTATORE|BATTERIA|TRASFORMATORE|CONTENITORE|SCATOLA|CASSETTA|CHASSIS|ARMADIO|LICENZA|SOFTWARE|APP|INTERFACCIA|TRASMETTITORE|RX|SINTETIZZATORE)([^A-Z0-9]|$)'
-        OR UPPER(COALESCE(a.`Desc_brev`, '')) REGEXP
-            '^[[:space:]]*SCHEDA[[:space:]]+CENTRALE([^A-Z0-9]|$)'
+        a.`Codice_articolo` IN (
+            '000216780', '000216608', '000216635', '430222073',
+            '000217041', '000217203', 'AJ-NVRKIT10'
+        )
+        OR (
+            UPPER(COALESCE(a.`Desc_brev`, '')) REGEXP
+                '(^|[^A-Z0-9])(CENTRALE|CENTRALI|CENTRALINA|CENTRALINE|DVR|NVR|XVR|HCVR|HDVR|VIDEOREGISTRATORE|VIDEOREGISTRATORI|VIDEO[[:space:]]+RECORDER)([^A-Z0-9]|$)'
+            AND (
+                UPPER(COALESCE(a.`Desc_brev`, '')) NOT REGEXP
+                    '^[[:space:]]*(SCHEDA|SCHEDE|MODULO|ESPANSIONE|TASTIERA|ALIMENTATORE|BATTERIA|TRASFORMATORE|CONTENITORE|SCATOLA|CASSETTA|CHASSIS|ARMADIO|LICENZA|SOFTWARE|APP|INTERFACCIA|TRASMETTITORE|RX|SINTETIZZATORE)([^A-Z0-9]|$)'
+                OR UPPER(COALESCE(a.`Desc_brev`, '')) REGEXP
+                    '^[[:space:]]*SCHEDA[[:space:]]+CENTRALE([^A-Z0-9]|$)'
+            )
+            AND UPPER(COALESCE(a.`Desc_brev`, '')) NOT REGEXP
+                '^[[:space:]]*MONITOR.*[^A-Z0-9]PER([^A-Z0-9]|$)'
+            AND UPPER(COALESCE(a.`Desc_brev`, '')) NOT REGEXP
+                '^[[:space:]]*CENTRALINA[[:space:]]+(DI[[:space:]]+)?CONTROLLO[[:space:]]+CAMERA([^A-Z0-9]|$)'
+        )
     )
-    AND UPPER(COALESCE(a.`Desc_brev`, '')) NOT REGEXP
-        '^[[:space:]]*MONITOR.*[^A-Z0-9]PER([^A-Z0-9]|$)'
-    AND UPPER(COALESCE(a.`Desc_brev`, '')) NOT REGEXP
-        '^[[:space:]]*CENTRALINA[[:space:]]+(DI[[:space:]]+)?CONTROLLO[[:space:]]+CAMERA([^A-Z0-9]|$)'
 GROUP BY
     ic.`Id_impianto`,
     i.`Descrizione`,
