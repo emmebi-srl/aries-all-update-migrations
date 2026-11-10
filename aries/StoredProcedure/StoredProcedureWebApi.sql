@@ -225,7 +225,8 @@ BEGIN
 		IFNULL(riferimento_clienti.Telefono, "") 'telefono', 
 		IFNULL(riferimento_clienti.altro_telefono, "") 'altro_telefono', 
 		IFNULL(riferimento_clienti.mail, "") 'mail',
-		riferimento_clienti.Promemoria_cliente
+		riferimento_clienti.Promemoria_cliente,
+		riferimento_clienti.Fatturazione AS fatturazione
 	FROM riferimento_clienti 
 		INNER JOIN riferimento_figura ON 
 			riferimento_clienti.figura = riferimento_figura.Id_figura;
@@ -251,7 +252,8 @@ BEGIN
 		IFNULL(riferimento_clienti.Telefono, "") 'telefono', 
 		IFNULL(riferimento_clienti.altro_telefono, "") 'altro_telefono', 
 		IFNULL(riferimento_clienti.mail, "") 'mail',
-		riferimento_clienti.Promemoria_cliente	
+		riferimento_clienti.Promemoria_cliente,
+		riferimento_clienti.Fatturazione AS fatturazione
 	FROM riferimento_clienti 
 		INNER JOIN riferimento_figura ON 
 			riferimento_clienti.figura = riferimento_figura.Id_figura
