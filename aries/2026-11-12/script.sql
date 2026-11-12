@@ -41,3 +41,168 @@ SET @sql = IF(@index_exists = 0,
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
+
+-- Quote reminders: sending the current revision of a quote (also a new revision of a quote
+-- already sent) restarts primo/secondo sollecito and data_invio. Same procedure as 2026-09-16
+-- except the "prev" branch.
+DROP PROCEDURE IF EXISTS sp_ariesEmailSetDocumentStatus;
+DELIMITER //
+CREATE PROCEDURE `sp_ariesEmailSetDocumentStatus`(
+  IN `email_id` INT(11)
+)
+BEGIN
+  DECLARE DocumentType VARCHAR(30);
+  DECLARE DocumentId VARCHAR(10);
+  DECLARE DocumentYear VARCHAR(10);
+  DECLARE DocumentReview VARCHAR(10);
+  DECLARE StatusId INT(11);
+  DECLARE EmailSendDate DATETIME;
+  DECLARE SystemId INT(11);
+  DECLARE ReminderNumber TINYINT;
+
+  SELECT
+    mail.Tipo_documento,
+    mail.Id_documento,
+    mail.Anno_documento,
+    mail.Revisione_documento,
+    mail.Id_stato,
+    mail.Data_invio
+  INTO
+    DocumentType,
+    DocumentId,
+    DocumentYear,
+    DocumentReview,
+    StatusId,
+    EmailSendDate
+  FROM mail
+  WHERE Id = email_id;
+
+  IF (DocumentType IS NOT NULL)
+    AND (StatusId = 1
+      OR DocumentType = 'rapporto_mobile_intervento'
+      OR DocumentType = 'rapporto_mobile_collaudo') THEN
+
+    IF DocumentType = 'prev' THEN
+      UPDATE revisione_preventivo
+      SET inviato = 1
+      WHERE id_preventivo = DocumentId
+        AND anno = DocumentYear
+        AND id_revisione = DocumentReview;
+
+      UPDATE preventivo
+      SET stato = 3,
+          data_invio = CURDATE()
+      WHERE id_preventivo = DocumentId
+        AND anno = DocumentYear
+        AND stato IN (5, 6);
+
+      -- Sending the current revision restarts the reminders from today. A new revision is
+      -- sent while the quote is already "inviato" (3): the update above skips it and the
+      -- status trigger doesn't clear the reminders, so the job kept counting from the first send.
+      UPDATE preventivo
+      SET data_invio = CURDATE(),
+          primo_sollecito = NULL,
+          secondo_sollecito = NULL
+      WHERE id_preventivo = DocumentId
+        AND anno = DocumentYear
+        AND revisione = DocumentReview
+        AND stato = 3;
+    END IF;
+
+    IF DocumentType = 'sollecito_preventivo'
+      AND DocumentId IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1
+        FROM campagna_aries_mail
+        WHERE id_mail = email_id
+      ) THEN
+      UPDATE preventivo
+      SET secondo_sollecito = NOW()
+      WHERE id_preventivo = DocumentId
+        AND anno = DocumentYear
+        AND primo_sollecito IS NOT NULL;
+
+      UPDATE preventivo
+      SET primo_sollecito = NOW()
+      WHERE id_preventivo = DocumentId
+        AND anno = DocumentYear
+        AND primo_sollecito IS NULL;
+    END IF;
+
+    IF DocumentType = 'fatt' THEN
+      UPDATE fattura
+      SET inviato = 1
+      WHERE id_fattura = DocumentId
+        AND anno = DocumentYear;
+    END IF;
+
+    IF DocumentType = 'tk' THEN
+      SELECT IFNULL(Id_impianto, -1)
+      INTO SystemId
+      FROM Ticket
+      WHERE Id = DocumentId;
+
+      UPDATE ticket
+      SET Stato_ticket = 2,
+          inviato = 1
+      WHERE id_impianto = SystemId;
+    END IF;
+
+    IF DocumentType = 'COMMESSA' THEN
+      UPDATE commessa
+      SET inv_com = 1
+      WHERE id_commessa = DocumentId
+        AND anno = DocumentYear;
+    END IF;
+
+    IF DocumentType = 'reso' THEN
+      UPDATE resoconto
+      SET inviato = 1,
+          data_invio = COALESCE(EmailSendDate, NOW())
+      WHERE id_resoconto = DocumentId
+        AND anno = DocumentYear;
+    END IF;
+
+    IF DocumentType = 'ordine' THEN
+      UPDATE ordine_fornitore
+      SET inviato = 1
+      WHERE id_Ordine = DocumentId
+        AND anno = DocumentYear;
+    END IF;
+
+    IF DocumentType = 'fatt1' THEN
+      UPDATE fattura
+      SET inviato = 1
+      WHERE id_fattura = DocumentId
+        AND anno = DocumentYear;
+
+      UPDATE clienti
+      SET rc = 1
+      WHERE id_cliente = (
+        SELECT id_cliente
+        FROM fattura
+        WHERE id_fattura = DocumentId
+          AND anno = DocumentYear
+      );
+    END IF;
+
+    IF DocumentType = 'rapporto_mobile_intervento' THEN
+      UPDATE rapporto_mobile
+      SET inviato = 1
+      WHERE Id_rapporto = DocumentId
+        AND anno = DocumentYear;
+    END IF;
+
+    IF DocumentType = 'rapporto_mobile_collaudo' THEN
+      UPDATE rapporto_mobile_collaudo
+      SET inviato = 1
+      WHERE Id_rapporto = DocumentId
+        AND anno = DocumentYear;
+    END IF;
+
+    IF DocumentType = 'cliente_estratto_conto' AND DocumentId IS NOT NULL THEN
+      CALL sp_ariesCustomerInvoicesStatementInsert(email_id, DocumentId);
+    END IF;
+  END IF;
+END//
+DELIMITER ;

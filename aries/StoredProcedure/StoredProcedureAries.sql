@@ -5257,8 +5257,17 @@ BEGIN
 			UPDATE preventivo 
 			SET stato=3,
 				data_invio=curdate() 
-			WHERE id_preventivo = DocumentId AND anno = DocumentYear AND stato IN (5, 6); 
-			
+			WHERE id_preventivo = DocumentId AND anno = DocumentYear AND stato IN (5, 6);
+
+			-- Sending the current revision restarts the reminders from today. A new revision is
+			-- sent while the quote is already "inviato" (3): the update above skips it and the
+			-- status trigger doesn't clear the reminders, so the job kept counting from the first send.
+			UPDATE preventivo
+			SET data_invio = curdate(),
+				primo_sollecito = NULL,
+				secondo_sollecito = NULL
+			WHERE id_preventivo = DocumentId AND anno = DocumentYear AND revisione = DocumentReview AND stato = 3;
+
 		END IF;
 		
 		
