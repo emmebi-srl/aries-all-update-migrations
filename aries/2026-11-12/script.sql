@@ -206,3 +206,27 @@ BEGIN
   END IF;
 END//
 DELIMITER ;
+
+-- Passkeys (WebAuthn) of the users, to log in to the web app without a password. The public key is
+-- stored as returned by the authenticator (COSE); the private key never leaves the user's device.
+-- credential_id is the base64url credential id (unique per authenticator), user_handle is the random
+-- id the authenticator keeps for the user (the same for all the passkeys of a user).
+CREATE TABLE IF NOT EXISTS `utente_passkey` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`id_utente` INT(11) NOT NULL,
+	`credential_id` VARCHAR(512) NOT NULL COMMENT 'base64url',
+	`public_key` BLOB NOT NULL COMMENT 'Chiave pubblica COSE',
+	`user_handle` VARBINARY(64) NOT NULL,
+	`sign_count` INT(10) UNSIGNED NOT NULL DEFAULT '0',
+	`transports` VARCHAR(100) NULL DEFAULT NULL COMMENT 'internal, hybrid, usb, nfc, ble separati da virgola',
+	`aaguid` VARCHAR(36) NULL DEFAULT NULL COMMENT 'Modello dell autenticatore',
+	`backup_eligible` TINYINT(1) NOT NULL DEFAULT '0',
+	`backed_up` TINYINT(1) NOT NULL DEFAULT '0' COMMENT 'Sincronizzata (iCloud, Google, ...)',
+	`nome` VARCHAR(100) NOT NULL,
+	`data_creazione` DATETIME NOT NULL,
+	`data_ultimo_utilizzo` DATETIME NULL DEFAULT NULL,
+	PRIMARY KEY (`id`),
+	UNIQUE KEY `UK_utente_passkey_credential_id` (`credential_id`),
+	KEY `FK_utente_passkey_utente` (`id_utente`),
+	CONSTRAINT `FK_utente_passkey_utente` FOREIGN KEY (`id_utente`) REFERENCES `utente` (`Id_utente`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
