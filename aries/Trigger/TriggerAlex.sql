@@ -1080,13 +1080,17 @@ BEGIN
 	DECLARE reminder_event_id INT(11);
 	DECLARE expiration_event_id INT(11);
 	DECLARE user_id INT(11);
-
-	
+	DECLARE is_open TINYINT(1);
 
 	SET user_id = IFNULL(@USER_ID, NEW.id_utente);
 
+	-- 2026-11-18: closed = stato_ticket.aperto = 0 (was the fixed ids 3 and 4, only on a status change).
+	SELECT IFNULL(MAX(stato_ticket.aperto + 0), 1)
+	INTO is_open
+	FROM stato_ticket
+	WHERE stato_ticket.Id_stato = NEW.stato_ticket;
 
-	IF NEW.stato_ticket != OLD.stato_ticket AND NEW.stato_ticket IN (3, 4) THEN
+	IF is_open = 0 THEN
 		CALL sp_ariesTicketDeleteReminderEvent(NEW.id_ticket, NEW.anno, user_id);
 		CALL sp_ariesTicketDeleteExpirationEvent(NEW.id_ticket, NEW.anno, user_id);
 
